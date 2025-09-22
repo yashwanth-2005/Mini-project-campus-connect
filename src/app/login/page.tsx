@@ -20,17 +20,6 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { findUserByEmail, setCurrentUser } from "@/lib/mock-db";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -38,7 +27,6 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [role, setRole] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
-  const [recoveryEmail, setRecoveryEmail] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -56,33 +44,26 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    const user = findUserByEmail(email);
+    setTimeout(() => {
+        const user = findUserByEmail(email);
 
-    if (user && user.password === password) {
-        setCurrentUser(user.id);
-        toast({
-            title: "Login Successful",
-            description: `Welcome back, ${user.fullName}!`,
-        });
-        router.push(`/dashboard?role=${role}`);
-    } else {
-        toast({
-            title: "Login Failed",
-            description: "Invalid email or password. Please try again.",
-            variant: "destructive",
-        });
-        setIsLoading(false);
-    }
+        if (user && user.password === password) {
+            setCurrentUser(user.id);
+            toast({
+                title: "Login Successful",
+                description: `Welcome back, ${user.fullName}!`,
+            });
+            router.push(`/dashboard?role=${role}`);
+        } else {
+            toast({
+                title: "Login Failed",
+                description: "Invalid email or password. Please try again.",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+        }
+    }, 100);
   };
-
-  const handlePasswordRecovery = () => {
-    const user = findUserByEmail(recoveryEmail);
-    if (user && user.password) {
-      alert(`Your password is: ${user.password}\n\nThis is an insecure mock recovery. In a real app, we would send a secure reset link.`);
-    } else {
-      alert("No user found with that email address.");
-    }
-  }
 
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
@@ -115,43 +96,12 @@ export default function LoginPage() {
       <div className="grid gap-2">
         <div className="flex items-center">
           <Label htmlFor={`${currentRole}-password`}>Password</Label>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Link
-                  href="#"
-                  onClick={(e) => e.preventDefault()}
-                  className="ml-auto inline-block text-sm underline"
-                >
-                  Forgot your password?
-                </Link>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Recover Password</DialogTitle>
-                  <DialogDescription>
-                    Enter your email address to recover your password. This is a mock feature and is not secure.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="recovery-email" className="text-right">
-                      Email
-                    </Label>
-                    <Input
-                      id="recovery-email"
-                      type="email"
-                      placeholder="name@example.com"
-                      className="col-span-3"
-                      value={recoveryEmail}
-                      onChange={(e) => setRecoveryEmail(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" onClick={handlePasswordRecovery}>Recover Password</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+            <Link
+              href="/forgot-password"
+              className="ml-auto inline-block text-sm underline"
+            >
+              Forgot your password?
+            </Link>
         </div>
         <div className="relative">
           <Input id={`${currentRole}-password`} type={showPassword ? "text" : "password"} required className="pr-10 transition-all focus:scale-[1.02] focus:shadow-lg" />
@@ -162,7 +112,7 @@ export default function LoginPage() {
             className="absolute top-1/2 right-2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
             onClick={() => setShowPassword(!showPassword)}
           >
-            {showPassword ? <EyeOff /> : <Eye />}
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
           </Button>
         </div>
