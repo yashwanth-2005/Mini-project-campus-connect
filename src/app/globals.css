@@ -147,12 +147,14 @@
     100% { background-position: 0% 50%; }
   }
 
-  .rainbow-text {
+  .rainbow-button {
     background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
     background-size: 200% 200%;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
     animation: rainbow-gradient 5s ease infinite;
+  }
+
+  .rainbow-button:hover {
+    /* Optional: slightly change the animation on hover */
+    animation: rainbow-gradient 4s ease infinite;
   }
 }
