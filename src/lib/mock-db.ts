@@ -15,6 +15,7 @@ export type User = {
     leetcode: string;
     bio?: string;
     github?: string;
+    profilePicture?: string;
 };
 
 // Function to get all users from localStorage
@@ -83,15 +84,16 @@ export const updateUser = (userId: string, updatedData: Partial<User>): User | n
     const currentUserData = users[userId];
     users[userId] = {
         ...currentUserData,
-        fullName: updatedData.fullName ?? currentUserData.fullName,
-        usn: updatedData.usn ?? currentUserData.usn,
-        year: updatedData.year ?? currentUserData.year,
-        bio: updatedData.bio ?? currentUserData.bio,
-        linkedin: updatedData.linkedin ?? currentUserData.linkedin,
-        github: updatedData.github ?? currentUserData.github,
-        leetcode: updatedData.leetcode ?? currentUserData.leetcode,
+        ...updatedData,
     };
 
     saveUsers(users);
+    // After updating, we should also update the currentUser in localStorage if it's the same user.
+    const currentUser = getCurrentUser();
+    if (currentUser && currentUser.id === userId) {
+        setCurrentUser(userId); // This just rewrites the ID, let's refresh the object.
+        // The user object is fetched fresh by getCurrentUser(), so we are good.
+    }
+    
     return users[userId];
 };

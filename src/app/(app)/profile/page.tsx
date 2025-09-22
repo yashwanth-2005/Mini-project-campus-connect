@@ -5,7 +5,7 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,7 @@ const profileSchema = z.object({
     linkedin: z.string().url("Please enter a valid LinkedIn URL").optional().or(z.literal('')),
     github: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
     leetcode: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
+    profilePicture: z.string().optional(),
 });
 
 export default function ProfilePage() {
@@ -34,6 +35,8 @@ export default function ProfilePage() {
     const router = useRouter();
     const [user, setUser] = useState<User | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
@@ -45,6 +48,7 @@ export default function ProfilePage() {
             linkedin: "",
             github: "",
             leetcode: "",
+            profilePicture: "",
         },
     });
 
@@ -52,42 +56,47 @@ export default function ProfilePage() {
         const currentUser = getCurrentUser();
         if (currentUser) {
             setUser(currentUser);
+            setPreviewImage(currentUser.profilePicture || null);
             form.reset({
                 fullName: currentUser.fullName,
                 usn: currentUser.usn,
                 year: currentUser.year,
                 bio: currentUser.bio || "Passionate developer and problem solver. Actively seeking opportunities in software engineering.",
                 linkedin: currentUser.linkedin || "",
-                github: "", // Assuming github is not collected at signup
+                github: currentUser.github || "",
                 leetcode: currentUser.leetcode || "",
+                profilePicture: currentUser.profilePicture || "",
             });
         } else {
-            // If no user, redirect to login, as they shouldn't be here.
             router.push('/login');
         }
         setIsLoading(false);
     }, [form, router]);
 
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const result = reader.result as string;
+                setPreviewImage(result);
+                form.setValue("profilePicture", result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
 
     function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!user) return;
 
         try {
-            const {fullName, ...rest} = data;
-            const nameParts = fullName.split(' ');
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.slice(1).join(' ') || '';
-
-            updateUser(user.id, {
-                ...rest,
-                fullName,
-                bio: data.bio
-            });
-
+            updateUser(user.id, data);
             toast({
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
+            // Force a reload of the user navigation to show the new picture
+            window.location.reload();
         } catch(e) {
             toast({
                 title: "Update Failed",
@@ -143,12 +152,12 @@ export default function ProfilePage() {
                     <CardContent className="space-y-6">
                         <div className="flex items-center gap-6">
                             <Avatar className="h-24 w-24 border">
-                                <AvatarImage src={`https://api.dicebear.com/8.x/bottts/svg?seed=${user.usn}`} data-ai-hint="person avatar" />
+                                <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${user.usn}`} data-ai-hint="person avatar" />
                                 <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-2">
                                 <Label htmlFor="picture">Profile Picture</Label>
-                                <Input id="picture" type="file" />
+                                <Input id="picture" type="file" accept="image/*" onChange={handleFileChange} ref={fileInputRef} />
                                 <p className="text-xs text-muted-foreground">JPG, PNG, or GIF, no larger than 5MB.</p>
                             </div>
                         </div>
