@@ -61,7 +61,7 @@ export default function ProfilePage() {
                 fullName: currentUser.fullName,
                 usn: currentUser.usn,
                 year: currentUser.year,
-                bio: currentUser.bio || "Passionate developer and problem solver. Actively seeking opportunities in software engineering.",
+                bio: currentUser.bio || "",
                 linkedin: currentUser.linkedin || "",
                 github: currentUser.github || "",
                 leetcode: currentUser.leetcode || "",
@@ -274,3 +274,5 @@ export default function ProfilePage() {
         </Form>
     );
 }
+
+    
