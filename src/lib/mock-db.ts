@@ -106,9 +106,8 @@ export const updateUser = (userId: string, updatedData: Partial<User>): User | n
     if (!users[userId]) return null;
 
     // Merge existing data with new data, ensuring no required fields are blanked
-    const currentUserData = users[userId];
     users[userId] = {
-        ...currentUserData,
+        ...users[userId],
         ...updatedData,
     };
 
