@@ -111,9 +111,9 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               {/* Could add breadcrumbs or page title here */}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" onClick={() => setIsChatOpen(true)}>
+              <Button variant="ghost" onClick={() => setIsChatOpen(true)} className="font-bold">
                 <Bot className="mr-2 h-4 w-4" />
-                Ask me anything?
+                <span className="rainbow-text">Ask me anything?</span>
               </Button>
               <ThemeToggle />
               <div className="hidden md:block">
