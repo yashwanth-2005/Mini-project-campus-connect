@@ -175,19 +175,11 @@ export default function ProfilePage() {
                                     </FormItem>
                                 )}
                             />
-                             <FormField
-                                control={form.control}
-                                name="usn"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>USN (University Seat Number)</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g., 1CR21CS001" {...field} onChange={(e) => field.onChange(e.target.value.toUpperCase())} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <div className="space-y-2">
+                                <Label htmlFor="usn">USN (University Seat Number)</Label>
+                                <Input id="usn" type="text" defaultValue={user.usn} disabled />
+                                <FormDescription>Your USN cannot be changed.</FormDescription>
+                            </div>
                         </div>
                          <div className="grid md:grid-cols-2 gap-4">
                            
