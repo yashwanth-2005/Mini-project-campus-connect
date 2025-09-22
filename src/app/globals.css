@@ -148,7 +148,7 @@
   }
 
   .rainbow-button {
-    background: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #8b00ff);
+    background: linear-gradient(90deg, #fca5a5, #fdba74, #fde047, #bbf7d0, #a5b4fc, #c4b5fd, #f9a8d4);
     background-size: 200% 200%;
     animation: rainbow-gradient 5s ease infinite;
   }
