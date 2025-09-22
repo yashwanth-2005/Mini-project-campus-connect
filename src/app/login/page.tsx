@@ -30,12 +30,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [role, setRole] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState("");
 
   const handleLogin = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -71,6 +73,15 @@ export default function LoginPage() {
     }
   };
 
+  const handlePasswordRecovery = () => {
+    const user = findUserByEmail(recoveryEmail);
+    if (user && user.password) {
+      alert(`Your password is: ${user.password}\n\nThis is an insecure mock recovery. In a real app, we would send a secure reset link.`);
+    } else {
+      alert("No user found with that email address.");
+    }
+  }
+
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
       {currentRole === 'student' && (
@@ -102,8 +113,8 @@ export default function LoginPage() {
       <div className="grid gap-2">
         <div className="flex items-center">
           <Label htmlFor={`${currentRole}-password`}>Password</Label>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
+            <Dialog>
+              <DialogTrigger asChild>
                 <Link
                   href="#"
                   onClick={(e) => e.preventDefault()}
@@ -111,19 +122,34 @@ export default function LoginPage() {
                 >
                   Forgot your password?
                 </Link>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Feature In Development</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Password recovery is not yet available in this prototype. A full implementation would require a secure backend and email service, which can be built using Firebase Authentication.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogAction>OK</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>Recover Password</DialogTitle>
+                  <DialogDescription>
+                    Enter your email address to recover your password. This is a mock feature and is not secure.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-4 items-center gap-4">
+                    <Label htmlFor="recovery-email" className="text-right">
+                      Email
+                    </Label>
+                    <Input
+                      id="recovery-email"
+                      type="email"
+                      placeholder="name@example.com"
+                      className="col-span-3"
+                      value={recoveryEmail}
+                      onChange={(e) => setRecoveryEmail(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button type="submit" onClick={handlePasswordRecovery}>Recover Password</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
         </div>
         <Input id={`${currentRole}-password`} type="password" required className="transition-all focus:scale-[1.02] focus:shadow-lg" />
       </div>
