@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -9,7 +10,6 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
   SheetDescription
 } from "@/components/ui/sheet";
@@ -22,8 +22,12 @@ type Message = {
   text: string;
 };
 
-export default function Chatbot() {
-  const [isOpen, setIsOpen] = useState(false);
+type ChatbotProps = {
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+}
+
+export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -52,16 +56,7 @@ export default function Chatbot() {
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button
-          className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-lg"
-          size="icon"
-        >
-          <Bot className="h-8 w-8" />
-          <span className="sr-only">Open Chatbot</span>
-        </Button>
-      </SheetTrigger>
+    <Sheet open={isOpen} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col">
         <SheetHeader>
           <SheetTitle>AI Chatbot Assistance</SheetTitle>

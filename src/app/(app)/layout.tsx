@@ -13,6 +13,7 @@ import {
   MessageSquare,
   User,
   Shield,
+  Bot,
 } from "lucide-react";
 
 import {
@@ -31,6 +32,7 @@ import { Logo } from "@/components/icons";
 import { UserNav } from "@/components/user-nav";
 import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { Button } from "@/components/ui/button";
 
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
@@ -48,6 +50,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const role = searchParams.get('role') || 'student';
   const [isLoading, setIsLoading] = useState(false);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
@@ -108,6 +111,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               {/* Could add breadcrumbs or page title here */}
             </div>
             <div className="flex items-center gap-2">
+              <Button variant="ghost" onClick={() => setIsChatOpen(true)}>
+                <Bot className="mr-2 h-4 w-4" />
+                Ask me anything?
+              </Button>
               <ThemeToggle />
               <div className="hidden md:block">
                 <UserNav />
@@ -116,7 +123,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           </div>
         </header>
         <main className="flex-1 p-4 md:p-8">{children}</main>
-        <Chatbot />
+        <Chatbot isOpen={isChatOpen} onOpenChange={setIsChatOpen} />
       </SidebarInset>
     </SidebarProvider>
   );
