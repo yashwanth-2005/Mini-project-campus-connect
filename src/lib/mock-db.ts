@@ -29,11 +29,48 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
+const defaultUsers: Record<string, User> = {
+    'user-faculty-1': {
+        id: 'user-faculty-1',
+        fullName: 'Suraj Rao',
+        email: 'surajrao081005@gmail.com',
+        password: 'q1w2e3r4t5',
+        usn: 'FAC001',
+        year: 0,
+        semester: 0,
+        linkedin: '',
+        leetcode: '',
+        bio: 'Faculty member in the Computer Science department.',
+        github: '',
+        profilePicture: 'https://picsum.photos/seed/faculty1/200/200'
+    },
+    'user-student-1': {
+        id: 'user-student-1',
+        fullName: 'Alex Doe',
+        email: 'alex.doe@example.com',
+        password: 'password123',
+        usn: '1CR21CS001',
+        year: 3,
+        semester: 6,
+        linkedin: 'https://www.linkedin.com/in/alex-doe',
+        leetcode: 'https://leetcode.com/alexdoe',
+        bio: 'Aspiring Software Engineer, passionate about open-source and web development.',
+        github: 'https://github.com/alexdoe',
+        profilePicture: 'https://picsum.photos/seed/student1/200/200'
+    }
+}
+
+
 // Function to get all users from localStorage
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return {};
-    const users = localStorage.getItem('users');
-    return users ? JSON.parse(users) : {};
+    let usersJson = localStorage.getItem('users');
+    if (!usersJson) {
+        // If no users in localStorage, initialize with default users
+        saveUsers(defaultUsers);
+        usersJson = JSON.stringify(defaultUsers);
+    }
+    return JSON.parse(usersJson);
 };
 
 // Function to save all users to localStorage
@@ -105,7 +142,7 @@ export const updateUser = (userId: string, updatedData: Partial<User>): User | n
     const users = getUsers();
     if (!users[userId]) return null;
 
-    // Merge existing data with new data, ensuring no required fields are blanked
+    // Merge existing data with new data
     users[userId] = {
         ...users[userId],
         ...updatedData,
