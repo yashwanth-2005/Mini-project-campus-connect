@@ -18,6 +18,17 @@ export type User = {
     profilePicture?: string;
 };
 
+export type UsnChangeRequest = {
+    id: string;
+    userId: string;
+    studentName: string;
+    currentUsn: string;
+    newUsn: string;
+    reason: string;
+    status: 'pending' | 'approved' | 'denied';
+    requestedAt: string;
+}
+
 // Function to get all users from localStorage
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return {};
@@ -30,6 +41,20 @@ const saveUsers = (users: Record<string, User>) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('users', JSON.stringify(users));
 };
+
+// Function to get all USN change requests from localStorage
+const getRequests = (): UsnChangeRequest[] => {
+    if (typeof window === 'undefined') return [];
+    const requests = localStorage.getItem('usnChangeRequests');
+    return requests ? JSON.parse(requests) : [];
+};
+
+// Function to save all USN change requests to localStorage
+const saveRequests = (requests: UsnChangeRequest[]) => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('usnChangeRequests', JSON.stringify(requests));
+};
+
 
 // Function to get the currently logged-in user
 export const getCurrentUser = (): User | null => {
@@ -96,4 +121,69 @@ export const updateUser = (userId: string, updatedData: Partial<User>): User | n
     }
     
     return users[userId];
+};
+
+// == USN CHANGE REQUESTS ==
+
+export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' | 'status' | 'requestedAt'>) => {
+    let requests = getRequests();
+    // Check if there's already a pending request for this user
+    const existingRequest = requests.find(r => r.userId === requestData.userId && r.status === 'pending');
+    if (existingRequest) {
+        throw new Error("You already have a pending USN change request.");
+    }
+
+    const newRequest: UsnChangeRequest = {
+        id: `req_${Date.now()}`,
+        ...requestData,
+        status: 'pending',
+        requestedAt: new Date().toISOString(),
+    };
+    requests.push(newRequest);
+    saveRequests(requests);
+    return newRequest;
+};
+
+export const getPendingUsnRequests = (): UsnChangeRequest[] => {
+    const requests = getRequests();
+    return requests.filter(req => req.status === 'pending').sort((a, b) => new Date(a.requestedAt).getTime() - new Date(b.requestedAt).getTime());
+};
+
+export const getUsnRequestForUser = (userId: string): UsnChangeRequest | undefined => {
+    const requests = getRequests();
+    return requests.find(r => r.userId === userId && r.status === 'pending');
+}
+
+export const approveUsnChange = (requestId: string) => {
+    let requests = getRequests();
+    const requestIndex = requests.findIndex(r => r.id === requestId);
+    if (requestIndex === -1) throw new Error("Request not found.");
+
+    const request = requests[requestIndex];
+    if (request.status !== 'pending') throw new Error("This request has already been actioned.");
+    
+    const users = getUsers();
+    if (!users[request.userId]) throw new Error("User associated with this request not found.");
+
+    // Update user's USN
+    users[request.userId].usn = request.newUsn;
+    saveUsers(users);
+
+    // Update request status
+    requests[requestIndex].status = 'approved';
+    saveRequests(requests);
+};
+
+export const denyUsnChange = (requestId: string) => {
+    let requests = getRequests();
+    const requestIndex = requests.findIndex(r => r.id === requestId);
+    if (requestIndex === -1) throw new Error("Request not found.");
+
+    const request = requests[requestIndex];
+    if (request.status !== 'pending') throw new Error("This request has already been actioned.");
+
+    // Just update request status to denied, but allow them to request again in future.
+    // For simplicity, we'll just mark it denied. A better implementation might remove it after a while.
+    requests[requestIndex].status = 'denied';
+    saveRequests(requests);
 };

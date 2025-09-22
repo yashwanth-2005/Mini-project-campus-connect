@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -16,8 +15,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, updateUser, User } from "@/lib/mock-db";
+import { getCurrentUser, updateUser, User, getUsnRequestForUser, createUsnChangeRequest } from "@/lib/mock-db";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 
 const profileSchema = z.object({
     fullName: z.string().min(1, "Full name is required"),
@@ -30,6 +31,11 @@ const profileSchema = z.object({
     profilePicture: z.string().optional(),
 });
 
+const usnChangeSchema = z.object({
+    newUsn: z.string().min(1, "New USN is required."),
+    reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
+});
+
 export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
@@ -37,6 +43,8 @@ export default function ProfilePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const [isUsnDialogOpen, setIsUsnDialogOpen] = useState(false);
+    const [pendingUsnRequest, setPendingUsnRequest] = useState(false);
 
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
@@ -50,6 +58,14 @@ export default function ProfilePage() {
             leetcode: "",
             profilePicture: "",
         },
+    });
+
+    const usnForm = useForm<z.infer<typeof usnChangeSchema>>({
+        resolver: zodResolver(usnChangeSchema),
+        defaultValues: {
+            newUsn: "",
+            reason: ""
+        }
     });
 
     useEffect(() => {
@@ -67,6 +83,11 @@ export default function ProfilePage() {
                 leetcode: currentUser.leetcode || "",
                 profilePicture: currentUser.profilePicture || "",
             });
+            // Check for pending USN change request
+            const pendingRequest = getUsnRequestForUser(currentUser.id);
+            if (pendingRequest) {
+                setPendingUsnRequest(true);
+            }
         } else {
             router.push('/login');
         }
@@ -101,6 +122,32 @@ export default function ProfilePage() {
             toast({
                 title: "Update Failed",
                 description: "Could not update your profile. Please try again.",
+                variant: 'destructive'
+            });
+        }
+    }
+
+    function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
+        if (!user) return;
+        try {
+            createUsnChangeRequest({
+                userId: user.id,
+                studentName: user.fullName,
+                currentUsn: user.usn,
+                newUsn: data.newUsn.toUpperCase(),
+                reason: data.reason
+            });
+            toast({
+                title: "Request Submitted",
+                description: "Your USN change request has been submitted for faculty approval."
+            });
+            setPendingUsnRequest(true);
+            setIsUsnDialogOpen(false);
+            usnForm.reset();
+        } catch (error: any) {
+             toast({
+                title: "Submission Failed",
+                description: error.message,
                 variant: 'destructive'
             });
         }
@@ -177,8 +224,63 @@ export default function ProfilePage() {
                             />
                             <div className="space-y-2">
                                 <Label htmlFor="usn">USN (University Seat Number)</Label>
-                                <Input id="usn" type="text" defaultValue={user.usn} disabled />
-                                <FormDescription>Your USN cannot be changed.</FormDescription>
+                                <div className="flex items-center gap-2">
+                                    <Input id="usn" type="text" value={user.usn} readOnly className="bg-muted/50" />
+                                     <Dialog open={isUsnDialogOpen} onOpenChange={setIsUsnDialogOpen}>
+                                        <DialogTrigger asChild>
+                                            <Button type="button" variant="outline" disabled={pendingUsnRequest}>
+                                                {pendingUsnRequest ? "Pending" : "Request Change"}
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>Request USN Change</DialogTitle>
+                                                <DialogDescription>
+                                                    Submit a request to a faculty member to change your USN. This is for correcting errors only.
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <Form {...usnForm}>
+                                                <form onSubmit={usnForm.handleSubmit(onUsnChangeSubmit)} className="space-y-4">
+                                                     <FormField
+                                                        control={usnForm.control}
+                                                        name="newUsn"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>New USN</FormLabel>
+                                                                <FormControl>
+                                                                    <Input placeholder="1CR21CSXXX" {...field} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <FormField
+                                                        control={usnForm.control}
+                                                        name="reason"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Reason for Change</FormLabel>
+                                                                <FormControl>
+                                                                    <Textarea placeholder="e.g., Typo during registration" {...field} />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <DialogFooter>
+                                                        <Button type="submit">Submit Request</Button>
+                                                    </DialogFooter>
+                                                </form>
+                                            </Form>
+                                        </DialogContent>
+                                    </Dialog>
+                                </div>
+                                <FormDescription>
+                                    {pendingUsnRequest 
+                                        ? <>Your change request is pending approval. <Badge variant="secondary">Pending</Badge></>
+                                        : "USN cannot be changed directly. Please submit a request for faculty approval."
+                                    }
+                                </FormDescription>
                             </div>
                         </div>
                          <div className="grid md:grid-cols-2 gap-4">
@@ -274,5 +376,3 @@ export default function ProfilePage() {
         </Form>
     );
 }
-
-    
