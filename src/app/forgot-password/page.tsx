@@ -34,8 +34,8 @@ export default function ForgotPasswordPage() {
             const user = findUserByEmail(email);
 
             if (user) {
-                // In a real app, you would send an email here.
-                // For this mock app, we'll just show a success state.
+                // In a real app, you would trigger an email service here.
+                // For this prototype, we'll just show a success state.
                 setEmailSent(true);
             } else {
                 toast({
@@ -67,9 +67,9 @@ export default function ForgotPasswordPage() {
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
-                            <AlertTitle>Check your inbox</AlertTitle>
+                            <AlertTitle>Check your inbox (Simulation)</AlertTitle>
                             <AlertDescription>
-                                We've sent a password reset link to <strong>{email}</strong>. Please follow the instructions in the email.
+                                If this were a real app, an email would be sent to <strong>{email}</strong> with password reset instructions.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">
