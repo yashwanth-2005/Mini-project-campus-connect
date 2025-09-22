@@ -31,6 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -38,6 +39,7 @@ export default function LoginPage() {
   const [role, setRole] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
@@ -151,7 +153,19 @@ export default function LoginPage() {
               </DialogContent>
             </Dialog>
         </div>
-        <Input id={`${currentRole}-password`} type="password" required className="transition-all focus:scale-[1.02] focus:shadow-lg" />
+        <div className="relative">
+          <Input id={`${currentRole}-password`} type={showPassword ? "text" : "password"} required className="pr-10 transition-all focus:scale-[1.02] focus:shadow-lg" />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="absolute top-1/2 right-2 -translate-y-1/2 h-7 w-7 text-muted-foreground hover:bg-transparent"
+            onClick={() => setShowPassword(!showPassword)}
+          >
+            {showPassword ? <EyeOff /> : <Eye />}
+            <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+          </Button>
+        </div>
       </div>
     </>
   );
