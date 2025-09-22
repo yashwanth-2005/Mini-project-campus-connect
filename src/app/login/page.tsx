@@ -20,6 +20,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { findUserByEmail, setCurrentUser } from "@/lib/mock-db";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -92,12 +102,28 @@ export default function LoginPage() {
       <div className="grid gap-2">
         <div className="flex items-center">
           <Label htmlFor={`${currentRole}-password`}>Password</Label>
-          <Link
-            href="#"
-            className="ml-auto inline-block text-sm underline"
-          >
-            Forgot your password?
-          </Link>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Link
+                  href="#"
+                  onClick={(e) => e.preventDefault()}
+                  className="ml-auto inline-block text-sm underline"
+                >
+                  Forgot your password?
+                </Link>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Feature In Development</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Password recovery is not yet available in this prototype. A full implementation would require a secure backend and email service, which can be built using Firebase Authentication.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogAction>OK</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
         </div>
         <Input id={`${currentRole}-password`} type="password" required className="transition-all focus:scale-[1.02] focus:shadow-lg" />
       </div>
@@ -107,7 +133,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
         {isLoading && (
-            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
             <div className="flex flex-col items-center gap-4">
                 <Logo className="h-16 w-16 text-primary animate-pulse-grow" />
                 <p className="text-muted-foreground">Logging you in...</p>
