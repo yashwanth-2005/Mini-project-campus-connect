@@ -109,12 +109,9 @@ export default function Home() {
 
     return () => {
       elements.forEach(el => {
-        // Find the observer for this element and disconnect it.
-        // A bit of a hack: The IntersectionObserver doesn't expose the elements it's observing.
-        // We can't directly check if this is the right observer.
-        // So we unobserve from all of them. This is safe.
-        o.unobserve(el);
-        return false; // just to satisfy find
+        observers.forEach(observer => {
+          observer.unobserve(el);
+        });
       });
     };
   }, []);
