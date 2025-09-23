@@ -1,5 +1,4 @@
 
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -25,32 +24,32 @@ import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const features = [
   {
-    icon: <Briefcase className="h-8 w-8" />,
+    icon: <Briefcase className="h-6 w-6 text-primary-foreground" />,
     title: "Placement Corner",
     description: "Your one-stop hub for career resources, roadmaps, and interview experiences.",
   },
   {
-    icon: <MessageSquare className="h-8 w-8" />,
+    icon: <MessageSquare className="h-6 w-6 text-primary-foreground" />,
     title: "Discussion Forum",
     description: "Connect with peers, seniors, and faculty. Ask questions and share knowledge.",
   },
   {
-    icon: <Megaphone className="h-8 w-8" />,
+    icon: <Megaphone className="h-6 w-6 text-primary-foreground" />,
     title: "Announcements",
     description: "Stay updated with the latest news and announcements from faculty and HODs.",
   },
   {
-    icon: <Calendar className="h-8 w-8" />,
+    icon: <Calendar className="h-6 w-6 text-primary-foreground" />,
     title: "Events Hub",
     description: "Discover and register for workshops, tech talks, and hackathons.",
   },
   {
-    icon: <FolderKanban className="h-8 w-8" />,
+    icon: <FolderKanban className="h-6 w-6 text-primary-foreground" />,
     title: "Resource Hub",
     description: "Access and share notes, past papers, and other study materials.",
   },
   {
-    icon: <Bot className="h-8 w-8" />,
+    icon: <Bot className="h-6 w-6 text-primary-foreground" />,
     title: "AI Chatbot",
     description: "Get instant answers to your campus-related questions with our smart assistant.",
   },
@@ -111,13 +110,11 @@ export default function Home() {
     return () => {
       elements.forEach(el => {
         // Find the observer for this element and disconnect it.
-        const elObserver = observers.find(o => {
-          // A bit of a hack: The IntersectionObserver doesn't expose the elements it's observing.
-          // We can't directly check if this is the right observer.
-          // So we unobserve from all of them. This is safe.
-          o.unobserve(el);
-          return false; // just to satisfy find
-        });
+        // A bit of a hack: The IntersectionObserver doesn't expose the elements it's observing.
+        // We can't directly check if this is the right observer.
+        // So we unobserve from all of them. This is safe.
+        o.unobserve(el);
+        return false; // just to satisfy find
       });
     };
   }, []);
@@ -213,18 +210,14 @@ export default function Home() {
           </div>
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature, i) => (
-              <Card key={feature.title} className={`group flex flex-col items-center text-center p-6 scroll-animate stagger-${(i % 3) + 1}`}>
-                 <div className="transition-all duration-500 group-hover:scale-110">
-                    <CardHeader className="p-0 mb-4">
-                      <div className="bg-primary/10 text-primary p-4 rounded-full transition-transform duration-300 group-hover:scale-110">
-                        {feature.icon}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <CardTitle className="mb-2 font-headline">{feature.title}</CardTitle>
-                      <p className="text-muted-foreground text-sm">{feature.description}</p>
-                    </CardContent>
-                 </div>
+              <Card key={feature.title} className={`overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 scroll-animate stagger-${(i % 3) + 1}`}>
+                  <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
+                    {feature.icon}
+                    <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 pt-4">
+                    <p className="text-muted-foreground text-sm">{feature.description}</p>
+                  </CardContent>
               </Card>
             ))}
           </div>
