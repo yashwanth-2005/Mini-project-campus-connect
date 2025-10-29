@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
+// Main schema for the user profile form.
 const profileSchema = z.object({
     fullName: z.string().min(1, "Full name is required"),
     usn: z.string().min(1, "USN is required"),
@@ -30,6 +31,7 @@ const profileSchema = z.object({
     profilePicture: z.string().optional(),
 });
 
+// Schema for the USN change request dialog.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -67,11 +69,13 @@ export default function ProfilePage() {
         }
     });
 
+    // On component mount, fetch the current user's data.
     useEffect(() => {
         const currentUser = getCurrentUser();
         if (currentUser) {
             setUser(currentUser);
             setPreviewImage(currentUser.profilePicture || null);
+            // Populate the form with existing user data.
             form.reset({
                 fullName: currentUser.fullName,
                 usn: currentUser.usn,
@@ -82,23 +86,25 @@ export default function ProfilePage() {
                 leetcode: currentUser.leetcode || "",
                 profilePicture: currentUser.profilePicture || "",
             });
-            // Check for pending USN change request
+            // Check if there's a pending USN change request for this user.
             const pendingRequest = getUsnRequestForUser(currentUser.id);
             if (pendingRequest) {
                 setPendingUsnRequest(true);
             }
         } else {
+            // If no user is logged in, redirect to login page.
             router.push('/login');
         }
         setIsLoading(false);
     }, [form, router]);
 
+    // Handle the profile picture file selection and create a preview.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                const result = reader.result as string;
+                const result = reader.result as string; // data URL
                 setPreviewImage(result);
                 form.setValue("profilePicture", result);
             };
@@ -106,6 +112,7 @@ export default function ProfilePage() {
         }
     };
 
+    // Fired when the main profile form is submitted.
     function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!user) return;
 
@@ -115,7 +122,7 @@ export default function ProfilePage() {
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            // Force a reload of the user navigation to show the new picture
+            // A page reload is needed to ensure the user nav gets the new picture.
             window.location.reload();
         } catch(e) {
             toast({
@@ -126,6 +133,7 @@ export default function ProfilePage() {
         }
     }
 
+    // Fired when the USN change request form is submitted.
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
         if (!user) return;
         try {
@@ -152,6 +160,7 @@ export default function ProfilePage() {
         }
     }
 
+    // Show a loading skeleton while fetching user data.
     if (isLoading || !user) {
         return (
             <div className="space-y-8">

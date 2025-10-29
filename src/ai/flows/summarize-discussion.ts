@@ -1,5 +1,6 @@
 'use server';
 
+// A Genkit flow to summarize a piece of text.
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 

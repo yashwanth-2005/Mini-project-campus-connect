@@ -34,16 +34,19 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const handleSend = async () => {
     if (input.trim() === "") return;
 
+    // Add user's message to the chat history.
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
 
     try {
+      // Call the AI flow to get the bot's response.
       const response = await chatWithBot({ query: input });
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
+      // Handle any errors from the AI service.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",

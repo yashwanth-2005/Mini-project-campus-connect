@@ -1,5 +1,6 @@
 'use server';
 
+// A Genkit flow for the AI chatbot, with a tool to fetch campus info.
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
@@ -17,6 +18,7 @@ export async function chatWithBot(input: ChatWithBotInput): Promise<ChatWithBotO
   return chatWithBotFlow(input);
 }
 
+// Defines a tool for the AI to use for campus-specific questions.
 const useCampusInfoTool = ai.defineTool({
   name: 'getCampusInformation',
   description: 'This tool retrieves information about the campus including resources, placement preparation, and events.',
@@ -25,6 +27,7 @@ const useCampusInfoTool = ai.defineTool({
   }),
   outputSchema: z.string(),
   async func(input) {
+    // In a real app, this would query a database or external API.
     return `Detailed campus information for query: ${input.query}`;
   },
 });

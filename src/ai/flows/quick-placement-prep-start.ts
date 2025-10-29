@@ -1,5 +1,6 @@
 'use server';
 
+// A Genkit flow to generate a personalized study plan.
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 

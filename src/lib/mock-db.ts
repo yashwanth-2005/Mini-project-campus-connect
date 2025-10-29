@@ -1,3 +1,6 @@
+// This file acts as a mock database using localStorage for prototyping.
+// In a real application, this would be replaced with a proper database service like Firestore.
+
 export type User = {
     id: string;
     fullName: string;
@@ -24,6 +27,7 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
+// Default user data to populate the database on first run.
 const defaultUsers: Record<string, User> = {
     'user-faculty-1': {
         id: 'user-faculty-1',
@@ -55,6 +59,7 @@ const defaultUsers: Record<string, User> = {
     }
 }
 
+// Helper to safely get users from localStorage.
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return defaultUsers;
     let usersJson = localStorage.getItem('users');
@@ -65,22 +70,26 @@ const getUsers = (): Record<string, User> => {
     return JSON.parse(usersJson);
 };
 
+// Helper to safely save users to localStorage.
 const saveUsers = (users: Record<string, User>) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('users', JSON.stringify(users));
 };
 
+// Helper to safely get USN requests from localStorage.
 const getRequests = (): UsnChangeRequest[] => {
     if (typeof window === 'undefined') return [];
     const requests = localStorage.getItem('usnChangeRequests');
     return requests ? JSON.parse(requests) : [];
 };
 
+// Helper to safely save USN requests to localStorage.
 const saveRequests = (requests: UsnChangeRequest[]) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('usnChangeRequests', JSON.stringify(requests));
 };
 
+// Retrieves the currently logged-in user's data.
 export const getCurrentUser = (): User | null => {
     if (typeof window === 'undefined') return null;
     const currentUserId = localStorage.getItem('currentUser');
@@ -89,6 +98,7 @@ export const getCurrentUser = (): User | null => {
     return users[currentUserId] || null;
 }
 
+// Sets the currently logged-in user.
 export const setCurrentUser = (userId: string | null) => {
     if (typeof window === 'undefined') return;
     if (userId) {
@@ -98,11 +108,13 @@ export const setCurrentUser = (userId: string | null) => {
     }
 }
 
+// Finds a user by their email address.
 export const findUserByEmail = (email: string): User | null => {
     const users = getUsers();
     return Object.values(users).find(user => user.email === email) || null;
 };
 
+// Creates a new user in the database.
 export const createUser = (userData: Omit<User, 'id'>): User => {
     const users = getUsers();
     const email = userData.email.toLowerCase();
@@ -121,6 +133,7 @@ export const createUser = (userData: Omit<User, 'id'>): User => {
     return newUser;
 };
 
+// Updates an existing user's data.
 export const updateUser = (userId: string, updatedData: Partial<User>): User | null => {
     const users = getUsers();
     if (!users[userId]) return null;
@@ -139,6 +152,7 @@ export const updateUser = (userId: string, updatedData: Partial<User>): User | n
     return users[userId];
 };
 
+// Creates a new request for a USN change.
 export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' | 'status' | 'requestedAt'>) => {
     let requests = getRequests();
     const existingRequest = requests.find(r => r.userId === requestData.userId && r.status === 'pending');
@@ -157,16 +171,19 @@ export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' 
     return newRequest;
 };
 
+// Retrieves all pending USN change requests.
 export const getPendingUsnRequests = (): UsnChangeRequest[] => {
     const requests = getRequests();
     return requests.filter(req => req.status === 'pending').sort((a, b) => new Date(a.requestedAt).getTime() - new Date(b.requestedAt).getTime());
 };
 
+// Gets the pending USN request for a specific user.
 export const getUsnRequestForUser = (userId: string): UsnChangeRequest | undefined => {
     const requests = getRequests();
     return requests.find(r => r.userId === userId && r.status === 'pending');
 }
 
+// Approves a USN change request.
 export const approveUsnChange = (requestId: string) => {
     let requests = getRequests();
     const requestIndex = requests.findIndex(r => r.id === requestId);
@@ -178,13 +195,16 @@ export const approveUsnChange = (requestId: string) => {
     const users = getUsers();
     if (!users[request.userId]) throw new Error("User associated with this request not found.");
 
+    // Update the user's USN and save.
     users[request.userId].usn = request.newUsn;
     saveUsers(users);
 
+    // Update the request status and save.
     requests[requestIndex].status = 'approved';
     saveRequests(requests);
 };
 
+// Denies a USN change request.
 export const denyUsnChange = (requestId: string) => {
     let requests = getRequests();
     const requestIndex = requests.findIndex(r => r.id === requestId);
