@@ -127,6 +127,11 @@
     transition: left 0.8s ease;
   }
 
+  .feature-card:hover {
+    transform: scale(1.03);
+    border-radius: calc(var(--radius) - 4px);
+  }
+
   .feature-card:hover::before {
     left: 150%;
   }
@@ -163,3 +168,5 @@
     animation: rainbow-gradient 4s ease infinite;
   }
 }
+
+    
