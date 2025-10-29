@@ -208,7 +208,7 @@ export default function ProfilePage() {
                     <CardContent className="space-y-6">
                         <div className="flex items-center gap-6">
                             <Avatar className="h-24 w-24 border">
-                                <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${user.usn}`} data-ai-hint="person avatar" />
+                                <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${user.usn}`} />
                                 <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-2">

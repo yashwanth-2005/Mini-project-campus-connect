@@ -53,7 +53,7 @@ export default function ForumPage() {
             
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10 border">
-                    <AvatarImage src="https://picsum.photos/seed/user-avatar/40/40" data-ai-hint="person avatar"/>
+                    <AvatarImage src="https://picsum.photos/seed/user-avatar/40/40" />
                     <AvatarFallback>U</AvatarFallback>
                 </Avatar>
                 <Input placeholder="What's on your mind?" className="h-12" />
@@ -74,7 +74,7 @@ export default function ForumPage() {
                                 <div className="text-sm text-muted-foreground flex items-center gap-4">
                                     <div className="flex items-center gap-2">
                                         <Avatar className="h-6 w-6">
-                                            <AvatarImage src={d.avatar} data-ai-hint="person face" />
+                                            <AvatarImage src={d.avatar} />
                                             <AvatarFallback>{d.author.charAt(0)}</AvatarFallback>
                                         </Avatar>
                                         <span>{d.author}</span>

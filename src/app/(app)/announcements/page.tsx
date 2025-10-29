@@ -94,7 +94,7 @@ export default function AnnouncementsPage() {
                         <CardHeader>
                             <div className="flex items-center gap-4">
                                 <Avatar>
-                                    <AvatarImage src={ann.avatar} data-ai-hint="person face" />
+                                    <AvatarImage src={ann.avatar} />
                                     <AvatarFallback>{ann.author.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <div>
