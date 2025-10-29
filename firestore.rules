@@ -1,0 +1,186 @@
+/**
+ * @fileOverview
+ * This ruleset enforces a user-ownership model for user profiles,
+ * public read access with owner-only writes for announcements, forum posts, and resources,
+ * and open read access for events. Event registrations are managed with path-based ownership.
+ *
+ * Data Structure:
+ * - /users/{userId}: User profiles, accessible only by the user and admins.
+ * - /announcements/{announcementId}: Announcements, publicly readable, but only the author can modify.
+ * - /events/{eventId}: Events, publicly readable.
+ * - /events/{eventId}/registrations/{userId}: Event registrations, accessible only by the user.
+ * - /forumPosts/{forumPostId}: Forum posts, publicly readable, but only the author can modify.
+ * - /resources/{resourceId}: Resources, publicly readable, but only the uploader can modify.
+ * - /roles_admin/{userId}: Admin roles, presence of document grants admin privileges.
+ *
+ * Key Security Decisions:
+ * - Users can only access their own profile data.
+ * - Announcements, Forum Posts, and Resources are publicly readable but have owner-only write access.
+ * - Events are publicly readable.
+ * - Listing all users is disallowed.
+ * - Admin role is determined by document existence in `/roles_admin/{userId}`.
+ *
+ * Denormalization for Authorization:
+ * - Announcements, Forum Posts, and Resources include `authorId` or `uploaderId` fields to enable efficient owner checks without additional reads.
+ * - Event registrations are managed with subcollections to simplify checking if a user is registered for an event.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Grants access to user profile data based on path-based ownership.
+     * @path /users/{userId}
+     * @allow (create) - User with UID 'user123' creates their own profile document with id 'user123'.
+     * @allow (get, update, delete) - User with UID 'user123' reads/updates/deletes their own profile document with id 'user123'.
+     * @deny (create) - User with UID 'user456' attempts to create a profile document with id 'user123'.
+     * @deny (get, update, delete) - User with UID 'user456' attempts to read/update/delete the profile document of user 'user123'.
+     * @principle Enforces document ownership for reads and writes.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Grants public read access to announcements and restricts write access to the author.
+     * @path /announcements/{announcementId}
+     * @allow (get, list) - Any user (signed in or not) can read announcements.
+     * @allow (create) - User with UID 'user123' creates an announcement with authorId 'user123'.
+     * @allow (update, delete) - User with UID 'user123' updates/deletes an announcement where resource.data.authorId == 'user123'.
+     * @deny (create) - User with UID 'user456' creates an announcement with authorId 'user123'.
+     * @deny (update, delete) - User with UID 'user456' attempts to update/delete an announcement where resource.data.authorId == 'user123'.
+     * @principle Allows public reads with owner-only writes.
+     */
+    match /announcements/{announcementId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == resource.data.authorId;
+      }
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner();
+      allow delete: if isSignedIn() && isOwner();
+    }
+
+    /**
+     * @description Grants public read access to events.
+     * @path /events/{eventId}
+     * @allow (get, list) - Any user (signed in or not) can read events.
+     * @deny (create, update, delete) - No one can create, update or delete events.
+     * @principle Allows public reads and denies all writes.
+     */
+    match /events/{eventId} {
+      allow get, list: if true;
+      allow create, update, delete: if false;
+    }
+
+    /**
+     * @description Grants access to event registration data based on path-based ownership.
+     * @path /events/{eventId}/registrations/{userId}
+     * @allow (create) - User with UID 'user123' registers for an event, creating a registration document with id 'user123'.
+     * @allow (get, update, delete) - User with UID 'user123' reads/updates/deletes their own registration document with id 'user123' for event 'eventXYZ'.
+     * @deny (create) - User with UID 'user456' attempts to create a registration document with id 'user123' for event 'eventXYZ'.
+     * @deny (get, update, delete) - User with UID 'user456' attempts to read/update/delete the registration document of user 'user123' for event 'eventXYZ'.
+     * @principle Enforces document ownership for reads and writes.
+     */
+    match /events/{eventId}/registrations/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Grants public read access to forum posts and restricts write access to the author.
+     * @path /forumPosts/{forumPostId}
+     * @allow (get, list) - Any user (signed in or not) can read forum posts.
+     * @allow (create) - User with UID 'user123' creates a forum post with authorId 'user123'.
+     * @allow (update, delete) - User with UID 'user123' updates/deletes a forum post where resource.data.authorId == 'user123'.
+     * @deny (create) - User with UID 'user456' creates a forum post with authorId 'user123'.
+     * @deny (update, delete) - User with UID 'user456' attempts to update/delete a forum post where resource.data.authorId == 'user123'.
+     * @principle Allows public reads with owner-only writes.
+     */
+    match /forumPosts/{forumPostId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == resource.data.authorId;
+      }
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner();
+      allow delete: if isSignedIn() && isOwner();
+    }
+
+    /**
+     * @description Grants public read access to resources and restricts write access to the uploader.
+     * @path /resources/{resourceId}
+     * @allow (get, list) - Any user (signed in or not) can read resources.
+     * @allow (create) - User with UID 'user123' creates a resource with uploaderId 'user123'.
+     * @allow (update, delete) - User with UID 'user123' updates/deletes a resource where resource.data.uploaderId == 'user123'.
+     * @deny (create) - User with UID 'user456' creates a resource with uploaderId 'user123'.
+     * @deny (update, delete) - User with UID 'user456' attempts to update/delete a resource where resource.data.uploaderId == 'user123'.
+     * @principle Allows public reads with owner-only writes.
+     */
+    match /resources/{resourceId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == resource.data.uploaderId;
+      }
+      function isSignedIn() {
+        return request.auth != null;
+      }
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
+      allow update: if isSignedIn() && isOwner();
+      allow delete: if isSignedIn() && isOwner();
+    }
+
+       /**
+        * @description Grants admin role based on document existence in this collection.
+        * @path /roles_admin/{userId}
+        * @allow (get) - Any authenticated user can check for admin role.
+        * @allow (list) - Listing of admin roles is disallowed.
+        * @allow (create) - User with UID 'user123' creates an admin role with id 'user123'.
+        * @allow (update, delete) - User with UID 'user123' updates/deletes their admin role document with id 'user123'.
+        * @principle Enforces admin role based on document existence.
+        */
+    match /roles_admin/{userId} {
+        function isOwner(userId) {
+          return request.auth != null && request.auth.uid == userId;
+        }
+        function isAdmin() {
+          return exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
+        }
+        
+        allow get: if isSignedIn();
+        allow list: if false;
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        allow update: if isOwner(userId);
+        allow delete: if isOwner(userId);
+    }
+  }
+}
