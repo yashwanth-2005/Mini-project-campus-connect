@@ -19,7 +19,6 @@ import { GithubIcon, LinkedinIcon, Logo, TwitterIcon } from "@/components/icons"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import React, { useEffect, useRef, useState } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
-import { PlaceHolderImages } from "@/lib/placeholder-images";
 
 const features = [
   {
