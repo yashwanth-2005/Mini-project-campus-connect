@@ -109,6 +109,28 @@
     left: 100%;
   }
 
+  .feature-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+  }
+
+  .feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -150%;
+    width: 75%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transform: skewX(-25deg);
+    transition: left 0.8s ease;
+  }
+
+  .feature-card:hover::before {
+    left: 150%;
+  }
+
   @keyframes pulse-grow {
     0%, 100% {
       transform: scale(1);

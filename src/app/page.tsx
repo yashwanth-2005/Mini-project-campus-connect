@@ -221,8 +221,13 @@ export default function Home() {
             variants={staggerContainer}
           >
             {features.map((feature) => (
-              <motion.div key={feature.title} variants={staggerItem}>
-                <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
+              <motion.div 
+                key={feature.title} 
+                variants={staggerItem}
+                whileHover={{ scale: 1.03, y: -5 }}
+                transition={{ type: "spring", stiffness: 300 }}
+              >
+                <Card className="feature-card h-full">
                     <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
                       {feature.icon}
                       <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
