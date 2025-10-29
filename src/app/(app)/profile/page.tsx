@@ -19,7 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 
-// Main schema for the user profile form.
+// Defines the shape and validation rules for the main profile form.
 const profileSchema = z.object({
     fullName: z.string().min(1, "Full name is required"),
     usn: z.string().min(1, "USN is required"),
@@ -31,7 +31,7 @@ const profileSchema = z.object({
     profilePicture: z.string().optional(),
 });
 
-// Schema for the USN change request dialog.
+// Defines the shape and validation for the USN change request dialog.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -47,6 +47,7 @@ export default function ProfilePage() {
     const [isUsnDialogOpen, setIsUsnDialogOpen] = useState(false);
     const [pendingUsnRequest, setPendingUsnRequest] = useState(false);
 
+    // Initialize the main profile form with validation.
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -61,6 +62,7 @@ export default function ProfilePage() {
         },
     });
 
+    // Initialize a separate form for the USN change dialog.
     const usnForm = useForm<z.infer<typeof usnChangeSchema>>({
         resolver: zodResolver(usnChangeSchema),
         defaultValues: {
@@ -69,13 +71,13 @@ export default function ProfilePage() {
         }
     });
 
-    // Fetch the current user's data when the page loads.
+    // On component mount, fetch the current user's data.
     useEffect(() => {
         const currentUser = getCurrentUser();
         if (currentUser) {
             setUser(currentUser);
             setPreviewImage(currentUser.profilePicture || null);
-            // Pre-fill the form with the user's existing data.
+            // Pre-fill the form with existing user data for editing.
             form.reset({
                 fullName: currentUser.fullName,
                 usn: currentUser.usn,
@@ -86,25 +88,25 @@ export default function ProfilePage() {
                 leetcode: currentUser.leetcode || "",
                 profilePicture: currentUser.profilePicture || "",
             });
-            // See if there's already a pending request for a USN change.
+            // Check if there's a pending USN change request to disable the button.
             const pendingRequest = getUsnRequestForUser(currentUser.id);
             if (pendingRequest) {
                 setPendingUsnRequest(true);
             }
         } else {
-            // Redirect to login if no user is found.
+            // If no user is logged in, redirect them.
             router.push('/login');
         }
         setIsLoading(false);
     }, [form, router]);
 
-    // When a user selects a new profile picture, create a temporary preview.
+    // When a user selects a new image, create a temporary local preview.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                const result = reader.result as string; // This is a data URL.
+                const result = reader.result as string; // This will be a base64 data URL.
                 setPreviewImage(result);
                 form.setValue("profilePicture", result);
             };
@@ -112,7 +114,7 @@ export default function ProfilePage() {
         }
     };
 
-    // Fired when the main profile form is submitted to save changes.
+    // Handles the submission of the main profile form to save changes.
     function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!user) return;
 
@@ -122,7 +124,7 @@ export default function ProfilePage() {
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            // Reload the page to make sure the user avatar in the nav bar also updates.
+            // Force a page reload to update the user avatar in the main navigation.
             window.location.reload();
         } catch(e) {
             toast({
@@ -133,7 +135,7 @@ export default function ProfilePage() {
         }
     }
 
-    // Fired when the USN change request form is submitted.
+    // Handles the submission of the USN change request form.
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
         if (!user) return;
         try {
@@ -148,7 +150,7 @@ export default function ProfilePage() {
                 title: "Request Submitted",
                 description: "Your USN change request has been submitted for faculty approval."
             });
-            setPendingUsnRequest(true); // Visually disable the button.
+            setPendingUsnRequest(true); // Visually disable the request button.
             setIsUsnDialogOpen(false); // Close the dialog.
             usnForm.reset();
         } catch (error: any) {
@@ -160,7 +162,7 @@ export default function ProfilePage() {
         }
     }
 
-    // Show a loading skeleton while fetching the user's data.
+    // Displays a loading skeleton while fetching user data to prevent UI flicker.
     if (isLoading || !user) {
         return (
             <div className="space-y-8">

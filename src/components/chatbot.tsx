@@ -31,31 +31,32 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Handles sending a message to the AI and getting a response.
+  // This function handles the logic for sending and receiving messages.
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    // Add the user's message to the chat history.
+    // Add the user's message to the chat history immediately for a responsive feel.
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
+    
     const currentInput = input;
-    setInput("");
-    setIsLoading(true);
+    setInput(""); // Clear the input field.
+    setIsLoading(true); // Show a loading indicator.
 
     try {
-      // Call the AI flow to get the bot's response.
+      // Call the Genkit flow to get the bot's response.
       const response = await chatWithBot({ query: currentInput });
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      // Show an error message if the AI service fails.
+      // If the AI call fails, show a user-friendly error message.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Hide the loading indicator.
     }
   };
 

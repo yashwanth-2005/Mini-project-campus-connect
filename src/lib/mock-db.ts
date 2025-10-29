@@ -1,5 +1,4 @@
-// This file acts as a mock database using localStorage for prototyping.
-// In a real application, this would be replaced with a proper database service like Firestore.
+// This file acts as a mock database using the browser's localStorage.
 
 export type User = {
     id: string;
@@ -27,7 +26,7 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
-// Default user data to populate the database on first run.
+// Some default users to populate the database on first run.
 const defaultUsers: Record<string, User> = {
     'user-faculty-1': {
         id: 'user-faculty-1',
@@ -59,7 +58,7 @@ const defaultUsers: Record<string, User> = {
     }
 }
 
-// Safely get users from localStorage.
+// Safely gets users from localStorage.
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return defaultUsers;
     let usersJson = localStorage.getItem('users');
@@ -70,20 +69,20 @@ const getUsers = (): Record<string, User> => {
     return JSON.parse(usersJson);
 };
 
-// Safely save users to localStorage.
+// Safely saves users to localStorage.
 const saveUsers = (users: Record<string, User>) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('users', JSON.stringify(users));
 };
 
-// Safely get USN requests from localStorage.
+// Safely gets USN change requests from localStorage.
 const getRequests = (): UsnChangeRequest[] => {
     if (typeof window === 'undefined') return [];
     const requests = localStorage.getItem('usnChangeRequests');
     return requests ? JSON.parse(requests) : [];
 };
 
-// Safely save USN requests to localStorage.
+// Safely saves USN change requests to localStorage.
 const saveRequests = (requests: UsnChangeRequest[]) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('usnChangeRequests', JSON.stringify(requests));
@@ -114,7 +113,7 @@ export const findUserByEmail = (email: string): User | null => {
     return Object.values(users).find(user => user.email === email) || null;
 };
 
-// Creates a new user in the database.
+// Creates a new user.
 export const createUser = (userData: Omit<User, 'id'>): User => {
     const users = getUsers();
     const email = userData.email.toLowerCase();

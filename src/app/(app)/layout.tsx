@@ -33,7 +33,7 @@ import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
-// Navigation items for different user roles.
+// Defines all possible navigation links in the app.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/profile", icon: <User />, label: "Profile", role: ['student', 'faculty'] },
@@ -52,24 +52,24 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Show only the navigation items relevant to the current user's role.
+  // Filters the navigation items based on the current user's role.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
+  // A simple loading indicator for better perceived performance on page transitions.
   const handleLinkClick = (href: string) => {
-    // A simple loading indicator for better perceived performance on navigation.
     if (pathname !== href) {
       setIsLoading(true);
     }
   };
 
-  // Turn off the loading indicator once the new page has loaded.
+  // Resets the loading indicator once the new page content has loaded.
   useEffect(() => {
     setIsLoading(false);
   }, [pathname, searchParams]);
 
   return (
     <SidebarProvider>
-      {/* A full-screen overlay shown during page transitions. */}
+      {/* A full-screen overlay shown during page transitions for a smoother feel. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -110,7 +110,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex-1">
-              {/* Future space for breadcrumbs or page titles. */}
+              {/* Space for breadcrumbs or other header content. */}
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setIsChatOpen(true)} className="font-bold rainbow-button text-white">
@@ -131,13 +131,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-
+// Uses a Suspense boundary to gracefully handle the loading of URL search parameters on the client.
 export default function AppLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Use a Suspense boundary to gracefully handle the loading of URL search parameters.
   return (
     <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"><Logo className="h-16 w-16 text-primary animate-pulse-grow" /></div>}>
       <AppLayoutContent>{children}</AppLayoutContent>
