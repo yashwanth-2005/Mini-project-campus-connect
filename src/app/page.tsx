@@ -2,7 +2,7 @@
 'use client';
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Briefcase,
   Calendar,
@@ -18,8 +18,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GithubIcon, LinkedinIcon, Logo, TwitterIcon } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
+import { motion } from "framer-motion";
 
 const features = [
   {
@@ -75,6 +76,25 @@ const testimonials = [
     }
 ]
 
+// Animation variants for Framer Motion
+const fadeIn = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const staggerItem = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+};
+
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -85,36 +105,6 @@ export default function Home() {
       router.push(path);
     }, 100);
   };
-
-  useEffect(() => {
-    const observers: IntersectionObserver[] = [];
-    const elements = document.querySelectorAll('.scroll-animate');
-
-    elements.forEach(el => {
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('in-view');
-                }
-            });
-        }, { threshold: 0.1 });
-
-        observer.observe(el);
-        observers.push(observer);
-    });
-
-    return () => {
-        elements.forEach(el => {
-            // Find the observer for the element and disconnect it.
-            const observer = observers.find(obs => {
-                // This is a workaround as there is no direct way to get the observer for an element.
-                // We disconnect all of them, which is safe.
-                obs.unobserve(el);
-                return true; 
-            });
-        });
-    };
-  }, []);
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
@@ -147,10 +137,16 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1">
-         <section className="py-20 md:py-32">
+      <main className="flex-1 overflow-x-hidden">
+         <motion.section 
+            className="py-20 md:py-32"
+            initial="initial"
+            animate="animate"
+            variants={staggerContainer}
+            transition={{ staggerChildren: 0.2 }}
+          >
           <div className="container text-center">
-            <div className="max-w-4xl mx-auto animate-in">
+            <motion.div variants={fadeIn} className="max-w-4xl mx-auto">
               <h1 className="text-4xl font-extrabold leading-tight tracking-tighter md:text-6xl lg:text-7xl font-headline">
                 The All-In-One Platform for Your Campus Life
               </h1>
@@ -170,12 +166,20 @@ export default function Home() {
                     <Link href="#features">Explore Features</Link>
                 </Button>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </section>
+        </motion.section>
         
-        <section id="quick-prep" className="bg-secondary/50 py-20 my-12">
-            <div className="container text-center scroll-animate">
+        <motion.section 
+          id="quick-prep" 
+          className="bg-secondary/50 py-20 my-12"
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: 0.5 }}
+          variants={fadeIn}
+          transition={{ duration: 0.5 }}
+        >
+            <div className="container text-center">
                 <div className="mx-auto max-w-3xl">
                     <div className="inline-block bg-primary text-primary-foreground rounded-full p-3 mb-4 animate-pulse">
                         <Zap className="h-8 w-8" />
@@ -194,66 +198,97 @@ export default function Home() {
                       </Button>
                 </div>
             </div>
-        </section>
+        </motion.section>
 
-        <section id="features" className="container my-20">
-          <div className="mx-auto flex flex-col items-center gap-4 text-center mb-12 scroll-animate">
+        <motion.section 
+          id="features" 
+          className="container my-20"
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer}
+        >
+          <motion.div variants={fadeIn} className="mx-auto flex flex-col items-center gap-4 text-center mb-12">
             <div>
               <h2 className="text-3xl font-bold tracking-tight font-headline">Everything You Need, in One Place</h2>
               <p className="text-muted-foreground max-w-2xl">
                 CampusConnect integrates every aspect of your academic and social life into a single, seamless experience.
               </p>
             </div>
-          </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature, i) => (
-              <Card key={feature.title} className={`overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 scroll-animate stagger-${(i % 3) + 1}`}>
-                  <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
-                    {feature.icon}
-                    <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 pt-4">
-                    <p className="text-muted-foreground text-sm">{feature.description}</p>
-                  </CardContent>
-              </Card>
+          </motion.div>
+          <motion.div 
+            className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+            variants={staggerContainer}
+          >
+            {features.map((feature) => (
+              <motion.div key={feature.title} variants={staggerItem}>
+                <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
+                    <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
+                      {feature.icon}
+                      <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-4">
+                      <p className="text-muted-foreground text-sm">{feature.description}</p>
+                    </CardContent>
+                </Card>
+              </motion.div>
             ))}
-          </div>
-        </section>
+          </motion.div>
+        </motion.section>
         
-        <section id="testimonials" className="my-20 py-24 bg-secondary/50">
-            <div className="container scroll-animate">
-                <div className="mx-auto flex flex-col items-center gap-4 text-center mb-12">
+        <motion.section 
+          id="testimonials" 
+          className="my-20 py-24 bg-secondary/50"
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer}
+        >
+            <div className="container">
+                <motion.div variants={fadeIn} className="mx-auto flex flex-col items-center gap-4 text-center mb-12">
                     <h2 className="text-3xl font-bold tracking-tight font-headline">From Our Students</h2>
                     <p className="text-muted-foreground max-w-2xl">
                         See how CampusConnect is helping students achieve their goals.
                     </p>
-                </div>
-                <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {testimonials.map((testimonial, i) => (
-                         <Card key={testimonial.name} className={`bg-card p-6 flex flex-col justify-center items-center text-center scroll-animate stagger-${i+1}`}>
-                            <CardHeader className="p-0 items-center">
-                                <Avatar className="w-20 h-20 mb-4 border-2 border-primary">
-                                    <AvatarImage src={testimonial.avatar} />
-                                    <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <CardTitle className="text-lg">{testimonial.name}</CardTitle>
-                                <CardDescription>{testimonial.role}</CardDescription>
-                            </CardHeader>
-                            <CardContent className="pt-4">
-                                <div className="flex justify-center mb-4 text-yellow-400">
-                                    {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
-                                </div>
-                                <p className="text-muted-foreground text-sm italic">&quot;{testimonial.testimonial}&quot;</p>
-                            </CardContent>
-                        </Card>
+                </motion.div>
+                <motion.div 
+                  className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
+                  variants={staggerContainer}
+                  >
+                    {testimonials.map((testimonial) => (
+                         <motion.div key={testimonial.name} variants={staggerItem}>
+                          <Card className="bg-card p-6 flex flex-col justify-center items-center text-center h-full">
+                              <CardHeader className="p-0 items-center">
+                                  <Avatar className="w-20 h-20 mb-4 border-2 border-primary">
+                                      <AvatarImage src={testimonial.avatar} />
+                                      <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
+                                  </Avatar>
+                                  <CardTitle className="text-lg">{testimonial.name}</CardTitle>
+                                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                              </CardHeader>
+                              <CardContent className="pt-4">
+                                  <div className="flex justify-center mb-4 text-yellow-400">
+                                      {[...Array(5)].map((_, i) => <Star key={i} className="w-5 h-5 fill-current" />)}
+                                  </div>
+                                  <p className="text-muted-foreground text-sm italic">&quot;{testimonial.testimonial}&quot;</p>
+                              </CardContent>
+                          </Card>
+                         </motion.div>
                     ))}
-                </div>
+                </motion.div>
             </div>
-        </section>
+        </motion.section>
 
       </main>
 
-      <footer className="py-12 md:py-16 border-t border-border/40 bg-secondary/30 scroll-animate">
+      <motion.footer 
+        className="py-12 md:py-16 border-t border-border/40 bg-secondary/30"
+        initial="initial"
+        whileInView="animate"
+        viewport={{ once: true, amount: 0.1 }}
+        variants={fadeIn}
+        transition={{ duration: 0.5 }}
+      >
         <div className="container grid gap-8 md:grid-cols-5">
             <div className="md:col-span-2">
                 <Link href="/" className="flex items-center space-x-2 mb-4">
@@ -309,9 +344,7 @@ export default function Home() {
         <div className="container mt-8 pt-8 border-t border-border/40 text-center text-sm text-muted-foreground">
              &copy; {new Date().getFullYear()} CampusConnect. All Rights Reserved.
         </div>
-      </footer>
+      </motion.footer>
     </div>
   );
 }
-
-    
