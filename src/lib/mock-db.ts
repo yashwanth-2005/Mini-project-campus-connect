@@ -117,6 +117,7 @@ export const getFacultyUser = (): User | null => {
     return users['user-faculty-1'] || null;
 }
 
+
 // Creates a new user.
 export const createUser = (userData: Omit<User, 'id'>): User => {
     const users = getUsers();
