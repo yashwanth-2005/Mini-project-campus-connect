@@ -1,5 +1,3 @@
-
-
 // In a real application, this would be a proper database.
 // For this prototype, we'll use localStorage to simulate data persistence.
 
@@ -63,7 +61,7 @@ const defaultUsers: Record<string, User> = {
 
 // Function to get all users from localStorage
 const getUsers = (): Record<string, User> => {
-    if (typeof window === 'undefined') return {};
+    if (typeof window === 'undefined') return defaultUsers;
     let usersJson = localStorage.getItem('users');
     if (!usersJson) {
         // If no users in localStorage, initialize with default users

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -99,7 +98,7 @@ export default function AdminPage() {
                       <TableCell className="font-medium">{req.studentName}</TableCell>
                       <TableCell>{req.currentUsn}</TableCell>
                       <TableCell className='flex items-center gap-2'>
-                        {req.currentUsn} <ArrowRight className='size-4' /> {req.newUsn}
+                        {req.newUsn}
                       </TableCell>
                       <TableCell>{req.reason}</TableCell>
                       <TableCell>
