@@ -67,9 +67,9 @@ export default function ForgotPasswordPage() {
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
-                            <AlertTitle>Check your inbox (Simulation)</AlertTitle>
+                            <AlertTitle>Simulation Successful!</AlertTitle>
                             <AlertDescription>
-                                If this were a real app, an email would be sent to <strong>{email}</strong> with password reset instructions.
+                                This is a prototype. In a real application, a password reset link would be sent to <strong>{email}</strong>. Since no email is actually sent, please use your existing password to log in.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">
