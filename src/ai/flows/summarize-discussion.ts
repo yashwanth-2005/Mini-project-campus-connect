@@ -1,13 +1,5 @@
 'use server';
 
-/**
- * @fileOverview Summarizes long discussions into key takeaways using AI.
- *
- * - summarizeDiscussion - A function that summarizes a discussion thread.
- * - SummarizeDiscussionInput - The input type for the summarizeDiscussion function.
- * - SummarizeDiscussionOutput - The return type for the summarizeDiscussion function.
- */
-
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 

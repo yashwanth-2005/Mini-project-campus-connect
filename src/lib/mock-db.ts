@@ -1,11 +1,8 @@
-// In a real application, this would be a proper database.
-// For this prototype, we'll use localStorage to simulate data persistence.
-
 export type User = {
     id: string;
     fullName: string;
     email: string;
-    password?: string; // Not ideal to store passwords, but this is a simulation
+    password?: string;
     usn: string;
     year: number;
     semester: number;
@@ -58,40 +55,32 @@ const defaultUsers: Record<string, User> = {
     }
 }
 
-
-// Function to get all users from localStorage
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return defaultUsers;
     let usersJson = localStorage.getItem('users');
     if (!usersJson) {
-        // If no users in localStorage, initialize with default users
         saveUsers(defaultUsers);
         usersJson = JSON.stringify(defaultUsers);
     }
     return JSON.parse(usersJson);
 };
 
-// Function to save all users to localStorage
 const saveUsers = (users: Record<string, User>) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('users', JSON.stringify(users));
 };
 
-// Function to get all USN change requests from localStorage
 const getRequests = (): UsnChangeRequest[] => {
     if (typeof window === 'undefined') return [];
     const requests = localStorage.getItem('usnChangeRequests');
     return requests ? JSON.parse(requests) : [];
 };
 
-// Function to save all USN change requests to localStorage
 const saveRequests = (requests: UsnChangeRequest[]) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('usnChangeRequests', JSON.stringify(requests));
 };
 
-
-// Function to get the currently logged-in user
 export const getCurrentUser = (): User | null => {
     if (typeof window === 'undefined') return null;
     const currentUserId = localStorage.getItem('currentUser');
@@ -100,7 +89,6 @@ export const getCurrentUser = (): User | null => {
     return users[currentUserId] || null;
 }
 
-// Function to set the currently logged-in user
 export const setCurrentUser = (userId: string | null) => {
     if (typeof window === 'undefined') return;
     if (userId) {
@@ -110,13 +98,11 @@ export const setCurrentUser = (userId: string | null) => {
     }
 }
 
-// API to find a user by email
 export const findUserByEmail = (email: string): User | null => {
     const users = getUsers();
     return Object.values(users).find(user => user.email === email) || null;
 };
 
-// API to create a new user
 export const createUser = (userData: Omit<User, 'id'>): User => {
     const users = getUsers();
     const email = userData.email.toLowerCase();
@@ -135,33 +121,26 @@ export const createUser = (userData: Omit<User, 'id'>): User => {
     return newUser;
 };
 
-// API to update a user's profile
 export const updateUser = (userId: string, updatedData: Partial<User>): User | null => {
     const users = getUsers();
     if (!users[userId]) return null;
 
-    // Merge existing data with new data
     users[userId] = {
         ...users[userId],
         ...updatedData,
     };
 
     saveUsers(users);
-    // After updating, we should also update the currentUser in localStorage if it's the same user.
     const currentUser = getCurrentUser();
     if (currentUser && currentUser.id === userId) {
-        setCurrentUser(userId); // This just rewrites the ID, let's refresh the object.
-        // The user object is fetched fresh by getCurrentUser(), so we are good.
+        setCurrentUser(userId); 
     }
     
     return users[userId];
 };
 
-// == USN CHANGE REQUESTS ==
-
 export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' | 'status' | 'requestedAt'>) => {
     let requests = getRequests();
-    // Check if there's already a pending request for this user
     const existingRequest = requests.find(r => r.userId === requestData.userId && r.status === 'pending');
     if (existingRequest) {
         throw new Error("You already have a pending USN change request.");
@@ -199,11 +178,9 @@ export const approveUsnChange = (requestId: string) => {
     const users = getUsers();
     if (!users[request.userId]) throw new Error("User associated with this request not found.");
 
-    // Update user's USN
     users[request.userId].usn = request.newUsn;
     saveUsers(users);
 
-    // Update request status
     requests[requestIndex].status = 'approved';
     saveRequests(requests);
 };
@@ -216,8 +193,6 @@ export const denyUsnChange = (requestId: string) => {
     const request = requests[requestIndex];
     if (request.status !== 'pending') throw new Error("This request has already been actioned.");
 
-    // Just update request status to denied, but allow them to request again in future.
-    // For simplicity, we'll just mark it denied. A better implementation might remove it after a while.
     requests[requestIndex].status = 'denied';
     saveRequests(requests);
 };

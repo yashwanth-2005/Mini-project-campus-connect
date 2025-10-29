@@ -1,13 +1,5 @@
 'use server';
 
-/**
- * @fileOverview A flow to generate a tailored study plan and suggest relevant resources for placement preparation.
- *
- * - generatePlacementPrepPlan - A function that handles the generation of a tailored study plan.
- * - PlacementPrepInput - The input type for the generatePlacementPrepPlan function.
- * - PlacementPrepOutput - The return type for the generatePlacementPrepPlan function.
- */
-
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 

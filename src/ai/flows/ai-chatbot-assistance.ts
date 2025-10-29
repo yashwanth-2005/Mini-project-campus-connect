@@ -1,13 +1,5 @@
 'use server';
 
-/**
- * @fileOverview This file implements the AI Chatbot Assistance flow.
- *
- * - chatWithBot - A function that allows users to ask campus-related questions and receive helpful answers.
- * - ChatWithBotInput - The input type for the chatWithBot function.
- * - ChatWithBotOutput - The return type for the chatWithBot function.
- */
-
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
@@ -33,8 +25,6 @@ const useCampusInfoTool = ai.defineTool({
   }),
   outputSchema: z.string(),
   async func(input) {
-    // TODO: Implement the retrieval of campus information here.
-    // This placeholder simulates fetching campus information.
     return `Detailed campus information for query: ${input.query}`;
   },
 });
@@ -50,7 +40,7 @@ const prompt = ai.definePrompt({
   Otherwise, respond to the question directly using your general knowledge.
   Always provide a helpful and informative answer to the user.
   `,
-  prompt: `User query: {{{query}}}`, // The prompt is using the query directly.
+  prompt: `User query: {{{query}}}`,
 });
 
 const chatWithBotFlow = ai.defineFlow(
