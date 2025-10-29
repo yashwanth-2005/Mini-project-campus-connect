@@ -18,9 +18,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GithubIcon, LinkedinIcon, Logo, TwitterIcon } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 const features = [
   {
@@ -94,6 +94,56 @@ const staggerItem = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
 };
+
+const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
+    const cardRef = useRef<HTMLDivElement>(null);
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+
+    const rotateX = useTransform(y, [-150, 150], [10, -10]);
+    const rotateY = useTransform(x, [-150, 150], [-10, 10]);
+
+    const handleMouseMove = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        if (!cardRef.current) return;
+        const rect = cardRef.current.getBoundingClientRect();
+        x.set(event.clientX - rect.left - rect.width / 2);
+        y.set(event.clientY - rect.top - rect.height / 2);
+    };
+
+    const handleMouseLeave = () => {
+        x.set(0);
+        y.set(0);
+    };
+
+    return (
+        <motion.div
+            ref={cardRef}
+            variants={staggerItem}
+            style={{ 
+                rotateX, 
+                rotateY,
+                transformStyle: "preserve-3d",
+            }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={handleMouseLeave}
+            className="relative"
+        >
+            <Card 
+                className="feature-card h-full"
+                style={{ transform: "translateZ(8px)" }}
+            >
+                <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
+                  {feature.icon}
+                  <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 pt-4">
+                  <p className="text-muted-foreground text-sm">{feature.description}</p>
+                </CardContent>
+            </Card>
+        </motion.div>
+    );
+};
+
 
 export default function Home() {
   const router = useRouter();
@@ -219,24 +269,10 @@ export default function Home() {
           <motion.div 
             className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
             variants={staggerContainer}
+            style={{ perspective: "1000px" }}
           >
             {features.map((feature) => (
-              <motion.div 
-                key={feature.title} 
-                variants={staggerItem}
-                whileHover={{ scale: 1.03, y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <Card className="feature-card h-full">
-                    <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
-                      {feature.icon}
-                      <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4 pt-4">
-                      <p className="text-muted-foreground text-sm">{feature.description}</p>
-                    </CardContent>
-                </Card>
-              </motion.div>
+                <FeatureCard key={feature.title} feature={feature} />
             ))}
           </motion.div>
         </motion.section>
