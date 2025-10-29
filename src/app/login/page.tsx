@@ -18,7 +18,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { findUserByEmail, setCurrentUser } from "@/lib/mock-db";
+import { findUserByEmail, setCurrentUser, getFacultyUser } from "@/lib/mock-db";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
@@ -44,9 +44,17 @@ export default function LoginPage() {
     const password = passwordInput.value;
 
     setTimeout(() => {
-        const user = findUserByEmail(email);
+        let user;
+        if (role === 'faculty') {
+            // For prototype purposes, allow any login for faculty
+            user = getFacultyUser();
+        } else {
+            user = findUserByEmail(email);
+        }
 
-        if (user && user.password === password) {
+        const isPasswordCorrect = (role === 'student') ? (user && user.password === password) : true;
+
+        if (user && isPasswordCorrect) {
             setCurrentUser(user.id);
             toast({
                 title: "Login Successful",
@@ -171,5 +179,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

@@ -111,6 +111,12 @@ export const findUserByEmail = (email: string): User | null => {
     return Object.values(users).find(user => user.email === email) || null;
 };
 
+// A helper function to get the default faculty user for prototype login.
+export const getFacultyUser = (): User | null => {
+    const users = getUsers();
+    return users['user-faculty-1'] || null;
+}
+
 // Creates a new user.
 export const createUser = (userData: Omit<User, 'id'>): User => {
     const users = getUsers();
