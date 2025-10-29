@@ -33,7 +33,7 @@ import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
-// All possible navigation items for all user roles.
+// Navigation items for different user roles.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/profile", icon: <User />, label: "Profile", role: ['student', 'faculty'] },
@@ -52,24 +52,24 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Filter navigation items based on the current user's role.
+  // Show only the navigation items relevant to the current user's role.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
   const handleLinkClick = (href: string) => {
-    // Show a loading spinner for a better UX during page transitions.
+    // A simple loading indicator for better perceived performance on navigation.
     if (pathname !== href) {
       setIsLoading(true);
     }
   };
 
-  // When the new page loads, turn off the loading indicator.
+  // Turn off the loading indicator once the new page has loaded.
   useEffect(() => {
     setIsLoading(false);
   }, [pathname, searchParams]);
 
   return (
     <SidebarProvider>
-      {/* Loading overlay shown during page navigation. */}
+      {/* A full-screen overlay shown during page transitions. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -137,7 +137,7 @@ export default function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Use a Suspense boundary to handle loading of route parameters like `role`.
+  // Use a Suspense boundary to gracefully handle the loading of URL search parameters.
   return (
     <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"><Logo className="h-16 w-16 text-primary animate-pulse-grow" /></div>}>
       <AppLayoutContent>{children}</AppLayoutContent>

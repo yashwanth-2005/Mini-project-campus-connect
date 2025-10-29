@@ -20,20 +20,21 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Protect the route: only faculty should access this page.
+    // Only allow users with the 'faculty' role to see this page.
     if (role !== 'faculty') {
       router.push('/dashboard');
       return;
     }
-    // Fetch pending requests when the component mounts.
+    // Get pending USN requests from the mock database on page load.
     setRequests(getPendingUsnRequests());
     setIsLoading(false);
   }, [role, router]);
 
+  // Handle the approval of a USN change request.
   const handleApprove = (requestId: string) => {
     try {
       approveUsnChange(requestId);
-      setRequests(getPendingUsnRequests()); // Refresh the list of requests.
+      setRequests(getPendingUsnRequests()); // Refresh the list after approval.
       toast({
         title: 'Request Approved',
         description: "The student's USN has been successfully updated.",
@@ -47,9 +48,10 @@ export default function AdminPage() {
     }
   };
 
+  // Handle the denial of a USN change request.
   const handleDeny = (requestId: string) => {
     denyUsnChange(requestId);
-    setRequests(getPendingUsnRequests()); // Refresh the list of requests.
+    setRequests(getPendingUsnRequests()); // Refresh the list after denial.
     toast({
       title: 'Request Denied',
       description: 'The USN change request has been denied.',

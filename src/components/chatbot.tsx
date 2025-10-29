@@ -31,22 +31,24 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Handles sending a message to the AI and getting a response.
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    // Add user's message to the chat history.
+    // Add the user's message to the chat history.
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
     setInput("");
     setIsLoading(true);
 
     try {
       // Call the AI flow to get the bot's response.
-      const response = await chatWithBot({ query: input });
+      const response = await chatWithBot({ query: currentInput });
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      // Handle any errors from the AI service.
+      // Show an error message if the AI service fails.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",

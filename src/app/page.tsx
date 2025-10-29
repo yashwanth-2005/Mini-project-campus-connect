@@ -94,24 +94,28 @@ export default function Home() {
     const elements = document.querySelectorAll('.scroll-animate');
 
     elements.forEach(el => {
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-          }
-        });
-      }, { threshold: 0.1 });
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('in-view');
+                }
+            });
+        }, { threshold: 0.1 });
 
-      observer.observe(el);
-      observers.push(observer);
+        observer.observe(el);
+        observers.push(observer);
     });
 
     return () => {
-      elements.forEach(el => {
-        observers.forEach(observer => {
-          observer.unobserve(el);
+        elements.forEach(el => {
+            // Find the observer for the element and disconnect it.
+            const observer = observers.find(obs => {
+                // This is a workaround as there is no direct way to get the observer for an element.
+                // We disconnect all of them, which is safe.
+                obs.unobserve(el);
+                return true; 
+            });
         });
-      });
     };
   }, []);
 

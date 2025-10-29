@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
                             <MailCheck className="h-4 w-4" />
                             <AlertTitle>Simulation Successful!</AlertTitle>
                             <AlertDescription>
-                                This is a prototype. In a real application, a password reset link would be sent to <strong>{email}</strong>. Since no email is actually sent, please use your existing password to log in.
+                                In a real application, a password reset link would be sent to <strong>{email}</strong>.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">

@@ -59,7 +59,7 @@ const defaultUsers: Record<string, User> = {
     }
 }
 
-// Helper to safely get users from localStorage.
+// Safely get users from localStorage.
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return defaultUsers;
     let usersJson = localStorage.getItem('users');
@@ -70,20 +70,20 @@ const getUsers = (): Record<string, User> => {
     return JSON.parse(usersJson);
 };
 
-// Helper to safely save users to localStorage.
+// Safely save users to localStorage.
 const saveUsers = (users: Record<string, User>) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('users', JSON.stringify(users));
 };
 
-// Helper to safely get USN requests from localStorage.
+// Safely get USN requests from localStorage.
 const getRequests = (): UsnChangeRequest[] => {
     if (typeof window === 'undefined') return [];
     const requests = localStorage.getItem('usnChangeRequests');
     return requests ? JSON.parse(requests) : [];
 };
 
-// Helper to safely save USN requests to localStorage.
+// Safely save USN requests to localStorage.
 const saveRequests = (requests: UsnChangeRequest[]) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('usnChangeRequests', JSON.stringify(requests));
@@ -195,11 +195,9 @@ export const approveUsnChange = (requestId: string) => {
     const users = getUsers();
     if (!users[request.userId]) throw new Error("User associated with this request not found.");
 
-    // Update the user's USN and save.
     users[request.userId].usn = request.newUsn;
     saveUsers(users);
 
-    // Update the request status and save.
     requests[requestIndex].status = 'approved';
     saveRequests(requests);
 };

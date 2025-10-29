@@ -69,13 +69,13 @@ export default function ProfilePage() {
         }
     });
 
-    // On component mount, fetch the current user's data.
+    // Fetch the current user's data when the page loads.
     useEffect(() => {
         const currentUser = getCurrentUser();
         if (currentUser) {
             setUser(currentUser);
             setPreviewImage(currentUser.profilePicture || null);
-            // Populate the form with existing user data.
+            // Pre-fill the form with the user's existing data.
             form.reset({
                 fullName: currentUser.fullName,
                 usn: currentUser.usn,
@@ -86,25 +86,25 @@ export default function ProfilePage() {
                 leetcode: currentUser.leetcode || "",
                 profilePicture: currentUser.profilePicture || "",
             });
-            // Check if there's a pending USN change request for this user.
+            // See if there's already a pending request for a USN change.
             const pendingRequest = getUsnRequestForUser(currentUser.id);
             if (pendingRequest) {
                 setPendingUsnRequest(true);
             }
         } else {
-            // If no user is logged in, redirect to login page.
+            // Redirect to login if no user is found.
             router.push('/login');
         }
         setIsLoading(false);
     }, [form, router]);
 
-    // Handle the profile picture file selection and create a preview.
+    // When a user selects a new profile picture, create a temporary preview.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
             const reader = new FileReader();
             reader.onloadend = () => {
-                const result = reader.result as string; // data URL
+                const result = reader.result as string; // This is a data URL.
                 setPreviewImage(result);
                 form.setValue("profilePicture", result);
             };
@@ -112,7 +112,7 @@ export default function ProfilePage() {
         }
     };
 
-    // Fired when the main profile form is submitted.
+    // Fired when the main profile form is submitted to save changes.
     function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!user) return;
 
@@ -122,7 +122,7 @@ export default function ProfilePage() {
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            // A page reload is needed to ensure the user nav gets the new picture.
+            // Reload the page to make sure the user avatar in the nav bar also updates.
             window.location.reload();
         } catch(e) {
             toast({
@@ -148,8 +148,8 @@ export default function ProfilePage() {
                 title: "Request Submitted",
                 description: "Your USN change request has been submitted for faculty approval."
             });
-            setPendingUsnRequest(true);
-            setIsUsnDialogOpen(false);
+            setPendingUsnRequest(true); // Visually disable the button.
+            setIsUsnDialogOpen(false); // Close the dialog.
             usnForm.reset();
         } catch (error: any) {
              toast({
@@ -160,7 +160,7 @@ export default function ProfilePage() {
         }
     }
 
-    // Show a loading skeleton while fetching user data.
+    // Show a loading skeleton while fetching the user's data.
     if (isLoading || !user) {
         return (
             <div className="space-y-8">
