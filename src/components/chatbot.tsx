@@ -35,13 +35,13 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    // Add the user's message to the chat history immediately for a responsive feel.
+    // Add user's message to the chat history immediately.
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     
     const currentInput = input;
     setInput(""); // Clear the input field.
-    setIsLoading(true); // Show a loading indicator.
+    setIsLoading(true); // Show a loading spinner.
 
     try {
       // Call the Genkit flow to get the bot's response.
@@ -49,14 +49,14 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      // If the AI call fails, show a user-friendly error message.
+      // If the AI call fails, show an error message.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
-      setIsLoading(false); // Hide the loading indicator.
+      setIsLoading(false); // Hide the loading spinner.
     }
   };
 

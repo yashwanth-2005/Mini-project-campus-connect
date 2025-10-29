@@ -1,4 +1,3 @@
-// This file acts as a mock database using the browser's localStorage.
 
 export type User = {
     id: string;
@@ -26,7 +25,6 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
-// Some default users to populate the database on first run.
 const defaultUsers: Record<string, User> = {
     'user-faculty-1': {
         id: 'user-faculty-1',

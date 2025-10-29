@@ -33,7 +33,6 @@ import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
-// Defines all possible navigation links in the app.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/profile", icon: <User />, label: "Profile", role: ['student', 'faculty'] },
@@ -52,24 +51,24 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Filters the navigation items based on the current user's role.
+  // Filter navigation items based on the current user's role.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
-  // A simple loading indicator for better perceived performance on page transitions.
+  // A loading indicator for better perceived performance on page transitions.
   const handleLinkClick = (href: string) => {
     if (pathname !== href) {
       setIsLoading(true);
     }
   };
 
-  // Resets the loading indicator once the new page content has loaded.
+  // Reset the loading indicator after a page transition is complete.
   useEffect(() => {
     setIsLoading(false);
   }, [pathname, searchParams]);
 
   return (
     <SidebarProvider>
-      {/* A full-screen overlay shown during page transitions for a smoother feel. */}
+      {/* Full-screen overlay shown during page transitions. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -131,7 +130,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Uses a Suspense boundary to gracefully handle the loading of URL search parameters on the client.
+// Use a Suspense boundary to gracefully handle loading of URL search parameters.
 export default function AppLayout({
   children,
 }: {

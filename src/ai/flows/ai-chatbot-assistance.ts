@@ -1,6 +1,6 @@
 'use server';
 
-// This flow powers the AI chatbot, using a tool to fetch campus-specific information.
+// This flow powers the AI chatbot.
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
@@ -27,7 +27,7 @@ const useCampusInfoTool = ai.defineTool({
   }),
   outputSchema: z.string(),
   async func(input) {
-    // In a production app, this would query a database or call a dedicated API.
+    // This could query a database or call a dedicated API.
     return `Detailed campus information for query: ${input.query}`;
   },
 });

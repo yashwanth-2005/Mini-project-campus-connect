@@ -34,7 +34,6 @@ export default function ForgotPasswordPage() {
 
             if (user) {
                 // In a real app, you would trigger an email service here.
-                // For this prototype, we'll just show a success state.
                 setEmailSent(true);
             } else {
                 toast({

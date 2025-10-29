@@ -20,7 +20,7 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // A simple role-based guard to protect this page.
+    // A simple guard to protect this page, only allowing faculty access.
     if (role !== 'faculty') {
       router.push('/dashboard');
       return;
