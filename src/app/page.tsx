@@ -58,21 +58,18 @@ const testimonials = [
         name: "Priya Sharma",
         role: "Software Engineer @ TechCorp",
         avatar: "https://picsum.photos/seed/priya/80/80",
-        avatarHint: "woman face",
         testimonial: "The placement roadmaps and interview experiences on CampusConnect were a game-changer for my preparation. I landed my dream job thanks to the resources here!"
     },
     {
         name: "Rahul Verma",
         role: "Product Manager @ Innovate Inc.",
         avatar: "https://picsum.photos/seed/rahul/80/80",
-        avatarHint: "man face",
         testimonial: "Connecting with alumni through the forum gave me invaluable insights into the industry. The community is incredibly supportive and helpful."
     },
     {
         name: "Anjali Singh",
         role: "Data Scientist @ Future Solutions",
         avatar: "https://picsum.photos/seed/anjali/80/80",
-        avatarHint: "woman smiling",
         testimonial: "I never missed a single campus event thanks to the real-time notifications. The workshops were amazing for skill-building. Highly recommended!"
     }
 ]
@@ -235,7 +232,7 @@ export default function Home() {
                          <Card key={testimonial.name} className={`bg-card p-6 flex flex-col justify-center items-center text-center scroll-animate stagger-${i+1}`}>
                             <CardHeader className="p-0 items-center">
                                 <Avatar className="w-20 h-20 mb-4 border-2 border-primary">
-                                    <AvatarImage src={testimonial.avatar} data-ai-hint={testimonial.avatarHint}/>
+                                    <AvatarImage src={testimonial.avatar} />
                                     <AvatarFallback>{testimonial.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
                                 <CardTitle className="text-lg">{testimonial.name}</CardTitle>
