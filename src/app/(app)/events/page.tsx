@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar, Clock, MapPin } from "lucide-react";
@@ -12,6 +15,7 @@ const events = [
         location: "CS Department, Seminar Hall 1",
         description: "A hands-on workshop covering the fundamentals of AI and ML with practical projects.",
         image: "https://picsum.photos/seed/event1/600/400",
+        imageHint: "AI workshop"
     },
     {
         title: "Tech Talk: The Future of Web Dev",
@@ -21,6 +25,7 @@ const events = [
         location: "Online via Zoom",
         description: "Join industry expert Jane Doe as she discusses upcoming trends in web development.",
         image: "https://picsum.photos/seed/event2/600/400",
+        imageHint: "tech talk"
     },
     {
         title: "Annual Hackathon: CodeWave",
@@ -30,6 +35,7 @@ const events = [
         location: "Main Auditorium",
         description: "The 24-hour coding marathon is back! Build, innovate, and win exciting prizes.",
         image: "https://picsum.photos/seed/event3/600/400",
+        imageHint: "hackathon"
     },
 ]
 
@@ -44,7 +50,7 @@ export default function EventsPage() {
                 {events.map((event, index) => (
                     <Card key={index} className="overflow-hidden flex flex-col">
                         <CardHeader className="p-0">
-                            <Image src={event.image} alt={event.title} width={600} height={400} />
+                            <Image src={event.image} alt={event.title} width={600} height={400} data-ai-hint={event.imageHint} />
                         </CardHeader>
                         <CardContent className="p-6 flex-1">
                             <p className="text-sm font-semibold text-primary mb-1">{event.category.toUpperCase()}</p>
@@ -74,3 +80,5 @@ export default function EventsPage() {
         </div>
     )
 }
+
+    
