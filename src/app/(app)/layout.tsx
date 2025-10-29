@@ -74,7 +74,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
             <Logo className="h-16 w-16 text-primary animate-pulse-grow" />
-            <p className="text-muted-foreground">Loading...</p>
+            <p className="text-muted-foreground">Connecting you...</p>
           </div>
         </div>
       )}
@@ -143,5 +143,3 @@ export default function AppLayout({
     </React.Suspense>
   )
 }
-
-    
