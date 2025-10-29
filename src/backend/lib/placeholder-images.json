@@ -1,0 +1,34 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-image",
+      "description": "A modern university campus building",
+      "imageUrl": "https://images.unsplash.com/flagged/photo-1554473675-d0904f3cbf38?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx1bml2ZXJzaXR5JTIwY2FtcHVzfGVufDB8fHx8MTc2MTY3NzM2NHww&ixlib=rb-4.1.0&q=80&w=1080"
+    },
+    {
+      "id": "hero-graduation",
+      "description": "Students in graduation gowns throwing their caps in the air",
+      "imageUrl": "https://images.unsplash.com/photo-1631131428457-3c14bdcb81d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxncmFkdWF0aW9uJTIwc3R1ZGVudHN8ZW58MHx8fHwxNzYxNzUyMzA4fDA&ixlib=rb-4.1.0&q=80&w=1080"
+    },
+    {
+      "id": "feature-placements",
+      "description": "Students collaborating on a project",
+      "imageUrl": "https://images.unsplash.com/photo-1758270705518-b61b40527e76?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxzdHVkZW50cyUyMGNvbGxhYm9yYXRpbmd8ZW58MHx8fHwxNzYxNjY4NTkxfDA&ixlib=rb-4.1.0&q=80&w=1080"
+    },
+    {
+      "id": "feature-forum",
+      "description": "A group of people in a discussion",
+      "imageUrl": "https://images.unsplash.com/photo-1634326080825-985cfc816db6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxwZW9wbGUlMjBkaXNjdXNzaW9ufGVufDB8fHx8MTc2MTczOTA2NXww&ixlib=rb-4.1.0&q=80&w=1080"
+    },
+    {
+      "id": "feature-events",
+      "description": "A person speaking at a conference",
+      "imageUrl": "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxjb25mZXJlbmNlJTIwc3BlYWtlcnxlbnwwfHx8fDE3NjE2NTI0Mzh8MA&ixlib=rb-4.1.0&q=80&w=1080"
+    },
+    {
+      "id": "user-avatar",
+      "description": "A generic user avatar",
+      "imageUrl": "https://images.unsplash.com/photo-1569913486515-b74bf7751574?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwZXJzb24lMjBhdmF0YXJ8ZW58MHx8fHwxNzYxNjU4MjgzfDA&ixlib=rb-4.1.0&q=80&w=1080"
+    }
+  ]
+}
