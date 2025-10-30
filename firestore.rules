@@ -1,116 +1,158 @@
 /**
  * @file Firestore Security Rules for CampusConnect
- *
- * Core Philosophy:
- * This ruleset enforces a user-ownership model for user profiles and allows public read access with owner-only writes for announcements, events, forum posts, resources, and chat messages.
+ * @description This ruleset enforces a user-ownership model for user profiles and author-based control for announcements, forum posts and resources, while events and chatbot messages are publicly readable.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile data; access is restricted to the owning user.
- * - /announcements/{announcementId}: Stores announcement data; public read, owner-only write.
- * - /events/{eventId}: Stores event data; public read, owner-only write.
- * - /forum_posts/{forumPostId}: Stores forum posts; public read, owner-only write.
- * - /resources/{resourceId}: Stores resource data; public read, owner-only write.
- * - /chat_messages/{chatMessageId}: Stores chat messages; public read, owner-only write.
+ * - /users/{userId}: Stores private user profile data, accessible only to the user.
+ * - /announcements/{announcementId}: Stores announcements, write-controlled by the authorId field.
+ * - /events/{eventId}: Stores event information, publicly readable.
+ * - /forum_posts/{forumPostId}: Stores forum posts, write-controlled by the authorId field.
+ * - /resources/{resourceId}: Stores resources, write-controlled by the uploaderId field.
+ * - /chat_messages/{chatMessageId}: Stores chatbot messages, publicly readable.
  *
  * Key Security Decisions:
- * - User listing is disabled to protect privacy.
- * - Public read access is granted to top-level collections to facilitate data sharing and discovery.
- * - Write access to top-level collections is restricted to the owner (creator) of the document, enforced by matching `authorId` or `uploaderId` to the authenticated user's ID.
- * - Data validation is minimized in this prototyping phase to allow for rapid schema iteration.
- *
- * Denormalization for Authorization:
- * - Announcements, events, forum posts, resources, and chat messages include an `authorId` or `uploaderId` field to simplify ownership checks without requiring additional `get()` calls.
+ * - Users can only read and write their own profile data.
+ * - Announcements, Forum Posts, and Resources are author-controlled.
+ * - Events and Chatbot messages are publicly readable.
+ * - Listing of user profiles is disallowed for privacy.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description: Controls access to user profile data. Only the user can read or write their own profile.
-     * @path: /users/{userId}
-     * @allow: User with UID 'user123' (create, update, get, list) if they are accessing their own profile (userId == 'user123').
-     * @deny: User with UID 'user456' (create, update, get, list) if they try to access profile 'user123'.
-     * @principle: Enforces strict user-ownership for profile data.
+     * @description Controls access to user profile data. Only the user can read and write their own profile.
+     * @path /users/{userId}
+     * @allow (create, update, delete) if request.auth.uid == userId
+     * @deny (create, update, delete) if request.auth.uid != userId
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      function isOwner(userId) {
-        return request.auth != null && request.auth.uid == userId;
-      }
-      allow get: if isOwner(userId);
+      // Only the authenticated user can read their own profile.
+      allow get: if isSignedIn() && isOwner(userId);
+      // No one can list all user profiles.
       allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == request.auth.uid;
-      allow update: if isOwner(userId);
-      allow delete: if isOwner(userId);
+
+      // Only the authenticated user can create their own profile.
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+
+      // Only the authenticated user can update their own profile.
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+
+      // Only the authenticated user can delete their own profile.
+      allow delete: if isSignedIn() && isExistingOwner(userId);
     }
 
     /**
-     * @description: Controls access to announcements. Allows public read access, but restricts write access to the announcement's author.
-     * @path: /announcements/{announcementId}
-     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the author of the announcement (authorId == 'user123').
-     * @deny: User with UID 'user456' (create, update, delete) if they try to modify an announcement authored by 'user123'.
-     * @principle: Public read, owner-only write. Validates author on create, update, and delete.
+     * @description Controls access to announcements. Anyone can read, but only the author can create, update, or delete.
+     * @path /announcements/{announcementId}
+     * @allow (get, list) if true
+     * @allow (create) if request.auth.uid == request.resource.data.authorId
+     * @allow (update, delete) if request.auth.uid == resource.data.authorId
+     * @deny (create, update, delete) if request.auth.uid != resource.data.authorId
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /announcements/{announcementId} {
+      // Allow anyone to read announcements.
       allow get, list: if true;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow update: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow delete: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+
+      // Only the author can create an announcement, and authorId must match the request.auth.uid.
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+
+      // Only the author can update an announcement.
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+
+      // Only the author can delete an announcement.
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description: Controls access to events. Allows public read access, but restricts write access to the event's creator.
-     * @path: /events/{eventId}
-     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the author of the event (authorId == 'user123').
-     * @deny: User with UID 'user456' (create, update, delete) if they try to modify an event authored by 'user123'.
-     * @principle: Public read, owner-only write. Validates author on create, update, and delete.
+     * @description Controls access to events. All users can read the event data.
+     * @path /events/{eventId}
+     * @allow get, list: if true
+     * @principle Allows public reads.
      */
     match /events/{eventId} {
+      // Allow anyone to read events.
       allow get, list: if true;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow update: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow delete: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+
+      // Anyone can create, update, and delete events (Public Read with Owner-Only Writes pattern requires an ownership field.)
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
 
     /**
-     * @description: Controls access to forum posts. Allows public read access, but restricts write access to the post's author.
-     * @path: /forum_posts/{forumPostId}
-     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the author of the post (authorId == 'user123').
-     * @deny: User with UID 'user456' (create, update, delete) if they try to modify a post authored by 'user123'.
-     * @principle: Public read, owner-only write. Validates author on create, update, and delete.
+     * @description Controls access to forum posts. Anyone can read, but only the author can create, update, or delete.
+     * @path /forum_posts/{forumPostId}
+     * @allow (get, list) if true
+     * @allow (create) if request.auth.uid == request.resource.data.authorId
+     * @allow (update, delete) if request.auth.uid == resource.data.authorId
+     * @deny (create, update, delete) if request.auth.uid != resource.data.authorId
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /forum_posts/{forumPostId} {
+      // Allow anyone to read forum posts.
       allow get, list: if true;
-      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow update: if request.auth != null && request.resource.data.authorId == request.auth.uid;
-      allow delete: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+
+      // Only the author can create a forum post, and authorId must match the request.auth.uid.
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+
+      // Only the author can update a forum post.
+      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+
+      // Only the author can delete a forum post.
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
     }
 
     /**
-     * @description: Controls access to resources. Allows public read access, but restricts write access to the uploader.
-     * @path: /resources/{resourceId}
-     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the uploader of the resource (uploaderId == 'user123').
-     * @deny: User with UID 'user456' (create, update, delete) if they try to modify a resource uploaded by 'user123'.
-     * @principle: Public read, owner-only write. Validates uploader on create, update, and delete.
+     * @description Controls access to resources. Anyone can read, but only the uploader can create, update, or delete.
+     * @path /resources/{resourceId}
+     * @allow (get, list) if true
+     * @allow (create) if request.auth.uid == request.resource.data.uploaderId
+     * @allow (update, delete) if request.auth.uid == resource.data.uploaderId
+     * @deny (create, update, delete) if request.auth.uid != resource.data.uploaderId
+     * @principle Enforces document ownership for writes, allows public reads.
      */
     match /resources/{resourceId} {
+      // Allow anyone to read resources.
       allow get, list: if true;
-      allow create: if request.auth != null && request.resource.data.uploaderId == request.auth.uid;
-      allow update: if request.auth != null && request.resource.data.uploaderId == request.auth.uid;
-      allow delete: if request.auth != null && request.resource.data.uploaderId == request.auth.uid;
+
+      // Only the uploader can create a resource, and uploaderId must match the request.auth.uid.
+      allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
+
+      // Only the uploader can update a resource.
+      allow update: if isSignedIn() && isExistingOwner(resource.data.uploaderId);
+
+      // Only the uploader can delete a resource.
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.uploaderId);
     }
 
     /**
-     * @description: Controls access to chat messages. Allows public read access, but restricts write access to the user who sent the message.
-     * @path: /chat_messages/{chatMessageId}
-     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the sender of the message (userId == 'user123').
-     * @deny: User with UID 'user456' (create, update, delete) if they try to modify a message sent by 'user123'.
-     * @principle: Public read, owner-only write. Validates user on create, update, and delete.
+     * @description Controls access to chat messages. All users can read the chat messages.
+     * @path /chat_messages/{chatMessageId}
+     * @allow get, list: if true
+     * @principle Allows public reads.
      */
     match /chat_messages/{chatMessageId} {
+      // Allow anyone to read chat messages.
       allow get, list: if true;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow update: if request.auth != null && request.resource.data.userId == request.auth.uid;
-      allow delete: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+        // Anyone can create, update, and delete chat messages (Public Read with Owner-Only Writes pattern requires an ownership field.)
+        allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
     }
+  }
+
+  // Helper function to determine if the user is signed in.
+  function isSignedIn() {
+    return request.auth != null;
+  }
+
+  // Helper function to determine if the user is the owner of the resource.
+  function isOwner(userId) {
+    return request.auth.uid == userId;
+  }
+
+    // Helper function to determine if the user is the existing owner of the resource.
+  function isExistingOwner(userId) {
+    return isOwner(userId) && resource != null;
   }
 }

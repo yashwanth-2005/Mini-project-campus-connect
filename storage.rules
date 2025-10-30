@@ -3,21 +3,23 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
     
-    // Resource Hub files: Allow read for all, write only for authenticated users.
-    // The path here should match the path you use when uploading files from your client code.
-    // e.g., `resources/${userId}/${fileName}`
-    match /resources/{userId}/{allPaths=**} {
-      // Allow anyone to read the files (e.g., for download links)
-      allow read: if true;
-      
-      // Only the authenticated user matching the {userId} in the path can write (upload/update/delete)
-      allow write: if request.auth != null && request.auth.uid == userId;
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
     
-    // Profile pictures: Allow public read, but only the owner can write.
-    match /profile-pictures/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.uid == userId;
+    // Allow signed-in users to upload to their own folder in `resources`
+    match /resources/{userId}/{fileName} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+    }
+    
+    // Fallback rule for any other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }

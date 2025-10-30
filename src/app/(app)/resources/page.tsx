@@ -13,7 +13,7 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
-import { collection, query, where, doc, deleteDoc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, query, where, doc, deleteDoc, updateDoc, addDoc, serverTimestamp } from "firebase/firestore";
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
@@ -24,7 +24,7 @@ type Resource = {
     fileType: string;
     uploaderId: string;
     uploaderName: string;
-    uploadDate: string;
+    uploadDate: any; // Firestore timestamp
     fileUrl: string;
     storagePath: string;
 };
@@ -58,7 +58,9 @@ const UploadResourceDialog = ({
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <Dialog open={isOpen} onOpenChange={(open) => {
+            if (!isUploading) onOpenChange(open);
+        }}>
             <DialogTrigger asChild>
                 <Button>
                     <Upload className="mr-2 h-4 w-4" />
@@ -200,12 +202,14 @@ export default function ResourcesPage() {
     };
 
     const handleDownload = (url: string, fileName: string) => {
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        fetch(url).then(response => response.blob()).then(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
     };
 
     const handleUpload = async (title: string, description: string, file: File) => {
@@ -225,14 +229,14 @@ export default function ResourcesPage() {
                 fileType: file.type || "File",
                 uploaderId: user.uid,
                 uploaderName: user.displayName || 'Anonymous',
-                uploadDate: new Date().toISOString(),
+                uploadDate: serverTimestamp(),
                 fileUrl: downloadURL,
                 storagePath: storagePath,
             });
 
             toast({
                 title: "Resource Uploaded",
-                description: `"${title}" has been added to the hub.`,
+                description: `'${title}' has been added to the hub.`,
             });
             setIsUploadDialogOpen(false);
         } catch (error: any) {
@@ -294,7 +298,7 @@ export default function ResourcesPage() {
 
             toast({
                 title: "Resource Deleted",
-                description: `"${resourceToDelete?.name}" has been removed.`,
+                description: `'${resourceToDelete?.name}' has been removed.`,
                 variant: "destructive"
             });
         } catch (error: any) {
@@ -314,6 +318,13 @@ export default function ResourcesPage() {
         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
+    const formatDate = (timestamp: any) => {
+        if (timestamp && timestamp.toDate) {
+            return timestamp.toDate().toLocaleDateString();
+        }
+        return "Just now";
+    }
+
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -321,12 +332,12 @@ export default function ResourcesPage() {
                     <h1 className="text-3xl font-bold font-headline">Resource Hub</h1>
                     <p className="text-muted-foreground">Central repository for notes, papers, and other materials.</p>
                 </div>
-                <UploadResourceDialog 
+                {user && <UploadResourceDialog 
                     isOpen={isUploadDialogOpen}
                     onOpenChange={setIsUploadDialogOpen}
                     onUpload={handleUpload}
                     isUploading={isUploading}
-                />
+                />}
             </div>
             
             <div className="relative">
@@ -371,7 +382,7 @@ export default function ResourcesPage() {
                                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{resource.description}</TableCell>
                                     <TableCell>{resource.fileType}</TableCell>
                                     <TableCell>{resource.uploaderName}</TableCell>
-                                    <TableCell>{new Date(resource.uploadDate).toLocaleDateString()}</TableCell>
+                                    <TableCell>{formatDate(resource.uploadDate)}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -396,7 +407,7 @@ export default function ResourcesPage() {
                                                             Edit
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem 
-                                                            className="text-destructive"
+                                                            className="text-destructive focus:text-destructive"
                                                             onClick={() => handleDeleteClick(resource.id)}
                                                         >
                                                             <Trash className="mr-2 h-4 w-4"/>
@@ -431,7 +442,7 @@ export default function ResourcesPage() {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive/90">
+                    <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
                         Delete
                     </AlertDialogAction>
                     </AlertDialogFooter>
