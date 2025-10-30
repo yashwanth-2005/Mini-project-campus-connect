@@ -12,42 +12,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { findUserById, User } from "@/lib/mock-db"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import React from "react"
 import { Skeleton } from "./ui/skeleton"
+import { useUser, useAuth } from "@/firebase"
+import { signOut } from "firebase/auth"
 
 export function UserNav() {
-  const [userProfile, setUserProfile] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    // In our mock setup, the logged-in user's ID is stored in localStorage.
-    // We retrieve it here to fetch the full user profile.
-    const loggedInUserId = localStorage.getItem('loggedInUser');
-    if (loggedInUserId) {
-        const profile = findUserById(loggedInUserId);
-        setUserProfile(profile);
-    }
-    setIsLoading(false);
-  }, []);
-
   const handleLogout = async () => {
-    // Clear the logged-in user state and redirect to the landing page.
-    localStorage.removeItem('loggedInUser');
-    setUserProfile(null);
-    router.push('/');
+    try {
+      await signOut(auth);
+      router.push('/');
+    } catch (error) {
+      console.error("Error signing out: ", error);
+    }
   }
 
-  // Show a skeleton loader while we check for a logged-in user.
-  if (isLoading) {
+  if (isUserLoading) {
     return <Skeleton className="h-9 w-9 rounded-full" />
   }
   
-  // If no user is found, show a login button.
-  if (!userProfile) {
+  if (!user) {
      return (
       <Button asChild>
         <Link href="/login">Login</Link>
@@ -60,17 +50,17 @@ export function UserNav() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-9 w-9 border">
-            <AvatarImage src={userProfile.profilePicture || `https://api.dicebear.com/8.x/bottts/svg?seed=${userProfile.usn}`} alt={userProfile.fullName} />
-            <AvatarFallback>{userProfile.fullName.charAt(0)}</AvatarFallback>
+            <AvatarImage src={user.photoURL || `https://api.dicebear.com/8.x/bottts/svg?seed=${user.uid}`} alt={user.displayName || "User"} />
+            <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{userProfile.fullName}</p>
+            <p className="text-sm font-medium leading-none">{user.displayName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {userProfile.email}
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>

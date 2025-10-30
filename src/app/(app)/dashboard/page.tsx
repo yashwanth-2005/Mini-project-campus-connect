@@ -5,9 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Briefcase, Calendar, MessageSquare, Shield } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { findUserById, User } from "@/lib/mock-db";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useUser } from "@/firebase";
+import React from "react";
 
 const allQuickLinks = [
     {
@@ -42,26 +41,14 @@ const allQuickLinks = [
 
 export default function DashboardPage() {
     const searchParams = useSearchParams();
-    const router = useRouter();
+    const { user } = useUser();
     const role = searchParams.get('role') || 'student';
-    const [userProfile, setUserProfile] = useState<User | null>(null);
     
-    useEffect(() => {
-        const loggedInUserId = localStorage.getItem('loggedInUser');
-        if (loggedInUserId) {
-            const profile = findUserById(loggedInUserId);
-            setUserProfile(profile);
-        } else {
-            // If no one is logged in, redirect to the login page.
-            router.push('/login');
-        }
-    }, [router])
-
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     
     const welcomeMessage = () => {
         if (role === 'faculty') return "Welcome back, Faculty!";
-        if (userProfile) return `Welcome back, ${userProfile.fullName.split(' ')[0]}!`;
+        if (user) return `Welcome back, ${user.displayName?.split(' ')[0] || 'Student'}!`;
         return "Welcome back!";
     }
 

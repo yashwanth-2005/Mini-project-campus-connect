@@ -8,11 +8,7 @@
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user profile."
-        },
-        "googleId": {
-          "type": "string",
-          "description": "Google identifier for the user. Used for Google Sign-In."
+          "description": "Unique identifier for the user profile, matching Firebase Auth UID."
         },
         "email": {
           "type": "string",
@@ -224,18 +220,30 @@
           "type": "string",
           "description": "Unique identifier for the resource."
         },
+        "name": {
+            "type": "string",
+            "description": "Display name of the file."
+        },
+        "description": {
+            "type": "string",
+            "description": "A brief description of the resource."
+        },
         "uploaderId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Resource). The user who uploaded the resource."
+          "description": "The UID of the user who uploaded the resource."
         },
-        "fileName": {
-          "type": "string",
-          "description": "Name of the file."
+        "uploaderName": {
+            "type": "string",
+            "description": "The display name of the user who uploaded the resource."
         },
         "fileUrl": {
           "type": "string",
-          "description": "URL of the file in Firebase Cloud Storage.",
+          "description": "Publicly accessible URL of the file in Firebase Cloud Storage.",
           "format": "uri"
+        },
+        "storagePath": {
+          "type": "string",
+          "description": "The full path to the file in Firebase Cloud Storage."
         },
         "uploadDate": {
           "type": "string",
@@ -249,9 +257,11 @@
       },
       "required": [
         "id",
+        "name",
         "uploaderId",
-        "fileName",
+        "uploaderName",
         "fileUrl",
+        "storagePath",
         "uploadDate"
       ]
     },
@@ -294,8 +304,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {

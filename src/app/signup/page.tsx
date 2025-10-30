@@ -17,15 +17,16 @@ import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { createUser } from "@/lib/mock-db";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useAuth, useFirestore } from "@/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { Loader2 } from "lucide-react";
 
-
-// This schema defines the shape and validation rules for our signup form.
 const signupSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
@@ -42,6 +43,8 @@ const signupSchema = z.object({
 export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
   
   const form = useForm<z.infer<typeof signupSchema>>({
@@ -62,14 +65,12 @@ export default function SignupPage() {
   const password = form.watch("password");
   const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
 
-  // This function checks the strength of the entered password and provides visual feedback.
   const checkPasswordStrength = (pass: string) => {
     let score = 0;
     if (!pass) {
         setStrength({ score: 0, label: '', color: '' });
         return;
     }
-    // Award points for different character types and length.
     if (pass.length >= 8) score++;
     if (/[A-Z]/.test(pass)) score++;
     if (/[a-z]/.test(pass)) score++;
@@ -98,12 +99,10 @@ export default function SignupPage() {
     setStrength({ score, label, color });
   };
   
-  // Re-calculate password strength whenever the password input changes.
   useEffect(() => {
     checkPasswordStrength(password);
   }, [password]);
 
-  // This function handles creating a new user account.
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
 
@@ -117,42 +116,57 @@ export default function SignupPage() {
       return;
     }
     
-    // Simulate a network delay
-    setTimeout(() => {
-      try {
-          // Create a user in our mock database.
-          createUser({
-              id: `user-${Date.now()}`,
-              fullName: data.fullName,
-              email: data.email,
-              usn: data.usn.toUpperCase(),
-              year: data.year,
-              semester: data.semester,
-              course: data.course,
-              linkedin: data.linkedin,
-              leetcode: data.leetcode,
-          });
+    try {
+        if (!firestore) throw new Error("Firestore not initialized");
+        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const user = userCredential.user;
 
-          toast({
-              title: "Account Created!",
-              description: "You can now log in with your new account.",
-          });
-          router.push('/login');
-      } catch (error: any) {
-          toast({
-              title: "Signup Failed",
-              description: "This email is already registered. Please try logging in.",
-              variant: "destructive",
-          });
-      } finally {
-          setIsLoading(false);
-      }
-    }, 500);
+        await updateProfile(user, {
+            displayName: data.fullName
+        });
+
+        const userProfileData = {
+            id: user.uid,
+            email: data.email,
+            firstName: data.fullName.split(' ')[0],
+            lastName: data.fullName.split(' ').slice(1).join(' '),
+            usn: data.usn.toUpperCase(),
+            year: data.year,
+            semester: data.semester,
+            course: data.course,
+            linkedinUrl: data.linkedin,
+            leetcodeUrl: data.leetcode,
+            githubUrl: "",
+            profilePictureUrl: "",
+            role: 'student'
+        };
+
+        await setDoc(doc(firestore, "users", user.uid), userProfileData);
+
+        toast({
+            title: "Account Created!",
+            description: "You can now log in with your new account.",
+        });
+        router.push('/login');
+    } catch (error: any) {
+        let errorMessage = "An unexpected error occurred.";
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = "This email is already registered. Please try logging in."
+        } else {
+            errorMessage = error.message;
+        }
+        toast({
+            title: "Signup Failed",
+            description: errorMessage,
+            variant: "destructive",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
-       {/* The loading overlay appears when the signup process is initiated. */}
        {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -306,6 +320,7 @@ export default function SignupPage() {
                 </CardContent>
                 <CardFooter className="flex flex-col gap-4">
                     <Button type="submit" className="w-full shine-button" disabled={isLoading}>
+                        {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         {isLoading ? "Creating Account..." : "Create Account"}
                     </Button>
                     <div className="text-center text-sm">

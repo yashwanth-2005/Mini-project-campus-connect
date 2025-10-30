@@ -6,171 +6,111 @@
  *
  * Data Structure:
  * - /users/{userId}: Stores user profile data; access is restricted to the owning user.
- * - /announcements/{announcementId}: Stores announcements; publicly readable, writable only by the author.
- * - /events/{eventId}: Stores event information; publicly readable, writable only by the author.
- * - /forum_posts/{forumPostId}: Stores forum posts; publicly readable, writable only by the author.
- * - /resources/{resourceId}: Stores resources; publicly readable, writable only by the uploader.
- * - /chat_messages/{chatMessageId}: Stores chat messages; publicly readable, writable only by the user.
+ * - /announcements/{announcementId}: Stores announcement data; public read, owner-only write.
+ * - /events/{eventId}: Stores event data; public read, owner-only write.
+ * - /forum_posts/{forumPostId}: Stores forum posts; public read, owner-only write.
+ * - /resources/{resourceId}: Stores resource data; public read, owner-only write.
+ * - /chat_messages/{chatMessageId}: Stores chat messages; public read, owner-only write.
  *
  * Key Security Decisions:
- * - User listing is disallowed to protect user privacy.
- * - Public read access is granted to announcements, events, forum posts, resources, and chat messages, enabling wide discoverability.
- * - Write access to announcements, events, forum posts, resources, and chat messages is restricted to the author/uploader.
+ * - User listing is disabled to protect privacy.
+ * - Public read access is granted to top-level collections to facilitate data sharing and discovery.
+ * - Write access to top-level collections is restricted to the owner (creator) of the document, enforced by matching `authorId` or `uploaderId` to the authenticated user's ID.
+ * - Data validation is minimized in this prototyping phase to allow for rapid schema iteration.
  *
  * Denormalization for Authorization:
- *  - Announcements, events, forum posts, resources, and chat messages each contain an `authorId` or `uploaderId` field, which is used to enforce owner-only writes. This avoids costly `get()` calls to a separate user profile document.
+ * - Announcements, events, forum posts, resources, and chat messages include an `authorId` or `uploaderId` field to simplify ownership checks without requiring additional `get()` calls.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Manages user profile data. Only the user can read and write their own profile.
-     * @path /users/{userId}
-     * @allow (create) - User 'user_abc' can create their profile if request.auth.uid == 'user_abc' and request.resource.data.id == 'user_abc'.
-     * @allow (get, update, delete) - User 'user_abc' can read, update, and delete their profile if request.auth.uid == 'user_abc'.
-     * @deny (create) - User 'user_xyz' cannot create profile 'user_abc'.
-     * @deny (get, update, delete) - User 'user_xyz' cannot read, update, or delete profile 'user_abc'.
-     * @principle Enforces strict user ownership for profile data.
+     * @description: Controls access to user profile data. Only the user can read or write their own profile.
+     * @path: /users/{userId}
+     * @allow: User with UID 'user123' (create, update, get, list) if they are accessing their own profile (userId == 'user123').
+     * @deny: User with UID 'user456' (create, update, get, list) if they try to access profile 'user123'.
+     * @principle: Enforces strict user-ownership for profile data.
      */
     match /users/{userId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
       function isOwner(userId) {
-        return request.auth.uid == userId;
+        return request.auth != null && request.auth.uid == userId;
       }
-
       allow get: if isOwner(userId);
       allow list: if false;
-
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == request.auth.uid;
-      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.id == request.auth.uid;
+      allow create: if isOwner(userId) && request.resource.data.id == request.auth.uid;
+      allow update: if isOwner(userId);
       allow delete: if isOwner(userId);
     }
 
     /**
-     * @description Manages announcements.  Any user can read announcements. Only the author can create, update, and delete.
-     * @path /announcements/{announcementId}
-     * @allow (get, list) - Any user can read announcements.
-     * @allow (create) - User 'user_abc' can create a new announcement with authorId == 'user_abc'.
-     * @allow (update, delete) - User 'user_abc' can update/delete announcement if they are the author.
-     * @deny (create) - User 'user_xyz' cannot create an announcement with authorId == 'user_abc'.
-     * @deny (update, delete) - User 'user_xyz' cannot update/delete announcement authored by 'user_abc'.
-     * @principle Allows public read access but enforces owner-only writes.
+     * @description: Controls access to announcements. Allows public read access, but restricts write access to the announcement's author.
+     * @path: /announcements/{announcementId}
+     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the author of the announcement (authorId == 'user123').
+     * @deny: User with UID 'user456' (create, update, delete) if they try to modify an announcement authored by 'user123'.
+     * @principle: Public read, owner-only write. Validates author on create, update, and delete.
      */
     match /announcements/{announcementId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(authorId) {
-        return request.auth.uid == authorId;
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow delete: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      allow update: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      allow delete: if request.auth != null && request.resource.data.authorId == request.auth.uid;
     }
 
     /**
-     * @description Manages events.  Any user can read events. Only the creator can create, update, and delete.
-     * @path /events/{eventId}
-     * @allow (get, list) - Any user can read events.
-     * @allow (create) - User 'user_abc' can create a new event.
-     * @allow (update, delete) - User 'user_abc' can update/delete an event if they are the owner (author).
-     * @deny (update, delete) - User 'user_xyz' cannot update/delete event authored by 'user_abc'.
-     * @principle Allows public read access but enforces owner-only writes.
+     * @description: Controls access to events. Allows public read access, but restricts write access to the event's creator.
+     * @path: /events/{eventId}
+     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the author of the event (authorId == 'user123').
+     * @deny: User with UID 'user456' (create, update, delete) if they try to modify an event authored by 'user123'.
+     * @principle: Public read, owner-only write. Validates author on create, update, and delete.
      */
     match /events/{eventId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(authorId) {
-        return request.auth.uid == authorId;
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow delete: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      allow update: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      allow delete: if request.auth != null && request.resource.data.authorId == request.auth.uid;
     }
 
     /**
-     * @description Manages forum posts.  Any user can read forum posts. Only the author can create, update, and delete.
-     * @path /forum_posts/{forumPostId}
-     * @allow (get, list) - Any user can read forum posts.
-     * @allow (create) - User 'user_abc' can create a new forum post with authorId == 'user_abc'.
-     * @allow (update, delete) - User 'user_abc' can update/delete forum post if they are the author.
-     * @deny (create) - User 'user_xyz' cannot create a forum post with authorId == 'user_abc'.
-     * @deny (update, delete) - User 'user_xyz' cannot update/delete forum post authored by 'user_abc'.
-     * @principle Allows public read access but enforces owner-only writes.
+     * @description: Controls access to forum posts. Allows public read access, but restricts write access to the post's author.
+     * @path: /forum_posts/{forumPostId}
+     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the author of the post (authorId == 'user123').
+     * @deny: User with UID 'user456' (create, update, delete) if they try to modify a post authored by 'user123'.
+     * @principle: Public read, owner-only write. Validates author on create, update, and delete.
      */
     match /forum_posts/{forumPostId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(authorId) {
-        return request.auth.uid == authorId;
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow delete: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      allow update: if request.auth != null && request.resource.data.authorId == request.auth.uid;
+      allow delete: if request.auth != null && request.resource.data.authorId == request.auth.uid;
     }
 
     /**
-     * @description Manages resources in the resource hub. Any user can read resources. Only the uploader can create, update, and delete.
-     * @path /resources/{resourceId}
-     * @allow (get, list) - Any user can read resources.
-     * @allow (create) - User 'user_abc' can create a new resource with uploaderId == 'user_abc'.
-     * @allow (update, delete) - User 'user_abc' can update/delete resource if they are the uploader.
-     * @deny (create) - User 'user_xyz' cannot create a resource with uploaderId == 'user_abc'.
-     * @deny (update, delete) - User 'user_xyz' cannot update/delete resource uploaded by 'user_abc'.
-     * @principle Allows public read access but enforces owner-only writes.
+     * @description: Controls access to resources. Allows public read access, but restricts write access to the uploader.
+     * @path: /resources/{resourceId}
+     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the uploader of the resource (uploaderId == 'user123').
+     * @deny: User with UID 'user456' (create, update, delete) if they try to modify a resource uploaded by 'user123'.
+     * @principle: Public read, owner-only write. Validates uploader on create, update, and delete.
      */
     match /resources/{resourceId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(uploaderId) {
-        return request.auth.uid == uploaderId;
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
-      allow update: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
-      allow delete: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
+      allow create: if request.auth != null && request.resource.data.uploaderId == request.auth.uid;
+      allow update: if request.auth != null && request.resource.data.uploaderId == request.auth.uid;
+      allow delete: if request.auth != null && request.resource.data.uploaderId == request.auth.uid;
     }
 
     /**
-     * @description Manages chat messages for the AI chatbot. Any user can read chat messages. Only the user can create messages with their userId. Updates/deletes are disallowed.
-     * @path /chat_messages/{chatMessageId}
-     * @allow (get, list) - Any user can read chat messages.
-     * @allow (create) - User 'user_abc' can create a new chat message with userId == 'user_abc'.
-     * @deny (create) - User 'user_xyz' cannot create a chat message with userId == 'user_abc'.
-     * @deny (update, delete) - No one can update or delete chat messages.
-     * @principle Allows public read access and owner-only create access, but disallows updates and deletes.
+     * @description: Controls access to chat messages. Allows public read access, but restricts write access to the user who sent the message.
+     * @path: /chat_messages/{chatMessageId}
+     * @allow: Any user (get, list). User with UID 'user123' (create, update, delete) if they are the sender of the message (userId == 'user123').
+     * @deny: User with UID 'user456' (create, update, delete) if they try to modify a message sent by 'user123'.
+     * @principle: Public read, owner-only write. Validates user on create, update, and delete.
      */
     match /chat_messages/{chatMessageId} {
-      function isSignedIn() {
-        return request.auth != null;
-      }
-
-      function isOwner(userId) {
-        return request.auth.uid == userId;
-      }
-
       allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if false;
-      allow delete: if false;
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow delete: if request.auth != null && request.resource.data.userId == request.auth.uid;
     }
   }
 }

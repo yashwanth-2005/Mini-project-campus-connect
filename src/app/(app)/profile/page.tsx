@@ -14,25 +14,22 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { findUserById, updateUser, User, getUsnRequestForUser, createUsnChangeRequest } from "@/lib/mock-db";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
-// Defines the shape and validation rules for the profile form.
 const profileSchema = z.object({
-    fullName: z.string().min(1, "Full name is required"),
-    usn: z.string().min(1, "USN is required"),
-    year: z.coerce.number().min(1, "Year is required").max(4, "Please enter a valid year"),
-    bio: z.string().optional(),
-    linkedin: z.string().url("Please enter a valid LinkedIn URL").optional().or(z.literal('')),
-    github: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
-    leetcode: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
-    profilePicture: z.string().optional(),
+    firstName: z.string().min(1, "First name is required"),
+    lastName: z.string().min(1, "Last name is required"),
+    linkedinUrl: z.string().url("Please enter a valid LinkedIn URL").optional().or(z.literal('')),
+    githubUrl: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
+    leetcodeUrl: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
+    profilePictureUrl: z.string().optional(),
 });
 
-// Defines the validation for the USN change request dialog.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -41,8 +38,12 @@ const usnChangeSchema = z.object({
 export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
-    const [userProfile, setUserProfile] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
+
+    const userDocRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [firestore, user]);
+    const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
+
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUsnDialogOpen, setIsUsnDialogOpen] = useState(false);
@@ -52,50 +53,36 @@ export default function ProfilePage() {
 
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
-        defaultValues: { /* Populated by the useEffect hook below */ },
+        defaultValues: {
+            firstName: '',
+            lastName: '',
+            linkedinUrl: '',
+            githubUrl: '',
+            leetcodeUrl: '',
+            profilePictureUrl: ''
+        },
     });
-
-    const usnForm = useForm<z.infer<typeof usnChangeSchema>>({
-        resolver: zodResolver(usnChangeSchema),
-        defaultValues: { newUsn: "", reason: "" }
-    });
-
-    // When the component mounts, fetch the logged-in user's profile from localStorage.
+    
     useEffect(() => {
-        const loggedInUserId = localStorage.getItem('loggedInUser');
-        if (loggedInUserId) {
-            const profile = findUserById(loggedInUserId);
-            if (profile) {
-                setUserProfile(profile);
-                setPreviewImage(profile.profilePicture || null);
-                // Pre-fill the form with the fetched profile data.
-                form.reset({
-                    fullName: profile.fullName,
-                    usn: profile.usn,
-                    year: profile.year,
-                    bio: profile.bio || "",
-                    linkedin: profile.linkedin || "",
-                    github: profile.github || "",
-                    leetcode: profile.leetcode || "",
-                    profilePicture: profile.profilePicture || "",
-                });
+      if (!isUserLoading && !user) {
+        router.push('/login');
+      }
+    }, [isUserLoading, user, router]);
 
-                // Check if this user has a pending USN change request.
-                const pendingRequest = getUsnRequestForUser(profile.id);
-                setPendingUsnRequest(!!pendingRequest);
-            } else {
-                 // If the ID in localStorage is invalid, clear it and redirect.
-                localStorage.removeItem('loggedInUser');
-                router.push('/login');
-            }
-        } else {
-            // If no one is logged in, redirect to the login page.
-            router.push('/login');
+    useEffect(() => {
+        if (userProfile) {
+            form.reset({
+                firstName: userProfile.firstName,
+                lastName: userProfile.lastName,
+                linkedinUrl: userProfile.linkedinUrl || "",
+                githubUrl: userProfile.githubUrl || "",
+                leetcodeUrl: userProfile.leetcodeUrl || "",
+                profilePictureUrl: userProfile.profilePictureUrl || "",
+            });
+            setPreviewImage(userProfile.profilePictureUrl || null);
         }
-        setIsLoading(false);
-    }, [form, router]);
+    }, [userProfile, form]);
 
-    // Create a local preview when a new profile picture is selected.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -103,72 +90,49 @@ export default function ProfilePage() {
             reader.onloadend = () => {
                 const result = reader.result as string;
                 setPreviewImage(result);
-                form.setValue("profilePicture", result);
+                form.setValue("profilePictureUrl", result);
             };
             reader.readAsDataURL(file);
         }
     };
 
-    // Handles saving the main profile form.
-    function onSubmit(data: z.infer<typeof profileSchema>) {
-        if (!userProfile) return;
+    async function onSubmit(data: z.infer<typeof profileSchema>) {
+        if (!userDocRef) return;
         setIsSaving(true);
         
-        setTimeout(() => {
-            try {
-                updateUser(userProfile.id, data);
-                toast({
-                    title: "Profile Updated!",
-                    description: "Your profile has been successfully updated.",
-                });
-                // Force a reload to update the user avatar in the main navigation.
-                window.location.reload();
-            } catch(e) {
-                toast({
-                    title: "Update Failed",
-                    description: "Could not update your profile. Please try again.",
-                    variant: 'destructive'
-                });
-            } finally {
-                setIsSaving(false);
-            }
-        }, 500);
+        try {
+            await updateDoc(userDocRef, data);
+            toast({
+                title: "Profile Updated!",
+                description: "Your profile has been successfully updated.",
+            });
+            window.location.reload();
+        } catch(e) {
+            toast({
+                title: "Update Failed",
+                description: "Could not update your profile. Please try again.",
+                variant: 'destructive'
+            });
+        } finally {
+            setIsSaving(false);
+        }
     }
 
-    // Handles the submission of the USN change request.
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
-        if (!userProfile) return;
+        // This is a placeholder as USN change logic is complex and out of scope for now
         setIsRequestingUsn(true);
         setTimeout(() => {
-            try {
-                createUsnChangeRequest({
-                    userId: userProfile.id,
-                    studentName: userProfile.fullName,
-                    currentUsn: userProfile.usn,
-                    newUsn: data.newUsn.toUpperCase(),
-                    reason: data.reason
-                });
-                toast({
-                    title: "Request Submitted",
-                    description: "Your USN change request has been submitted for faculty approval."
-                });
-                setPendingUsnRequest(true);
-                setIsUsnDialogOpen(false);
-                usnForm.reset();
-            } catch (error: any) {
-                 toast({
-                    title: "Submission Failed",
-                    description: error.message,
-                    variant: 'destructive'
-                });
-            } finally {
-                setIsRequestingUsn(false);
-            }
+             toast({
+                title: "Request Submitted",
+                description: "Your USN change request has been submitted for faculty approval."
+            });
+            setPendingUsnRequest(true);
+            setIsUsnDialogOpen(false);
+            setIsRequestingUsn(false);
         }, 500);
     }
 
-    // Displays a loading skeleton while fetching user data.
-    if (isLoading || !userProfile) {
+    if (isUserLoading || isProfileLoading || !userProfile) {
         return (
             <div className="space-y-8">
                 <div>
@@ -178,7 +142,6 @@ export default function ProfilePage() {
                 <Card>
                     <CardHeader>
                         <CardTitle>Personal Information</CardTitle>
-                        <CardDescription>This information will be visible on your profile after approval.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-6">
                         <div className="flex items-center gap-6">
@@ -215,7 +178,7 @@ export default function ProfilePage() {
                         <div className="flex items-center gap-6">
                             <Avatar className="h-24 w-24 border">
                                 <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${userProfile.usn}`} />
-                                <AvatarFallback>{userProfile.fullName.charAt(0)}</AvatarFallback>
+                                <AvatarFallback>{userProfile.firstName.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-2">
                                 <Label htmlFor="picture">Profile Picture</Label>
@@ -226,116 +189,44 @@ export default function ProfilePage() {
                         <div className="grid md:grid-cols-2 gap-4">
                             <FormField
                                 control={form.control}
-                                name="fullName"
+                                name="firstName"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Full Name</FormLabel>
+                                        <FormLabel>First Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Your Name" {...field} />
+                                            <Input placeholder="Your First Name" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
-                            <div className="space-y-2">
-                                <Label htmlFor="usn">USN (University Seat Number)</Label>
-                                <div className="flex items-center gap-2">
-                                    <Input id="usn" type="text" value={userProfile.usn} readOnly className="bg-muted/50" />
-                                     <Dialog open={isUsnDialogOpen} onOpenChange={setIsUsnDialogOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button type="button" variant="outline" disabled={pendingUsnRequest}>
-                                                {pendingUsnRequest ? "Pending" : "Request Change"}
-                                            </Button>
-                                        </DialogTrigger>
-                                        <DialogContent>
-                                            <DialogHeader>
-                                                <DialogTitle>Request USN Change</DialogTitle>
-                                                <DialogDescription>
-                                                    Submit a request to a faculty member to change your USN. This is for correcting errors only.
-                                                </DialogDescription>
-                                            </DialogHeader>
-                                            <Form {...usnForm}>
-                                                <form onSubmit={usnForm.handleSubmit(onUsnChangeSubmit)} className="space-y-4">
-                                                     <FormField
-                                                        control={usnForm.control}
-                                                        name="newUsn"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>New USN</FormLabel>
-                                                                <FormControl>
-                                                                    <Input placeholder="1CR21CSXXX" {...field} />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                    <FormField
-                                                        control={usnForm.control}
-                                                        name="reason"
-                                                        render={({ field }) => (
-                                                            <FormItem>
-                                                                <FormLabel>Reason for Change</FormLabel>
-                                                                <FormControl>
-                                                                    <Textarea placeholder="e.g., Typo during registration" {...field} />
-                                                                </FormControl>
-                                                                <FormMessage />
-                                                            </FormItem>
-                                                        )}
-                                                    />
-                                                    <DialogFooter>
-                                                        <Button type="submit" disabled={isRequestingUsn}>
-                                                            {isRequestingUsn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                            Submit Request
-                                                        </Button>
-                                                    </DialogFooter>
-                                                </form>
-                                            </Form>
-                                        </DialogContent>
-                                    </Dialog>
-                                </div>
-                                <FormDescription>
-                                    {pendingUsnRequest 
-                                        ? <>Your change request is pending approval. <Badge variant="secondary">Pending</Badge></>
-                                        : "USN cannot be changed directly. Please submit a request for faculty approval."
-                                    }
-                                </FormDescription>
-                            </div>
-                        </div>
-                         <div className="grid md:grid-cols-2 gap-4">
-                           
-                            <FormField
+                             <FormField
                                 control={form.control}
-                                name="year"
+                                name="lastName"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Year of Study</FormLabel>
+                                        <FormLabel>Last Name</FormLabel>
                                         <FormControl>
-                                            <Input type="number" placeholder="e.g., 3" {...field} />
+                                            <Input placeholder="Your Last Name" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
+                        </div>
+
+                         <div className="grid md:grid-cols-2 gap-4">
+                           <div className="space-y-2">
+                                <Label>USN (University Seat Number)</Label>
+                                <Input value={userProfile.usn} readOnly className="bg-muted/50" />
+                                <FormDescription>USN cannot be changed directly. Please contact admin.</FormDescription>
+                           </div>
                              <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" type="email" defaultValue={userProfile.email} disabled />
+                                <Input id="email" type="email" value={userProfile.email} disabled />
                                 <FormDescription>You cannot change your registration email.</FormDescription>
                             </div>
                         </div>
-                       
-                        <FormField
-                            control={form.control}
-                            name="bio"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Bio</FormLabel>
-                                    <FormControl>
-                                        <Textarea placeholder="Tell us a little bit about yourself" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
                     </CardContent>
                 </Card>
 
@@ -347,7 +238,7 @@ export default function ProfilePage() {
                     <CardContent className="space-y-4">
                         <FormField
                             control={form.control}
-                            name="linkedin"
+                            name="linkedinUrl"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>LinkedIn Profile URL</FormLabel>
@@ -360,7 +251,7 @@ export default function ProfilePage() {
                         />
                         <FormField
                             control={form.control}
-                            name="github"
+                            name="githubUrl"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>GitHub Profile URL</FormLabel>
@@ -373,7 +264,7 @@ export default function ProfilePage() {
                         />
                         <FormField
                             control={form.control}
-                            name="leetcode"
+                            name="leetcodeUrl"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>LeetCode Profile URL</FormLabel>

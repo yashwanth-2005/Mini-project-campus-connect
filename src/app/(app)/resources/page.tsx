@@ -1,10 +1,9 @@
-
 'use client';
 
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Upload, Download, Edit, Trash, Search, Eye } from "lucide-react";
+import { MoreHorizontal, Upload, Download, Edit, Trash, Search, Eye, Loader2 } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -13,34 +12,33 @@ import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, where, doc, deleteDoc, updateDoc, addDoc } from "firebase/firestore";
+import { useCollection } from "@/firebase/firestore/use-collection";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
-// This defines the structure for a resource object.
 type Resource = {
     id: string;
     name: string;
     description: string;
-    type: string;
-    uploader: string;
-    date: string;
-    url: string; // The URL will be a Base64 dataURL for persistent storage.
+    fileType: string;
+    uploaderId: string;
+    uploaderName: string;
+    uploadDate: string;
+    fileUrl: string;
+    storagePath: string;
 };
 
-// This is our default list of resources, used if localStorage is empty.
-const initialResources: Resource[] = [
-    { id: 'res_1', name: "Data Structures & Algorithms Notes", description: "Comprehensive notes on core DSA concepts.", type: "PDF", uploader: "Jane Smith", date: "2024-05-20", url: "" },
-    { id: 'res_2', name: "Operating Systems PYQs", description: "Previous year questions for OS.", type: "PDF", uploader: "Admin", date: "2024-05-18", url: "" },
-    { id: 'res_3', name: "Database Management Systems Slides", description: "Lecture slides for DBMS.", type: "PPTX", uploader: "Prof. Davis", date: "2024-05-15", url: "" },
-];
-
-// This dialog component handles uploading new resources.
 const UploadResourceDialog = ({
     isOpen,
     onOpenChange,
     onUpload,
+    isUploading
 }: {
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onUpload: (title: string, description: string, file: File) => void;
+    isUploading: boolean;
 }) => {
     const [uploadTitle, setUploadTitle] = useState("");
     const [uploadDescription, setUploadDescription] = useState("");
@@ -57,10 +55,6 @@ const UploadResourceDialog = ({
             return;
         }
         onUpload(uploadTitle, uploadDescription, uploadFile);
-        // Reset the form after a successful upload.
-        setUploadTitle("");
-        setUploadDescription("");
-        setUploadFile(null);
     };
 
     return (
@@ -99,30 +93,33 @@ const UploadResourceDialog = ({
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit" onClick={handleUploadClick}>Upload</Button>
+                    <Button type="submit" onClick={handleUploadClick} disabled={isUploading}>
+                        {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        {isUploading ? "Uploading..." : "Upload"}
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
     );
 };
 
-// This dialog handles editing existing resource details.
 const EditResourceDialog = ({
     resource,
     isOpen,
     onOpenChange,
     onUpdate,
+    isUpdating,
 } : {
     resource: Resource | null;
     isOpen: boolean;
     onOpenChange: (isOpen: boolean) => void;
     onUpdate: (resourceId: string, title: string, description: string) => void;
+    isUpdating: boolean;
 }) => {
     const [editTitle, setEditTitle] = useState('');
     const [editDescription, setEditDescription] = useState('');
     const { toast } = useToast();
 
-    // When the selected resource changes, we pre-fill the form.
     React.useEffect(() => {
         if(resource) {
             setEditTitle(resource.name);
@@ -167,7 +164,10 @@ const EditResourceDialog = ({
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button type="submit" onClick={handleUpdateClick}>Save Changes</Button>
+                    <Button type="submit" onClick={handleUpdateClick} disabled={isUpdating}>
+                        {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Changes
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
@@ -177,65 +177,29 @@ const EditResourceDialog = ({
 export default function ResourcesPage() {
     const searchParams = useSearchParams();
     const { toast } = useToast();
+    const { user } = useUser();
     const role = searchParams.get('role') || 'student';
-    const [resources, setResources] = useState<Resource[]>([]);
+    
+    const firestore = useFirestore();
+    const storage = getStorage();
+
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
-    
-    // When the page loads, we try to get resources from localStorage. If it's empty, we use our initial default list.
-    useEffect(() => {
-        try {
-            const storedResources = localStorage.getItem('resources');
-            if (storedResources) {
-                setResources(JSON.parse(storedResources));
-            } else {
-                setResources(initialResources);
-            }
-        } catch (error) {
-            console.error("Failed to load resources from localStorage", error);
-            setResources(initialResources);
-        }
-    }, []);
 
-    // This effect runs whenever the 'resources' state changes. It saves the updated list to localStorage.
-    useEffect(() => {
-        try {
-            if (resources.length > 0 && resources !== initialResources) {
-              localStorage.setItem('resources', JSON.stringify(resources));
-            }
-        } catch (error) {
-            console.error("Failed to save resources to localStorage", error);
-        }
-    }, [resources]);
+    const resourcesCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'resources') : null, [firestore]);
+    const { data: resources, isLoading: isLoadingResources } = useCollection<Resource>(resourcesCollectionRef);
 
-    // This function opens the uploaded file in a new browser tab.
-    const handleView = (url: string, fileName: string) => {
-        if (!url) {
-            toast({
-                title: "View Unavailable",
-                description: "This is a default resource and does not have a file to view.",
-                variant: "destructive"
-            });
-            return;
-        }
+    const handleView = (url: string) => {
         window.open(url, '_blank');
     };
 
-
-    // This function triggers a download of the selected file.
     const handleDownload = (url: string, fileName: string) => {
-        if (!url) {
-            toast({
-                title: "Download Unavailable",
-                description: "This is a default resource and does not have a file to download.",
-                variant: "destructive"
-            });
-            return;
-        }
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', fileName);
@@ -244,82 +208,111 @@ export default function ResourcesPage() {
         document.body.removeChild(link);
     };
 
-    // This function handles the file upload process.
-    const handleUpload = (title: string, description: string, file: File) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            const newResource: Resource = {
-                id: `res_${Date.now()}`,
+    const handleUpload = async (title: string, description: string, file: File) => {
+        if (!user || !firestore) return;
+        setIsUploading(true);
+
+        const storagePath = `resources/${user.uid}/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, storagePath);
+
+        try {
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            await addDoc(collection(firestore, 'resources'), {
                 name: title,
-                description: description,
-                type: file.type || "File",
-                uploader: "Current User",
-                date: new Date().toLocaleDateString('en-CA'),
-                url: reader.result as string, // We store the file content as a Base64 dataURL.
-            };
-    
-            setResources(prevResources => [...prevResources, newResource]);
-    
+                description,
+                fileType: file.type || "File",
+                uploaderId: user.uid,
+                uploaderName: user.displayName || 'Anonymous',
+                uploadDate: new Date().toISOString(),
+                fileUrl: downloadURL,
+                storagePath: storagePath,
+            });
+
             toast({
                 title: "Resource Uploaded",
-                description: `"${newResource.name}" has been added to the hub.`,
+                description: `"${title}" has been added to the hub.`,
             });
-    
             setIsUploadDialogOpen(false);
-        };
-        reader.readAsDataURL(file);
+        } catch (error: any) {
+            toast({
+                title: "Upload Failed",
+                description: error.message || "Could not upload the file. Check storage rules.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsUploading(false);
+        }
     }
 
-    // This function opens the edit dialog for a specific resource.
     const handleEditClick = (resource: Resource) => {
         setEditingResource(resource);
         setIsEditDialogOpen(true);
     };
 
-    // This function updates the resource details in our state.
-    const handleUpdate = (resourceId: string, title: string, description: string) => {
-        setResources(prevResources => 
-            prevResources.map(res => 
-                res.id === resourceId ? { ...res, name: title, description: description } : res
-            )
-        );
-        toast({
-            title: "Resource Updated",
-            description: "The resource details have been saved.",
-        });
-        setIsEditDialogOpen(false);
-        setEditingResource(null);
+    const handleUpdate = async (resourceId: string, title: string, description: string) => {
+        if (!firestore) return;
+        setIsUpdating(true);
+        const resourceDocRef = doc(firestore, 'resources', resourceId);
+        try {
+            await updateDoc(resourceDocRef, { name: title, description: description });
+            toast({
+                title: "Resource Updated",
+                description: "The resource details have been saved.",
+            });
+            setIsEditDialogOpen(false);
+            setEditingResource(null);
+        } catch (error: any) {
+             toast({
+                title: "Update Failed",
+                description: error.message || "Could not update the resource.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsUpdating(false);
+        }
     }
 
-    // This function opens the delete confirmation dialog.
     const handleDeleteClick = (resourceId: string) => {
         setDeletingResourceId(resourceId);
         setIsDeleteDialogOpen(true);
     };
 
-    // This function confirms and executes the deletion.
-    const handleConfirmDelete = () => {
-        if (!deletingResourceId) return;
+    const handleConfirmDelete = async () => {
+        if (!deletingResourceId || !firestore || !resources) return;
 
         const resourceToDelete = resources.find(res => res.id === deletingResourceId);
-        
-        setResources(prevResources => prevResources.filter(res => res.id !== deletingResourceId));
-        
-        toast({
-            title: "Resource Deleted",
-            description: `"${resourceToDelete?.name}" has been removed.`,
-            variant: "destructive"
-        });
+        if (!resourceToDelete) return;
 
-        setIsDeleteDialogOpen(false);
-        setDeletingResourceId(null);
+        const resourceDocRef = doc(firestore, 'resources', deletingResourceId);
+        const fileRef = ref(storage, resourceToDelete.storagePath);
+
+        try {
+            await deleteObject(fileRef);
+            await deleteDoc(resourceDocRef);
+
+            toast({
+                title: "Resource Deleted",
+                description: `"${resourceToDelete?.name}" has been removed.`,
+                variant: "destructive"
+            });
+        } catch (error: any) {
+            toast({
+                title: "Deletion Failed",
+                description: error.message || "Could not delete the resource.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsDeleteDialogOpen(false);
+            setDeletingResourceId(null);
+        }
     };
 
-    // We filter the displayed resources based on the search query.
-    const filteredResources = resources.filter(resource => 
+    const filteredResources = resources?.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    ) || [];
 
     return (
         <div className="space-y-8">
@@ -332,6 +325,7 @@ export default function ResourcesPage() {
                     isOpen={isUploadDialogOpen}
                     onOpenChange={setIsUploadDialogOpen}
                     onUpload={handleUpload}
+                    isUploading={isUploading}
                 />
             </div>
             
@@ -358,7 +352,13 @@ export default function ResourcesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredResources.length === 0 ? (
+                        {isLoadingResources ? (
+                            <TableRow>
+                                <TableCell colSpan={6} className="h-24 text-center">
+                                    <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                                </TableCell>
+                            </TableRow>
+                        ) : filteredResources.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center">
                                     {searchQuery ? "No resources found matching your search." : "No resources available yet. Be the first to upload!"}
@@ -369,9 +369,9 @@ export default function ResourcesPage() {
                                 <TableRow key={resource.id}>
                                     <TableCell className="font-medium">{resource.name}</TableCell>
                                     <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{resource.description}</TableCell>
-                                    <TableCell>{resource.type}</TableCell>
-                                    <TableCell>{resource.uploader}</TableCell>
-                                    <TableCell>{resource.date}</TableCell>
+                                    <TableCell>{resource.fileType}</TableCell>
+                                    <TableCell>{resource.uploaderName}</TableCell>
+                                    <TableCell>{new Date(resource.uploadDate).toLocaleDateString()}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
@@ -381,15 +381,15 @@ export default function ResourcesPage() {
                                             </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleView(resource.url, resource.name)}>
+                                                <DropdownMenuItem onClick={() => handleView(resource.fileUrl)}>
                                                     <Eye className="mr-2 h-4 w-4"/>
                                                     View
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDownload(resource.url, resource.name)}>
+                                                <DropdownMenuItem onClick={() => handleDownload(resource.fileUrl, resource.name)}>
                                                     <Download className="mr-2 h-4 w-4"/>
                                                     Download
                                                 </DropdownMenuItem>
-                                                {(role === 'faculty' || resource.uploader === 'Current User') && (
+                                                {(role === 'faculty' || resource.uploaderId === user?.uid) && (
                                                     <>
                                                         <DropdownMenuItem onClick={() => handleEditClick(resource)}>
                                                             <Edit className="mr-2 h-4 w-4"/>
@@ -418,6 +418,7 @@ export default function ResourcesPage() {
                 isOpen={isEditDialogOpen}
                 onOpenChange={setIsEditDialogOpen}
                 onUpdate={handleUpdate}
+                isUpdating={isUpdating}
             />
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
@@ -425,7 +426,7 @@ export default function ResourcesPage() {
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the
-                        resource from our servers.
+                        resource from the cloud.
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -439,5 +440,3 @@ export default function ResourcesPage() {
         </div>
     )
 }
-
-    
