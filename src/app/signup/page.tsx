@@ -31,7 +31,10 @@ const signupSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
   usn: z.string().min(1, "USN is required"),
-  year: z.coerce.number().min(1, "Year is required").max(4, "Year cannot be more than 4"),
+  year: z.coerce.number()
+    .min(1, "Year is required")
+    .max(4, "Year cannot be more than 4")
+    .refine(val => val <= 4, { message: "Year cannot be more than 4" }),
   semester: z.coerce.number().min(1, "Semester is required").max(8, "Semester cannot be more than 8"),
   course: z.string().min(1, "Please select your course"),
   linkedin: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
