@@ -1,13 +1,30 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquare, ThumbsUp, PenSquare } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
-const discussions = [
+type Discussion = {
+    id: number;
+    title: string;
+    content?: string;
+    author: string;
+    avatar: string;
+    time: string;
+    replies: number;
+    upvotes: number;
+    tags: string[];
+};
+
+const initialDiscussions: Discussion[] = [
     {
         id: 1,
         title: "How to prepare for FAANG interviews in 6 months?",
@@ -38,9 +55,75 @@ const discussions = [
         upvotes: 21,
         tags: ["academics", "courses", "review"]
     }
-]
+];
 
 export default function ForumPage() {
+    const [discussions, setDiscussions] = useState<Discussion[]>([]);
+    const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [newDiscussionTitle, setNewDiscussionTitle] = useState('');
+    const [newDiscussionContent, setNewDiscussionContent] = useState('');
+    const { toast } = useToast();
+
+    useEffect(() => {
+        try {
+            const storedDiscussions = localStorage.getItem('discussions');
+            if (storedDiscussions) {
+                setDiscussions(JSON.parse(storedDiscussions));
+            } else {
+                setDiscussions(initialDiscussions);
+            }
+        } catch (error) {
+            console.error("Failed to load discussions from localStorage", error);
+            setDiscussions(initialDiscussions);
+        }
+    }, []);
+
+    useEffect(() => {
+        try {
+            // Avoid overwriting initial discussions on first render
+            if (discussions.length > 0 && discussions !== initialDiscussions) {
+                 localStorage.setItem('discussions', JSON.stringify(discussions));
+            }
+        } catch (error) {
+            console.error("Failed to save discussions to localStorage", error);
+        }
+    }, [discussions]);
+
+
+    const handleStartDiscussion = () => {
+        if (!newDiscussionTitle.trim() || !newDiscussionContent.trim()) {
+            toast({
+                title: "Incomplete Discussion",
+                description: "Please provide both a title and content for your discussion.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const newDiscussion: Discussion = {
+            id: Date.now(),
+            title: newDiscussionTitle,
+            content: newDiscussionContent,
+            author: "Demo User", // Placeholder for logged-in user
+            avatar: "https://picsum.photos/seed/user-avatar/40/40",
+            time: "Just now",
+            replies: 0,
+            upvotes: 0,
+            tags: ["new"],
+        };
+
+        setDiscussions(prevDiscussions => [newDiscussion, ...prevDiscussions]);
+        
+        setNewDiscussionTitle('');
+        setNewDiscussionContent('');
+        setIsDialogOpen(false);
+
+        toast({
+            title: "Discussion Started!",
+            description: "Your post has been added to the forum.",
+        });
+    };
+
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -48,10 +131,46 @@ export default function ForumPage() {
                     <h1 className="text-3xl font-bold font-headline">Discussion Forum</h1>
                     <p className="text-muted-foreground">Connect with peers, seniors, and faculty.</p>
                 </div>
-                <Button>
-                    <PenSquare className="mr-2 h-4 w-4" />
-                    Start a Discussion
-                </Button>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                    <DialogTrigger asChild>
+                        <Button>
+                            <PenSquare className="mr-2 h-4 w-4" />
+                            Start a Discussion
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Start a New Discussion</DialogTitle>
+                            <DialogDescription>
+                                Share your thoughts, ask questions, and engage with the community.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="grid gap-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="discussion-title">Title</Label>
+                                <Input 
+                                    id="discussion-title" 
+                                    placeholder="What's the main topic?" 
+                                    value={newDiscussionTitle}
+                                    onChange={(e) => setNewDiscussionTitle(e.target.value)} 
+                                />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="discussion-content">Content</Label>
+                                <Textarea 
+                                    id="discussion-content" 
+                                    placeholder="Elaborate on your topic..."
+                                    value={newDiscussionContent}
+                                    onChange={(e) => setNewDiscussionContent(e.target.value)}
+                                    rows={5}
+                                />
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button onClick={handleStartDiscussion}>Post Discussion</Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
             
             <div className="flex items-center gap-4">
@@ -74,7 +193,7 @@ export default function ForumPage() {
                             </div>
                             <div className="flex-1">
                                 <CardTitle className="text-lg mb-2">{d.title}</CardTitle>
-                                <div className="text-sm text-muted-foreground flex items-center gap-4">
+                                <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
                                     <div className="flex items-center gap-2">
                                         <Avatar className="h-6 w-6">
                                             <AvatarImage src={d.avatar} />
@@ -90,6 +209,7 @@ export default function ForumPage() {
                                         <span>{d.replies} replies</span>
                                     </div>
                                 </div>
+                                {d.content && <p className="text-sm text-foreground mt-3">{d.content}</p>}
                                 <div className="mt-4 flex gap-2">
                                     {d.tags.map(tag => (
                                         <span key={tag} className="px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full text-xs font-medium">{tag}</span>
@@ -103,5 +223,3 @@ export default function ForumPage() {
         </div>
     )
 }
-
-    
