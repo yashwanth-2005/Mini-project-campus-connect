@@ -64,14 +64,10 @@ export default function SignupPage() {
   });
   
   const password = form.watch("password");
-  const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
 
-  const checkPasswordStrength = (pass: string) => {
+  const getPasswordStrength = (pass: string) => {
     let score = 0;
-    if (!pass) {
-        setStrength({ score: 0, label: '', color: '' });
-        return;
-    }
+    if (!pass) return { score: 0, label: '', color: '' };
     if (pass.length >= 8) score++;
     if (/[A-Z]/.test(pass)) score++;
     if (/[a-z]/.test(pass)) score++;
@@ -85,24 +81,22 @@ export default function SignupPage() {
       case 1:
       case 2:
         label = 'Weak';
-        color = 'text-red-500';
+        color = 'bg-red-500';
         break;
       case 3:
         label = 'Medium';
-        color = 'text-yellow-500';
+        color = 'bg-yellow-500';
         break;
       case 4:
       case 5:
         label = 'Strong';
-        color = 'text-green-500';
+        color = 'bg-green-500';
         break;
     }
-    setStrength({ score, label, color });
+    return { score, label, color };
   };
-  
-  useEffect(() => {
-    checkPasswordStrength(password);
-  }, [password]);
+
+  const strength = getPasswordStrength(password);
 
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
@@ -314,7 +308,7 @@ export default function SignupPage() {
                         <div className="space-y-2">
                         <Progress value={strength.score * 20} className="h-2 [&>div]:transition-all [&>div]:duration-300" />
                         <p className="text-xs text-muted-foreground">
-                            Password strength: <span className={`font-bold ${strength.color}`}>{strength.label}</span>
+                            Password strength: <span className={`font-bold`}>{strength.label}</span>
                         </p>
                         </div>
                     )}
@@ -337,3 +331,5 @@ export default function SignupPage() {
     </div>
   );
 }
+
+    
