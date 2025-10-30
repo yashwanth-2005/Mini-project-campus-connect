@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Upload, Download, Edit, Trash } from "lucide-react";
+import { MoreHorizontal, Upload, Download, Edit, Trash, Search } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -173,6 +173,7 @@ export default function ResourcesPage() {
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
     
     // Load resources from localStorage on initial render
     useEffect(() => {
@@ -271,6 +272,11 @@ export default function ResourcesPage() {
         setDeletingResourceId(null);
     };
 
+    const filteredResources = resources.filter(resource => 
+        resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        resource.description.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
     return (
         <div className="space-y-8">
             <div className="flex items-center justify-between">
@@ -284,12 +290,23 @@ export default function ResourcesPage() {
                     onUpload={handleUpload}
                 />
             </div>
+            
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                    placeholder="Search resources..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+            </div>
 
             <div className="border rounded-lg">
                 <Table>
                     <TableHeader>
                         <TableRow>
                             <TableHead>File Name</TableHead>
+                            <TableHead>Description</TableHead>
                             <TableHead>Type</TableHead>
                             <TableHead>Uploaded By</TableHead>
                             <TableHead>Date</TableHead>
@@ -297,16 +314,17 @@ export default function ResourcesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {resources.length === 0 ? (
+                        {filteredResources.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={5} className="h-24 text-center">
-                                    No resources available yet. Be the first to upload!
+                                <TableCell colSpan={6} className="h-24 text-center">
+                                    {searchQuery ? "No resources found matching your search." : "No resources available yet. Be the first to upload!"}
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            resources.map((resource) => (
+                            filteredResources.map((resource) => (
                                 <TableRow key={resource.id}>
                                     <TableCell className="font-medium">{resource.name}</TableCell>
+                                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{resource.description}</TableCell>
                                     <TableCell>{resource.type}</TableCell>
                                     <TableCell>{resource.uploader}</TableCell>
                                     <TableCell>{resource.date}</TableCell>
@@ -373,3 +391,5 @@ export default function ResourcesPage() {
         </div>
     )
 }
+
+    
