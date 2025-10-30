@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -17,8 +18,14 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { findUserByEmail, setCurrentUser, getFacultyUser } from "@/lib/mock-db";
+import { findUserByEmail, setCurrentUser, getFacultyUser, User } from "@/lib/mock-db";
 import { Eye, EyeOff } from "lucide-react";
+
+// Basic email format validation
+const isValidEmail = (email: string) => {
+    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return regex.test(email);
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,6 +35,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   // This function handles the login attempt for both students and faculty.
+  // It allows any valid email format to log in for demonstration purposes.
   const handleLogin = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -43,38 +51,60 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    // We use a timeout to simulate a network request.
+    // Simulate a network request.
     setTimeout(() => {
-        let user;
-        if (role === 'faculty') {
-            // For the prototype, we log in any faculty with a default user.
-            user = getFacultyUser();
-        } else {
-            user = findUserByEmail(email);
+        let user: User | null = null;
+        
+        if (!isValidEmail(email) || !password) {
+             toast({
+                title: "Login Failed",
+                description: "Please enter a valid email and password.",
+                variant: "destructive",
+            });
+            setIsLoading(false);
+            return;
         }
 
-        // For students, we check the password. For faculty, we allow login without a password check for this prototype.
-        const isPasswordCorrect = (role === 'student') ? (user && user.password === password) : true;
+        if (role === 'faculty') {
+            // For faculty, use a default mock user for simplicity.
+            user = getFacultyUser();
+        } else {
+            // For students, check if a user exists. If not, create one on-the-fly.
+            user = findUserByEmail(email);
+            if (!user) {
+                user = {
+                    id: `user-${Date.now()}`,
+                    fullName: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
+                    email: email,
+                    usn: "1CR21CSXXX",
+                    year: 3,
+                    semester: 6,
+                    linkedin: "",
+                    leetcode: "",
+                    github: ""
+                };
+            }
+        }
 
-        if (user && isPasswordCorrect) {
-            setCurrentUser(user.id);
+        if (user) {
+            setCurrentUser(user.id, user); // Save the (potentially new) user to mock DB
             toast({
                 title: "Login Successful",
                 description: `Welcome back, ${user.fullName}!`,
             });
             router.push(`/dashboard?role=${role}`);
         } else {
-            toast({
+             toast({
                 title: "Login Failed",
-                description: "Invalid email or password. Please try again.",
+                description: "An unexpected error occurred. Please try again.",
                 variant: "destructive",
             });
             setIsLoading(false);
         }
-    }, 100);
+    }, 500);
   };
 
-  // This function renders the login form fields. It's reused for both student and faculty tabs.
+  // This function renders the login form fields, reused for both tabs.
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
       {currentRole === 'student' && (

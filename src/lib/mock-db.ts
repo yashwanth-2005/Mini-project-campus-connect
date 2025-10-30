@@ -1,4 +1,5 @@
 
+
 export type User = {
     id: string;
     fullName: string;
@@ -96,10 +97,15 @@ export const getCurrentUser = (): User | null => {
 }
 
 // Sets the currently logged-in user.
-export const setCurrentUser = (userId: string | null) => {
+export const setCurrentUser = (userId: string | null, user?: User) => {
     if (typeof window === 'undefined') return;
     if (userId) {
         localStorage.setItem('currentUser', userId);
+        if (user) {
+            const users = getUsers();
+            users[userId] = user;
+            saveUsers(users);
+        }
     } else {
         localStorage.removeItem('currentUser');
     }
@@ -149,8 +155,9 @@ export const updateUser = (userId: string, updatedData: Partial<User>): User | n
 
     saveUsers(users);
     const currentUser = getCurrentUser();
+    // Re-set the current user in localStorage to ensure data consistency
     if (currentUser && currentUser.id === userId) {
-        setCurrentUser(userId); 
+        setCurrentUser(userId, users[userId]); 
     }
     
     return users[userId];
