@@ -34,6 +34,7 @@ const profileSchema = z.object({
     // Faculty specific fields
     department: z.string().optional(),
     facultyId: z.string().optional(),
+    uniqueCode: z.string().optional(),
 });
 
 // Defines validation for the USN change request form.
@@ -73,6 +74,7 @@ export default function ProfilePage() {
             profilePictureUrl: '',
             department: '',
             facultyId: '',
+            uniqueCode: '',
         },
     });
 
@@ -103,6 +105,7 @@ export default function ProfilePage() {
                 profilePictureUrl: userProfile.profilePictureUrl || "",
                 department: userProfile.department || "",
                 facultyId: userProfile.facultyId || "",
+                uniqueCode: userProfile.uniqueCode || "",
             });
             setPreviewImage(userProfile.profilePictureUrl || null);
         }

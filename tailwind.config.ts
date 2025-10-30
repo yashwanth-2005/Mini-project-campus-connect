@@ -17,6 +17,7 @@ export default {
     },
     extend: {
       fontFamily: {
+        // Sets the default body and headline fonts to use the CSS variable.
         body: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
       },

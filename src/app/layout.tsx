@@ -5,14 +5,15 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Inter } from 'next/font/google';
 
-// Configures the Inter font for optimized loading with Next.js.
+// This function configures the Inter font for optimal performance with Next.js.
+// It downloads the font at build time and self-hosts it.
 const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-inter', // This creates a CSS variable for the font.
 });
 
 // This is the root layout for the entire application.
-// It wraps every page with essential providers like themes and notifications.
+// It wraps every page with essential providers like themes, notifications, and Firebase services.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,7 +29,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* Provides Firebase services to the entire app. */}
+          {/* Provides Firebase services to the entire app on the client side. */}
           <FirebaseClientProvider>
             {children}
           </FirebaseClientProvider>
