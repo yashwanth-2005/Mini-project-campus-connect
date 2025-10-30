@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useForm } from "react-hook-form";
@@ -225,6 +226,12 @@ export default function ProfilePage() {
                                 <Label htmlFor="email">Email</Label>
                                 <Input id="email" type="email" value={userProfile.email} disabled />
                                 <FormDescription>You cannot change your registration email.</FormDescription>
+                            </div>
+                        </div>
+                        <div className="grid md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label>Course</Label>
+                                <Input value={userProfile.course} readOnly className="bg-muted/50" />
                             </div>
                         </div>
                     </CardContent>

@@ -33,8 +33,7 @@ const signupSchema = z.object({
   usn: z.string().min(1, "USN is required"),
   year: z.coerce.number().min(1, "Year is required").max(4, "Year cannot be more than 4"),
   semester: z.coerce.number().min(1, "Semester is required").max(8, "Semester cannot be more than 8"),
-  department: z.string().min(1, "Please select your department"),
-  branch: z.string().min(1, "Branch is required"),
+  course: z.string().min(1, "Please select your course"),
   linkedin: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   leetcode: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   password: z.string().min(8, "Password must be at least 8 characters long"),
@@ -57,8 +56,7 @@ export default function SignupPage() {
         usn: "",
         year: undefined,
         semester: undefined,
-        department: "",
-        branch: "",
+        course: "",
         linkedin: "",
         leetcode: "",
         password: "",
@@ -130,8 +128,8 @@ export default function SignupPage() {
             usn: data.usn.toUpperCase(),
             year: data.year,
             semester: data.semester,
-            course: data.department,
-            branch: data.branch,
+            course: data.course,
+            branch: data.course, // Using course as branch
             linkedinUrl: data.linkedin,
             leetcodeUrl: data.leetcode,
             githubUrl: "",
@@ -233,43 +231,34 @@ export default function SignupPage() {
                         </FormItem>
                     )} />
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="department"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Department</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select department" />
-                                    </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                    <SelectItem value="cse">Computer Science Engineering</SelectItem>
-                                    <SelectItem value="ise">Information Science Engineering</SelectItem>
-                                    <SelectItem value="ece">Electronics & Communication</SelectItem>
-                                    <SelectItem value="eee">Electrical & Electronics</SelectItem>
-                                    <SelectItem value="mech">Mechanical Engineering</SelectItem>
-                                    <SelectItem value="civil">Civil Engineering</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField control={form.control} name="branch" render={({ field }) => (
+                    <FormField
+                        control={form.control}
+                        name="course"
+                        render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Branch</FormLabel>
+                            <FormLabel>Course</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
                                 <FormControl>
-                                    <Input placeholder="e.g., General" {...field} />
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select your course" />
+                                </SelectTrigger>
                                 </FormControl>
-                                <FormMessage />
+                                <SelectContent>
+                                <SelectItem value="be-cse">B.E. - Computer Science & Engineering</SelectItem>
+                                <SelectItem value="be-ise">B.E. - Information Science & Engineering</SelectItem>
+                                <SelectItem value="be-ece">B.E. - Electronics & Communication</SelectItem>
+                                <SelectItem value="be-eee">B.E. - Electrical & Electronics</SelectItem>
+                                <SelectItem value="be-mech">B.E. - Mechanical Engineering</SelectItem>
+                                <SelectItem value="be-civil">B.E. - Civil Engineering</SelectItem>
+                                <SelectItem value="mca">MCA - Master of Computer Applications</SelectItem>
+                                <SelectItem value="mtech-cse">M.Tech - Computer Science & Engineering</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
                             </FormItem>
-                        )} />
-                    </div>
+                        )}
+                    />
                     
                     <div className="grid grid-cols-2 gap-4">
                          <FormField control={form.control} name="year" render={({ field }) => (
