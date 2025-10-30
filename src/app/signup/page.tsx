@@ -54,8 +54,8 @@ export default function SignupPage() {
         fullName: "",
         email: searchParams.get('email') || "",
         usn: "",
-        year: '' as unknown as number, // Fix: Initialize with empty string
-        semester: '' as unknown as number, // Fix: Initialize with empty string
+        year: '' as unknown as number,
+        semester: '' as unknown as number,
         course: "",
         linkedin: "",
         leetcode: "",
