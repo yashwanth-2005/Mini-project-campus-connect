@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MailCheck } from "lucide-react";
 import { findUserByEmail } from "@/lib/mock-db";
+import { Loader2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
     const { toast } = useToast();
@@ -104,6 +105,7 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                             <Button type="submit" className="w-full" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {isLoading ? "Sending..." : "Send Reset Link"}
                             </Button>
                         </CardContent>
