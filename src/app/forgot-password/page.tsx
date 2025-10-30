@@ -34,12 +34,13 @@ export default function ForgotPasswordPage() {
 
         try {
             // Use Firebase's built-in function to send a password reset email.
-            // On local development, this logs the reset link to the console instead of sending an email.
+            // On local development, this logs the reset link to the console instead of sending a real email.
+            // We've added a toast to make this clear to the user.
             await sendPasswordResetEmail(auth, email);
             setEmailSent(true);
             toast({
-              title: "Check your console!",
-              description: "The password reset link has been logged to the browser console."
+              title: "Check your browser console!",
+              description: "For local testing, the password reset link has been logged to the browser console."
             })
         } catch (error: any) {
             toast({
@@ -56,10 +57,10 @@ export default function ForgotPasswordPage() {
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
              {isLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
-                <div className="flex flex-col items-center gap-4">
-                    <Logo className="h-16 w-16 text-primary animate-pulse-grow" />
-                    <p className="text-muted-foreground">Connecting you...</p>
-                </div>
+                    <div className="flex flex-col items-center gap-4">
+                        <Logo className="h-16 w-16 text-primary animate-pulse-grow" />
+                        <p className="text-muted-foreground">Connecting you...</p>
+                    </div>
                 </div>
             )}
              <Card className="w-full max-w-md mx-auto shadow-xl animate-in fade-in-0 slide-in-from-bottom-10 duration-500">
@@ -81,7 +82,7 @@ export default function ForgotPasswordPage() {
                             <MailCheck className="h-4 w-4" />
                             <AlertTitle>Password Reset Link Generated!</AlertTitle>
                             <AlertDescription>
-                                For local testing, the reset link has been printed to your browser's developer console. Please copy it from there.
+                                For local testing, the reset link has been printed to your browser's developer console. Please copy it from there to reset your password. In a live deployed app, this would be sent as an email.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">
