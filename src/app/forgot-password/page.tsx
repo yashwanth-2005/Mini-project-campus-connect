@@ -43,11 +43,19 @@ export default function ForgotPasswordPage() {
                 });
             }
             setIsLoading(false);
-        }, 500);
+        }, 1000);
     }
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
+             {isLoading && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
+                <div className="flex flex-col items-center gap-4">
+                    <Logo className="h-16 w-16 text-primary animate-pulse-grow" />
+                    <p className="text-muted-foreground">Connecting you...</p>
+                </div>
+                </div>
+            )}
              <Card className="w-full max-w-md mx-auto shadow-xl animate-in fade-in-0 slide-in-from-bottom-10 duration-500">
                 <CardHeader className="space-y-1 text-center">
                     <Link href="/" className="flex items-center justify-center space-x-2 mb-4">
