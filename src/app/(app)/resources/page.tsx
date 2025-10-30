@@ -43,9 +43,9 @@ export default function ResourcesPage() {
                 <DialogContent ref={dialogContentRef} className="p-0">
                      <motion.div
                         drag
-                        dragListener={false}
                         dragConstraints={{ current: document.body }}
                         dragElastic={0.1}
+                        dragListener={false} // We will control drag initiation manually
                         onPointerDown={(e) => {
                             // Allows dragging only from the header
                             const target = e.target as HTMLElement;
