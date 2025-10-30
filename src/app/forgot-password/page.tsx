@@ -34,8 +34,13 @@ export default function ForgotPasswordPage() {
 
         try {
             // Use Firebase's built-in function to send a password reset email.
+            // On local development, this logs the reset link to the console instead of sending an email.
             await sendPasswordResetEmail(auth, email);
             setEmailSent(true);
+            toast({
+              title: "Check your console!",
+              description: "The password reset link has been logged to the browser console."
+            })
         } catch (error: any) {
             toast({
                 title: "Error",
@@ -66,7 +71,7 @@ export default function ForgotPasswordPage() {
                     <CardTitle className="text-2xl font-headline">Forgot Password</CardTitle>
                     <CardDescription>
                         {emailSent 
-                            ? "Check your inbox for a password reset link."
+                            ? "Check your browser console for the reset link."
                             : "Enter your registered email to reset your password."}
                     </CardDescription>
                 </CardHeader>
@@ -74,9 +79,9 @@ export default function ForgotPasswordPage() {
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
-                            <AlertTitle>Email Sent!</AlertTitle>
+                            <AlertTitle>Password Reset Link Generated!</AlertTitle>
                             <AlertDescription>
-                                A password reset link has been sent to <strong>{email}</strong>.
+                                For local testing, the reset link has been printed to your browser's developer console. Please copy it from there.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">
