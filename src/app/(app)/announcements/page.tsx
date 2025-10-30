@@ -39,6 +39,7 @@ const announcements = [
     }
 ]
 
+// This is the page where students and faculty can view campus announcements.
 export default function AnnouncementsPage() {
     const searchParams = useSearchParams();
     const role = searchParams.get('role') || 'student';
@@ -91,7 +92,7 @@ export default function AnnouncementsPage() {
                 )}
             </div>
             
-            {/* Renders a list of announcement cards. */}
+            {/* Renders a list of announcement cards from the mock data. */}
             <div className="space-y-6">
                 {announcements.map((ann, index) => (
                     <Card key={index}>
@@ -112,14 +113,14 @@ export default function AnnouncementsPage() {
                         <CardContent>
                             <p className="text-sm text-foreground">{ann.content}</p>
                         </CardContent>
-                        {/* Shows the attachments section if any files are attached. */}
+                        {/* Shows the attachments section only if there are files attached. */}
                         {ann.attachments.length > 0 && (
                             <CardFooter className="flex-col items-start gap-2">
                                 <h4 className="text-sm font-semibold">Attachments:</h4>
                                 <div className="space-y-2">
                                     {ann.attachments.map((file, i) => (
                                         <Button key={i} variant="outline" size="sm" className="h-auto py-1">
-                                            <Paperclip className="h-3 w-3 mr-2" />
+                                            <Paperclip className="mr-2 h-3 w-3" />
                                             {file.name}
                                         </Button>
                                     ))}

@@ -22,6 +22,7 @@ const docRepository = [
     { name: "Data-Structures-Notes.pdf", type: "Notes", uploader: "Senior Student" },
 ];
 
+// This is the page for all placement-related activities and resources.
 export default function PlacementsPage() {
     const searchParams = useSearchParams();
     const role = searchParams.get('role') || 'student';

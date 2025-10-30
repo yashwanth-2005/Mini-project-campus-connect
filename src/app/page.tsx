@@ -121,7 +121,7 @@ const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
     );
 };
 
-
+// This is the main landing page for the application.
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
@@ -129,6 +129,7 @@ export default function Home() {
   // Navigates to a new page and shows a loading screen.
   const handleLinkClick = (path: string, id: string) => {
     setLoading(id);
+    // A small timeout allows the loading animation to be seen.
     setTimeout(() => {
       router.push(path);
     }, 100);

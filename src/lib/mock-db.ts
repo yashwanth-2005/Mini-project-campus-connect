@@ -96,60 +96,6 @@ export const findUserByEmail = (email: string): User | null => {
     return Object.values(users).find(user => user.email === email) || null;
 };
 
-// Finds a user profile by their unique ID.
-export const findUserById = (userId: string): User | null => {
-    const users = getUsers();
-    return users[userId] || null;
-}
-
-// A helper to get the default faculty user for easy prototype login.
-export const getFacultyUser = (): User => {
-    const users = getUsers();
-    const facultyId = 'user-faculty-1';
-    // Ensures the default faculty user always exists.
-    if (!users[facultyId]) {
-        users[facultyId] = defaultUsers[facultyId];
-        saveUsers(users);
-    }
-    return users[facultyId];
-}
-
-
-// Creates a new user profile in our mock database.
-export const createUser = (userData: Partial<User> & { email: string, fullName: string, usn: string }): User => {
-    const users = getUsers();
-    const email = userData.email.toLowerCase();
-    if (findUserByEmail(email)) {
-        throw new Error("User with this email already exists.");
-    }
-     const newUser: User = { 
-        id: `user-${Date.now()}`,
-        year: 1,
-        semester: 1,
-        course: 'btech',
-        linkedin: '',
-        leetcode: '',
-        ...userData,
-    };
-    users[newUser.id] = newUser;
-    saveUsers(users);
-    return newUser;
-};
-
-// Updates an existing user's profile data.
-export const updateUser = (userId: string, updatedData: Partial<User>): User | null => {
-    const users = getUsers();
-    if (!users[userId]) return null;
-
-    users[userId] = {
-        ...users[userId],
-        ...updatedData,
-    };
-
-    saveUsers(users);
-    return users[userId];
-};
-
 // Creates a new request for a USN change.
 export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' | 'status' | 'requestedAt'>) => {
     let requests = getRequests();

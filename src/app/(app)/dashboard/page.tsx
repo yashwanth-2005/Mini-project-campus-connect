@@ -9,8 +9,8 @@ import { useSearchParams } from "next/navigation";
 import { useUser } from "@/firebase";
 import React from "react";
 
-// Defines the quick links available on the dashboard.
-// The `role` property controls which users can see each link.
+// This array defines the quick links available on the dashboard.
+// The `role` property controls which users see each link.
 const allQuickLinks = [
     {
         title: "Placement Corner",
@@ -42,10 +42,11 @@ const allQuickLinks = [
     }
 ];
 
+// This is the main dashboard page, the first thing users see after logging in.
 export default function DashboardPage() {
     const searchParams = useSearchParams();
     const { user } = useUser();
-    // The user's role is read from the URL parameter.
+    // The user's role is read from the URL parameter for simplicity in this prototype.
     const role = searchParams.get('role') || 'student';
     
     // Filters the quick links based on the user's role.
@@ -65,7 +66,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground">Here&apos;s a quick overview of what&apos;s happening on campus.</p>
             </div>
 
-            {/* A grid of cards that link to other pages in the app. */}
+            {/* A grid of cards that act as navigation links to other pages. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {quickLinks.map(link => (
                     <Card key={link.title} className="hover:shadow-lg transition-shadow">
@@ -85,7 +86,7 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            {/* A card that shows the most recent campus announcements. */}
+            {/* A card that shows a summary of the most recent campus announcements. */}
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Announcements</CardTitle>

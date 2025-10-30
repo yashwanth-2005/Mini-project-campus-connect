@@ -11,6 +11,7 @@ import { getPendingUsnRequests, approveUsnChange, denyUsnChange, UsnChangeReques
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Loader2 } from 'lucide-react';
 
+// This is the admin page, only accessible to faculty members.
 export default function AdminPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -21,14 +22,14 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // When the page loads, it checks if the user is a faculty member.
-  // If not, it sends them back to the dashboard.
+  // When the page loads, it checks if the user's role is 'faculty'.
+  // If not, it redirects them to the dashboard.
   useEffect(() => {
     if (role !== 'faculty') {
       router.push('/dashboard');
       return;
     }
-    // Otherwise, it loads the pending requests.
+    // Otherwise, it loads the pending USN change requests from our mock database.
     setRequests(getPendingUsnRequests());
     setIsLoading(false);
   }, [role, router]);
@@ -36,6 +37,7 @@ export default function AdminPage() {
   // Approves a student's USN change request and shows a success message.
   const handleApprove = (requestId: string) => {
     setActionLoading(requestId);
+    // A small delay to simulate a real network request.
     setTimeout(() => {
       try {
         approveUsnChange(requestId);
@@ -53,12 +55,13 @@ export default function AdminPage() {
       } finally {
         setActionLoading(null);
       }
-    }, 500); // A small delay to simulate a network request.
+    }, 500); 
   };
 
-  // Denies a student's USN change request and shows a message.
+  // Denies a student's USN change request and shows a confirmation message.
   const handleDeny = (requestId: string) => {
     setActionLoading(requestId);
+    // A small delay to simulate a real network request.
     setTimeout(() => {
       denyUsnChange(requestId);
       setRequests(getPendingUsnRequests()); 
@@ -68,9 +71,10 @@ export default function AdminPage() {
         variant: 'destructive',
       });
       setActionLoading(null);
-    }, 500); // A small delay to simulate a network request.
+    }, 500);
   };
 
+  // Shows a loading state while fetching data.
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -114,9 +118,7 @@ export default function AdminPage() {
                     <TableRow key={req.id}>
                       <TableCell className="font-medium">{req.studentName}</TableCell>
                       <TableCell>{req.currentUsn}</TableCell>
-                      <TableCell className='flex items-center gap-2'>
-                        {req.newUsn}
-                      </TableCell>
+                      <TableCell>{req.newUsn}</TableCell>
                       <TableCell>{req.reason}</TableCell>
                       <TableCell>
                         <Badge variant={req.status === 'pending' ? 'secondary' : 'default'}>{req.status}</Badge>

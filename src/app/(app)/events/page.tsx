@@ -40,6 +40,7 @@ const events = [
     },
 ]
 
+// This is the page where users can discover and see details about campus events.
 export default function EventsPage() {
     return (
         <div className="space-y-8">

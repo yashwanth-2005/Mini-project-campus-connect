@@ -59,6 +59,7 @@ const initialDiscussions: Discussion[] = [
     }
 ];
 
+// This is the main page for the discussion forum.
 export default function ForumPage() {
     const [discussions, setDiscussions] = useState<Discussion[]>([]);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -66,7 +67,8 @@ export default function ForumPage() {
     const [newDiscussionContent, setNewDiscussionContent] = useState('');
     const { toast } = useToast();
 
-    // Loads discussions from localStorage on the first render, or uses mock data if none exist.
+    // Loads discussions from localStorage on the first render.
+    // If none exist, it uses the initial mock data.
     useEffect(() => {
         try {
             const storedDiscussions = localStorage.getItem('discussions');
@@ -82,6 +84,7 @@ export default function ForumPage() {
     }, []);
 
     // Saves discussions to localStorage whenever the `discussions` state changes.
+    // This makes new posts persist across page reloads.
     useEffect(() => {
         try {
             if (discussions.length > 0 && discussions !== initialDiscussions) {

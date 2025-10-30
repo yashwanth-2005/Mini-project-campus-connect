@@ -19,6 +19,7 @@ import { Skeleton } from "./ui/skeleton"
 import { useUser, useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 
+// This component displays the user's avatar and a dropdown menu with profile-related links.
 export function UserNav() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -41,7 +42,6 @@ export function UserNav() {
   }
   
   // If no user is logged in, this component doesn't render anything.
-  // The main login button is handled by the page layout.
   if (!user) {
      return null;
   }

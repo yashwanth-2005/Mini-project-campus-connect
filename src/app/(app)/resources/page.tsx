@@ -184,6 +184,7 @@ const EditResourceDialog = ({
     );
 }
 
+// This is the page for the Resource Hub, where users can share and download files.
 export default function ResourcesPage() {
     const searchParams = useSearchParams();
     const { toast } = useToast();

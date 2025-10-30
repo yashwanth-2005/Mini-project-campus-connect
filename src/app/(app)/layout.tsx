@@ -60,7 +60,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Shows a loading screen during page transitions for a smoother experience.
   useEffect(() => {
-    setIsLoading(false); // End loading when navigation is complete
+    // End loading when navigation is complete
+    setIsLoading(false);
   }, [pathname, searchParams]);
 
   const handleLinkClick = (url: string) => {

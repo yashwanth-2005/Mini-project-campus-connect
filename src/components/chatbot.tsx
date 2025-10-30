@@ -29,6 +29,7 @@ type ChatbotProps = {
   onOpenChange: (isOpen: boolean) => void;
 }
 
+// This component provides an AI-powered chatbot in a side sheet.
 export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");

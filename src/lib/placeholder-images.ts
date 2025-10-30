@@ -9,5 +9,6 @@ export type ImagePlaceholder = {
   imageHint: string;
 };
 
-// Exports the array of placeholder images from the JSON file for use in the app.
+// Exports the array of placeholder images from the JSON file.
+// This allows image data to be managed in one central place.
 export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;

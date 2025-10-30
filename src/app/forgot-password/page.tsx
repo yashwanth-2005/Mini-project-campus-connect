@@ -18,38 +18,39 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MailCheck } from "lucide-react";
-import { findUserByEmail } from "@/lib/mock-db";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 export default function ForgotPasswordPage() {
     const { toast } = useToast();
+    const auth = useAuth();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
-    // This function simulates sending a password reset email.
+    // This function sends a password reset email using Firebase Auth.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
 
-        // A short delay to simulate a network request.
-        setTimeout(() => {
-            const userExists = findUserByEmail(email);
-
-            if (userExists) {
-                 // For this demo, we just show a success message instead of sending an email.
-                setEmailSent(true);
-            } else {
-                 toast({
-                    title: "Email not found",
-                    description: "No account is associated with this email.",
-                    variant: "destructive",
-                });
+        try {
+            await sendPasswordResetEmail(auth, email);
+            setEmailSent(true);
+        } catch (error: any) {
+            let description = "An unexpected error occurred. Please try again.";
+            // Provide a more user-friendly error message for common cases.
+            if (error.code === 'auth/user-not-found') {
+                description = "No account is associated with this email address.";
             }
+            toast({
+                title: "Email not found",
+                description: description,
+                variant: "destructive",
+            });
+        } finally {
             setIsLoading(false);
-        }, 500);
-
-       
+        }
     }
 
     return (
@@ -59,7 +60,7 @@ export default function ForgotPasswordPage() {
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
                     <div className="flex flex-col items-center gap-4">
                         <Logo className="h-16 w-16 text-primary animate-pulse-grow" />
-                        <p className="text-muted-foreground">Connecting you...</p>
+                        <p className="text-muted-foreground">Sending link...</p>
                     </div>
                 </div>
             )}
@@ -72,18 +73,18 @@ export default function ForgotPasswordPage() {
                     <CardTitle className="text-2xl font-headline">Forgot Password</CardTitle>
                     <CardDescription>
                         {emailSent 
-                            ? "A password reset link has been sent to your email."
+                            ? "Check your inbox for a password reset link."
                             : "Enter your registered email to reset your password."}
                     </CardDescription>
                 </CardHeader>
                 {emailSent ? (
-                    // This view is shown after the email is "sent".
+                    // This view is shown after the email is successfully sent.
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
                             <AlertTitle>Password Reset Link Sent!</AlertTitle>
                             <AlertDescription>
-                                For demonstration, you can now log in with your old password. In a real app, a reset link would be sent to <strong>{email}</strong>.
+                                A password reset link has been sent to <strong>{email}</strong>. Please check your spam folder if you don't see it.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">

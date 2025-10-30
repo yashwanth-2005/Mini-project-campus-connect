@@ -14,7 +14,7 @@ const ChatWithBotInputSchema = z.object({
 });
 export type ChatWithBotInput = z.infer<typeof ChatWithBotInputSchema>;
 
-// Defines the expected output for the chatbot.
+// Defines the expected output from the chatbot.
 const ChatWithBotOutputSchema = z.object({
   answer: z.string().describe('The AI Chatbot response to the user query.'),
 });
