@@ -73,16 +73,19 @@ export default function LoginPage() {
             description: `Welcome back, ${user.displayName || user.email}!`,
         });
         router.push(`/dashboard?role=${role}`);
+        // No need to set isLoading to false here as we are navigating away
     } catch (error: any) {
         let errorMessage = "An unexpected error occurred.";
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/invalid-credential":
+            case "auth/invalid-email":
                 toast({
                     title: "Account Not Found",
                     description: "Redirecting you to the sign-up page.",
                 });
                 router.push(`/signup?email=${encodeURIComponent(email)}`);
+                // Do not set isLoading to false here, let the redirect happen.
                 return;
             case "auth/wrong-password":
                 errorMessage = "Invalid password. Please try again.";
@@ -95,8 +98,7 @@ export default function LoginPage() {
             description: errorMessage,
             variant: "destructive",
         });
-    } finally {
-        setIsLoading(false);
+        setIsLoading(false); // Set loading to false only on caught errors that don't redirect
     }
   };
 
