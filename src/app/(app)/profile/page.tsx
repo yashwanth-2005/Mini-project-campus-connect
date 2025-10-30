@@ -19,10 +19,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
-// Defines the shape and validation rules for the profile form.
+// Defines the validation for the profile form.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -32,7 +32,7 @@ const profileSchema = z.object({
     profilePictureUrl: z.string().optional(),
 });
 
-// Defines validation for the USN change request dialog.
+// Defines validation for the USN change request form.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -75,7 +75,7 @@ export default function ProfilePage() {
       }
     }, [isUserLoading, user, router]);
 
-    // When the user's profile data loads, fills the form.
+    // When the user's profile data loads from Firestore, this fills the form.
     useEffect(() => {
         if (userProfile) {
             form.reset({
@@ -104,18 +104,20 @@ export default function ProfilePage() {
         }
     };
 
-    // Saves the updated profile data to Firestore.
+    // Saves the updated profile data back to Firestore.
     async function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!userDocRef) return;
         setIsSaving(true);
         
         try {
+            // Update the user's document in Firestore with the new data.
             await updateDoc(userDocRef, data);
             toast({
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            window.location.reload(); // Reload to update the user nav avatar.
+            // Reload the page to update the user's avatar in the navigation bar.
+            window.location.reload(); 
         } catch(e) {
             toast({
                 title: "Update Failed",
@@ -127,9 +129,10 @@ export default function ProfilePage() {
         }
     }
 
-    // A placeholder for handling USN change submissions.
+    // Handles the submission of the USN change request.
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
         setIsRequestingUsn(true);
+        // This is a placeholder for a real backend operation.
         setTimeout(() => {
              toast({
                 title: "Request Submitted",
@@ -141,7 +144,7 @@ export default function ProfilePage() {
         }, 500);
     }
 
-    // Shows a loading skeleton while user data is being fetched.
+    // Shows a loading skeleton while the user's data is being fetched.
     if (isUserLoading || isProfileLoading || !userProfile) {
         return (
             <div className="space-y-8">
