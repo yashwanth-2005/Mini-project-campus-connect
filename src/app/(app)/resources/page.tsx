@@ -62,7 +62,7 @@ const UploadResourceDialog = ({
                     Upload Resource
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]" style={{top: '35%', left: '40%'}}>
+            <DialogContent className="sm:max-w-[425px]" style={{top: '30%', left: '40%'}}>
                 <DialogHeader>
                     <DialogTitle>Upload Resource</DialogTitle>
                     <DialogDescription>
@@ -134,7 +134,7 @@ const EditResourceDialog = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[425px]" style={{top: '35%', left: '40%'}}>
+            <DialogContent className="sm:max-w-[425px]" style={{top: '30%', left: '40%'}}>
                 <DialogHeader>
                     <DialogTitle>Edit Resource</DialogTitle>
                     <DialogDescription>
@@ -373,5 +373,3 @@ export default function ResourcesPage() {
         </div>
     )
 }
-
-    
