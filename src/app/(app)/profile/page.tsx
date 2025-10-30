@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Defines the validation for the profile form.
 const profileSchema = z.object({
@@ -30,6 +31,7 @@ const profileSchema = z.object({
     githubUrl: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
     leetcodeUrl: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
     profilePictureUrl: z.string().optional(),
+    // Faculty specific
     department: z.string().optional(),
     facultyId: z.string().optional(),
 });
@@ -40,6 +42,7 @@ const usnChangeSchema = z.object({
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
 });
 
+// The main component for the user profile page.
 export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
@@ -269,19 +272,39 @@ export default function ProfilePage() {
                                     <Input value={userProfile.course} readOnly className="bg-muted/50" />
                                 </div>
                             ) : (
-                                <FormField
-                                    control={form.control}
-                                    name="department"
-                                    render={({ field }) => (
-                                        <FormItem>
+                                <>
+                                 <FormField
+                                        control={form.control}
+                                        name="department"
+                                        render={({ field }) => (
+                                            <FormItem>
                                             <FormLabel>Department</FormLabel>
-                                            <FormControl>
-                                                <Input placeholder="Your Department" {...field} />
-                                            </FormControl>
+                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select your department" />
+                                                </SelectTrigger>
+                                                </FormControl>
+                                                <SelectContent>
+                                                <SelectItem value="cse">Computer Science & Engineering</SelectItem>
+                                                <SelectItem value="ise">Information Science & Engineering</SelectItem>
+                                                <SelectItem value="ece">Electronics & Communication</SelectItem>
+                                                <SelectItem value="eee">Electrical & Electronics</SelectItem>
+                                                <SelectItem value="mech">Mechanical Engineering</SelectItem>
+                                                <SelectItem value="civil">Civil Engineering</SelectItem>
+                                                <SelectItem value="humanities">Basic Sciences & Humanities</SelectItem>
+                                                </SelectContent>
+                                            </Select>
                                             <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <div className="space-y-2">
+                                        <Label>Unique Code</Label>
+                                        <Input value={userProfile.uniqueCode || 'Not Set'} readOnly className="bg-muted/50" />
+                                        <FormDescription>This is your one-time verification code.</FormDescription>
+                                    </div>
+                                </>
                             )}
                         </div>
                     </CardContent>

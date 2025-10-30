@@ -66,6 +66,7 @@ const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema]
 });
 
 
+// The main component for the user signup page.
 export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -138,6 +139,7 @@ export default function SignupPage() {
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
 
+    // Checks for a strong enough password before submitting.
     if (strength.score < 3) {
       toast({
         title: "Weak Password",
@@ -151,18 +153,18 @@ export default function SignupPage() {
     try {
         if (!firestore) throw new Error("Firestore not initialized");
 
-        // Create the user in Firebase Authentication.
+        // Creates the user in Firebase Authentication.
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         const user = userCredential.user;
 
-        // Update the user's display name.
+        // Updates the user's display name.
         await updateProfile(user, {
             displayName: data.fullName
         });
 
         const [firstName, ...lastName] = data.fullName.split(' ');
 
-        // Prepare the user profile data for Firestore.
+        // Prepares the user profile data for Firestore.
         let userProfileData: any = {
             id: user.uid,
             email: data.email,
@@ -175,7 +177,7 @@ export default function SignupPage() {
             role: data.role,
         };
 
-        // Add role-specific data.
+        // Adds role-specific data.
         if (data.role === 'student') {
             userProfileData = {
                 ...userProfileData,
@@ -183,18 +185,19 @@ export default function SignupPage() {
                 year: data.year,
                 semester: data.semester,
                 course: data.course,
-                branch: data.course,
+                branch: data.course, // Use course as branch for students.
             }
         } else {
              userProfileData = {
                 ...userProfileData,
                 department: data.department,
                 facultyId: data.facultyId,
-                branch: data.department
+                branch: data.department, // Use department as branch for faculty.
+                uniqueCode: data.uniqueCode,
              }
         }
 
-        // Save the user profile to Firestore.
+        // Saves the user profile to Firestore.
         await setDoc(doc(firestore, "users", user.uid), userProfileData);
 
         toast({
@@ -223,7 +226,7 @@ export default function SignupPage() {
   const handleRoleChange = (role: 'student' | 'faculty') => {
     setSelectedRole(role);
     form.setValue('role', role);
-    // Reset form to clear previous role's data and avoid validation errors.
+    // Resets the form to clear previous role's data and avoid validation errors.
     form.reset({
         ...form.getValues(),
         role: role,
@@ -305,7 +308,7 @@ export default function SignupPage() {
                         </FormItem>
                     )} />
 
-                    {/* Conditional fields for students */}
+                    {/* Displays fields for students. */}
                     {selectedRole === 'student' && (
                         <>
                             <FormField control={form.control} name="usn" render={({ field }) => (
@@ -370,7 +373,7 @@ export default function SignupPage() {
                         </>
                     )}
 
-                    {/* Conditional fields for faculty */}
+                    {/* Displays fields for faculty. */}
                     {selectedRole === 'faculty' && (
                         <>
                             <FormField

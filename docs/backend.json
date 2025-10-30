@@ -76,6 +76,10 @@
         "course": {
           "type": "string",
           "description": "The student's course or degree program."
+        },
+        "uniqueCode": {
+          "type": "string",
+          "description": "A unique verification code for faculty members."
         }
       },
       "required": [
@@ -438,5 +442,3 @@
     "reasoning": "The Firestore structure is designed to support the CampusConnect application, emphasizing security, scalability, and ease of debugging. It adheres to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are Not Filters). Authorization Independence is achieved through denormalization. For example, access to resources is based on the uploaderId, and any group-based authorization (if implemented later) would require denormalizing group membership into the Resource document. Segregation is applied by using distinct collections for different data types (e.g., user profiles, announcements, events). Access modeling follows consistent patterns: private user data under `/users/{userId}`, and other entities under top-level collections. The design prioritizes clarity with explicit state modeling (if needed later), predictable schemas, and consistent naming conventions.\n\nThe structure supports the core features of the application:\n\n*   **User Profiles:** Stored under `/users/{userId}` for path-based ownership. This ensures that only the user can access their profile data unless explicitly granted otherwise.\n*   **Announcements:** Stored in a top-level `/announcements` collection. The `authorId` field is used to identify the creator. If specific roles (faculty, HOD) are required to create announcements, a separate `/roles_{role}/{userId}` collection could be used in security rules.\n*   **Events:** Stored in a top-level `/events` collection. The `registeredUserIds` array allows for tracking registered users. If more complex registration management is required, a subcollection `/events/{eventId}/registrations/{userId}` could be used.\n*   **Forum Posts:** Stored in a top-level `/forum_posts` collection. The `authorId` field identifies the creator. Upvotes and downvotes are tracked using arrays of user IDs.\n*   **Resource Hub:** Stored in a top-level `/resources` collection.  The `uploaderId` field identifies the user who uploaded the resource. This structure allows all authorized users to upload, edit, and delete files.\n*   **AI Chatbot Messages:** Stored in a top-level `/chat_messages` collection. The `userId` field identifies the user who sent the message.\n\nThis design ensures efficient and secure data management for CampusConnect."
   }
 }
-
-    
