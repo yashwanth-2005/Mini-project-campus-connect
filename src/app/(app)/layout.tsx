@@ -60,14 +60,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   // Shows a loading screen during page transitions for a smoother experience.
   useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 300); 
-    return () => clearTimeout(timer);
+    setIsLoading(false); // End loading when navigation is complete
   }, [pathname, searchParams]);
 
   const handleLinkClick = (url: string) => {
       // Prevents the loader from showing if the user clicks the current page's link.
-      if (url === window.location.pathname + window.location.search) return;
+      if (url.startsWith(pathname) && url.includes(`role=${role}`)) return;
       setIsLoading(true);
   };
 

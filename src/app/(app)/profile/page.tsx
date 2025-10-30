@@ -129,8 +129,8 @@ export default function ProfilePage() {
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            // Reloads the page to update the user's avatar in the navigation bar.
-            window.location.reload(); 
+            // Refreshes server components to show new user data without a full page reload.
+            router.refresh(); 
         } catch(e) {
             toast({
                 title: "Update Failed",
