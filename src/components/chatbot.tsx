@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -31,11 +32,11 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // This function handles sending a message and getting a response from the AI.
+  // Handles sending a message and getting a response from the AI.
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    // We add the user's message to the chat history right away.
+    // Adds the user's message to the chat history right away.
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     
@@ -44,12 +45,12 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
     setIsLoading(true);
 
     try {
-      // Call our Genkit AI flow to get the bot's response.
+      // Calls our Genkit AI flow to get the bot's response.
       const response = await chatWithBot({ query: currentInput });
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      // If the AI call fails, we show a user-friendly error message.
+      // If the AI call fails, show a user-friendly error message.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",

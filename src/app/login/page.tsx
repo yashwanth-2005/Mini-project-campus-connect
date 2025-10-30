@@ -48,7 +48,7 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    // Basic email and password validation before hitting Firebase.
+    // Basic email and password validation.
     if (!/^\S+@\S+\.\S+$/.test(email)) {
         toast({
             title: "Invalid Email",
@@ -69,7 +69,7 @@ export default function LoginPage() {
     }
 
     try {
-        // Attempt to sign in with Firebase Authentication.
+        // Sign in with Firebase Authentication.
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
@@ -78,12 +78,11 @@ export default function LoginPage() {
         const userDoc = await getDoc(userDocRef);
 
         if (!userDoc.exists()) {
-             // This case should ideally not happen if signup is working correctly.
-             throw new Error("User profile not found in database. Please contact support.");
+             throw new Error("User profile not found. Please contact support.");
         }
         
         const userProfile = userDoc.data();
-        // Get the role from the Firestore document. Default to 'student' if missing.
+        // Get the role from the Firestore document to ensure correct redirection.
         const userRole = userProfile.role || 'student';
         
         toast({
@@ -91,7 +90,7 @@ export default function LoginPage() {
             description: `Welcome back, ${user.displayName || user.email}!`,
         });
 
-        // Redirect to the correct dashboard based on the role found in the database.
+        // Redirect to the correct dashboard based on the role from the database.
         router.push(`/dashboard?role=${userRole}`);
 
     } catch (error: any) {
@@ -104,28 +103,22 @@ export default function LoginPage() {
             case "auth/invalid-credential":
             case "auth/invalid-email":
                 title = "Account Not Found";
-                description = "No account found with these details. Redirecting you to sign up.";
-                setIsLoading(false); // Stop loading before redirecting.
+                description = "No account found with these details. Redirecting to sign up.";
+                toast({ title, description, variant: "destructive" });
                 setTimeout(() => {
                     router.push(`/signup?email=${encodeURIComponent(email)}`);
                 }, 1500);
                 break;
             case "auth/wrong-password":
                 description = "Invalid password. Please try again.";
-                setIsLoading(false);
+                toast({ title, description, variant: "destructive" });
                 break;
             default:
                 description = error.message || "An unexpected error occurred.";
-                setIsLoading(false);
+                toast({ title, description, variant: "destructive" });
         }
-
-        if (error.code !== "auth/user-not-found") {
-             toast({
-                title: title,
-                description: description,
-                variant: "destructive",
-            });
-        }
+    } finally {
+        setIsLoading(false);
     }
   };
 

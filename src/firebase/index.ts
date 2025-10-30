@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -6,12 +7,12 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// This function initializes Firebase and returns the SDKs.
+// Initializes Firebase and returns the SDKs.
 // It ensures that Firebase is only initialized once.
 export function initializeFirebase() {
   if (!getApps().length) {
-    // Firebase App Hosting provides environment variables to initialize the app.
-    // We try that first, and fall back to our local config file if it fails.
+    // Try to initialize using App Hosting env variables first.
+    // Fall back to local config if it fails.
     let firebaseApp;
     try {
       firebaseApp = initializeApp();
@@ -24,11 +25,11 @@ export function initializeFirebase() {
     return getSdks(firebaseApp);
   }
 
-  // If already initialized, just get the existing app and return the SDKs.
+  // If already initialized, get the existing app.
   return getSdks(getApp());
 }
 
-// A helper to get all the service SDKs from a Firebase App instance.
+// A helper to get all service SDKs from a Firebase App instance.
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
@@ -38,7 +39,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   };
 }
 
-// Export all the necessary Firebase hooks and providers for easy access elsewhere.
+// Export hooks and providers for easy access elsewhere.
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';

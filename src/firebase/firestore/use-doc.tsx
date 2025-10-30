@@ -1,3 +1,4 @@
+
 'use client';
     
 import { useState, useEffect } from 'react';
@@ -11,7 +12,7 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// A utility type to add an 'id' field to a given type T.
+// A utility type to add an 'id' field to a given type.
 type WithId<T> = T & { id: string };
 
 // The return value of the useDoc hook.
@@ -24,10 +25,9 @@ export interface UseDocResult<T> {
 /**
  * A React hook to subscribe to a single Firestore document in real-time.
  * 
- * IMPORTANT: The document reference you pass to this hook MUST be memoized
+ * IMPORTANT: The document reference passed to this hook MUST be memoized
  * with useMemo or useMemoFirebase to prevent infinite re-renders.
  *
- * @template T The type for your document data.
  * @param {DocumentReference | null | undefined} docRef The Firestore document reference.
  * @returns {UseDocResult<T>} An object with the data, loading state, and error.
  */
@@ -52,7 +52,7 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
 
-    // Set up the real-time listener.
+    // Sets up the real-time listener.
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
@@ -77,12 +77,12 @@ export function useDoc<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // Send the error to a global listener.
+        // Sends the error to a global listener.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
 
-    // Clean up the listener when the component unmounts.
+    // Cleans up the listener when the component unmounts.
     return () => unsubscribe();
   }, [memoizedDocRef]);
 

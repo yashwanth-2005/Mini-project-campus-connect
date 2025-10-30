@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// A utility type to add an 'id' field to a given type T.
+// A utility type to add an 'id' field to a given type.
 export type WithId<T> = T & { id: string };
 
 // The return value of the useCollection hook.
@@ -35,10 +36,9 @@ export interface InternalQuery extends Query<DocumentData> {
 /**
  * A React hook to subscribe to a Firestore collection or query in real-time.
  * 
- * IMPORTANT: The query or reference you pass to this hook MUST be memoized
+ * IMPORTANT: The query or reference passed to this hook MUST be memoized
  * with useMemo or useMemoFirebase to prevent infinite re-renders.
  *  
- * @template T The type for your document data.
  * @param {CollectionReference | Query | null | undefined} memoizedTargetRefOrQuery The Firestore query or reference.
  * @returns {UseCollectionResult<T>} An object with the data, loading state, and error.
  */
@@ -64,7 +64,7 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
 
-    // Set up the real-time listener.
+    // Sets up the real-time listener.
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
@@ -93,18 +93,18 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // Send the error to a global listener.
+        // Sends the error to a global listener.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
 
-    // Clean up the listener when the component unmounts.
+    // Cleans up the listener when the component unmounts.
     return () => unsubscribe();
   }, [memoizedTargetRefOrQuery]); 
 
-  // A check to enforce memoization of the query.
+  // Enforces memoization of the query.
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error(memoizedTargetRefOrQuery + ' was not properly memoized using useMemoFirebase');
+    throw new Error('The query passed to useCollection was not memoized. Use useMemoFirebase.');
   }
   return { data, isLoading, error };
 }

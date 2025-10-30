@@ -24,6 +24,7 @@ type Discussion = {
     tags: string[];
 };
 
+// Initial mock data for the forum.
 const initialDiscussions: Discussion[] = [
     {
         id: 1,
@@ -64,6 +65,7 @@ export default function ForumPage() {
     const [newDiscussionContent, setNewDiscussionContent] = useState('');
     const { toast } = useToast();
 
+    // Loads discussions from localStorage or uses initial data.
     useEffect(() => {
         try {
             const storedDiscussions = localStorage.getItem('discussions');
@@ -78,9 +80,10 @@ export default function ForumPage() {
         }
     }, []);
 
+    // Saves discussions to localStorage whenever they change.
     useEffect(() => {
         try {
-            // Avoid overwriting initial discussions on first render
+            // Avoids overwriting initial discussions on first render.
             if (discussions.length > 0 && discussions !== initialDiscussions) {
                  localStorage.setItem('discussions', JSON.stringify(discussions));
             }
@@ -90,11 +93,12 @@ export default function ForumPage() {
     }, [discussions]);
 
 
+    // Handles creating a new discussion post.
     const handleStartDiscussion = () => {
         if (!newDiscussionTitle.trim() || !newDiscussionContent.trim()) {
             toast({
                 title: "Incomplete Discussion",
-                description: "Please provide both a title and content for your discussion.",
+                description: "Please provide both a title and content.",
                 variant: "destructive",
             });
             return;
@@ -142,7 +146,7 @@ export default function ForumPage() {
                         <DialogHeader>
                             <DialogTitle>Start a New Discussion</DialogTitle>
                             <DialogDescription>
-                                Share your thoughts, ask questions, and engage with the community.
+                                Share your thoughts and engage with the community.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">

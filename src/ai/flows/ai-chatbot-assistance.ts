@@ -1,51 +1,59 @@
+
 'use server';
 
-// This flow powers the AI chatbot.
+/**
+ * This flow powers the AI chatbot, allowing it to answer
+ * general and campus-specific questions.
+ */
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+// Defines the input schema for the chatbot.
 const ChatWithBotInputSchema = z.object({
   query: z.string().describe('The user query or question.'),
 });
 export type ChatWithBotInput = z.infer<typeof ChatWithBotInputSchema>;
 
+// Defines the output schema for the chatbot.
 const ChatWithBotOutputSchema = z.object({
   answer: z.string().describe('The AI Chatbot response to the user query.'),
 });
 export type ChatWithBotOutput = z.infer<typeof ChatWithBotOutputSchema>;
 
+// The main function that clients will call to trigger the flow.
 export async function chatWithBot(input: ChatWithBotInput): Promise<ChatWithBotOutput> {
   return chatWithBotFlow(input);
 }
 
-// Defines a tool for the AI to use for campus-specific questions.
+// Defines a tool the AI can use for campus-specific questions.
 const useCampusInfoTool = ai.defineTool({
   name: 'getCampusInformation',
-  description: 'This tool retrieves information about the campus including resources, placement preparation, and events.',
+  description: 'This tool retrieves information about campus resources, placements, and events.',
   inputSchema: z.object({
-    query: z.string().describe('The specific information being requested about the campus.'),
+    query: z.string().describe('The specific information being requested.'),
   }),
   outputSchema: z.string(),
   async func(input) {
-    // This could query a database or call a dedicated API.
+    // In a real app, this could query a database or call a dedicated API.
     return `Detailed campus information for query: ${input.query}`;
   },
 });
 
+// Defines the prompt and instructions for the AI model.
 const prompt = ai.definePrompt({
   name: 'chatWithBotPrompt',
   input: {schema: ChatWithBotInputSchema},
   output: {schema: ChatWithBotOutputSchema},
   tools: [useCampusInfoTool],
-  system: `You are a helpful AI chatbot assistant for students at a university campus.
-  Your goal is to answer student questions accurately and concisely. You have access to a tool that can retrieve campus information.
-  If the user's question is campus-related (e.g., about resources, placement preparation, events), use the getCampusInformation tool to get the relevant details.
-  Otherwise, respond to the question directly using your general knowledge.
-  Always provide a helpful and informative answer to the user.
+  system: `You are a helpful AI assistant for university students.
+  Your goal is to answer questions accurately and concisely.
+  If the question is campus-related (e.g., about resources, placements, events), use the getCampusInformation tool.
+  Otherwise, respond using your general knowledge.
   `,
   prompt: `User query: {{{query}}}`,
 });
 
+// Defines the Genkit flow that orchestrates the chat logic.
 const chatWithBotFlow = ai.defineFlow(
   {
     name: 'chatWithBotFlow',

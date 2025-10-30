@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import { useSearchParams } from "next/navigation";
 import { useUser } from "@/firebase";
 import React from "react";
 
+// Defines the quick links available on the dashboard.
 const allQuickLinks = [
     {
         title: "Placement Corner",
@@ -44,6 +46,7 @@ export default function DashboardPage() {
     const { user } = useUser();
     const role = searchParams.get('role') || 'student';
     
+    // Filters quick links based on the user's role.
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     
     const welcomeMessage = () => {

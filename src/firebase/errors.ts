@@ -1,3 +1,4 @@
+
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
@@ -8,6 +9,7 @@ type SecurityRuleContext = {
   requestResourceData?: any;
 };
 
+// A simplified version of the Firebase Auth token.
 interface FirebaseAuthToken {
   name: string | null;
   email: string | null;
@@ -21,6 +23,7 @@ interface FirebaseAuthToken {
   };
 }
 
+// The auth object as seen in security rules.
 interface FirebaseAuthObject {
   uid: string;
   token: FirebaseAuthToken;
@@ -36,7 +39,7 @@ interface SecurityRuleRequest {
   };
 }
 
-// Builds an auth object from the Firebase User that mimics the one in security rules.
+// Builds an auth object from a Firebase User, mimicking security rules.
 function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
   if (!currentUser) {
     return null;
@@ -93,8 +96,7 @@ function buildErrorMessage(requestObject: SecurityRuleRequest): string {
 ${JSON.stringify(requestObject, null, 2)}`;
 }
 
-// A custom error class that structures information to mimic the request object
-// available in Firestore Security Rules, making it easier to debug.
+// A custom error class that structures information to mimic the request object in security rules.
 export class FirestorePermissionError extends Error {
   public readonly request: SecurityRuleRequest;
 

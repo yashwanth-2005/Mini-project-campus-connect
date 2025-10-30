@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -23,7 +24,7 @@ interface UserAuthState {
   userError: Error | null;
 }
 
-// The combined state that will be available through the Firebase context.
+// The combined state available through the Firebase context.
 export interface FirebaseContextState {
   areServicesAvailable: boolean; 
   firebaseApp: FirebaseApp | null;
@@ -53,10 +54,10 @@ export interface UserHookResult {
   userError: Error | null;
 }
 
-// The React Context that will hold all our Firebase state.
+// The React Context that holds our Firebase state.
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
-// This provider component manages and provides Firebase services and user auth state to the app.
+// This provider manages and provides Firebase services and auth state.
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
   firebaseApp,
@@ -85,14 +86,14 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
       },
       (error) => { 
-        console.error("FirebaseProvider: onAuthStateChanged error:", error);
+        console.error("FirebaseProvider: Auth state error:", error);
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
-    return () => unsubscribe(); // Clean up the subscription on unmount.
+    return () => unsubscribe(); // Cleans up the subscription on unmount.
   }, [auth]); 
 
-  // Memoize the context value to prevent unnecessary re-renders.
+  // Memoizes the context value to prevent unnecessary re-renders.
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth && storage);
     return {
@@ -124,7 +125,7 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   }
 
   if (!context.areServicesAvailable || !context.firebaseApp || !context.firestore || !context.auth || !context.storage) {
-    throw new Error('Firebase core services not available. Check FirebaseProvider props.');
+    throw new Error('Firebase services are not available. Check the FirebaseProvider setup.');
   }
 
   return {

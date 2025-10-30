@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Calendar, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 
+// A mock data array for campus events.
 const events = [
     {
         title: "AI & Machine Learning Workshop",
@@ -80,5 +81,3 @@ export default function EventsPage() {
         </div>
     )
 }
-
-    

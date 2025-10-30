@@ -24,6 +24,7 @@ export function UserNav() {
   const auth = useAuth();
   const router = useRouter();
 
+  // Handles the user logout process.
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -33,10 +34,12 @@ export function UserNav() {
     }
   }
 
+  // Shows a skeleton loader while the user state is loading.
   if (isUserLoading) {
     return <Skeleton className="h-9 w-9 rounded-full" />
   }
   
+  // If no user is logged in, show a login button.
   if (!user) {
      return (
       <Button asChild>

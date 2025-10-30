@@ -1,5 +1,6 @@
 
-
+// This file contains mock data and functions for a prototype.
+// In a real application, this would be replaced by a proper database.
 export type User = {
     id: string;
     fullName: string;
@@ -26,7 +27,7 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
-// This is our mock database, stored in the browser's localStorage.
+// Our mock database, stored in the browser's localStorage.
 const defaultUsers: Record<string, User> = {
     'user-faculty-1': {
         id: 'user-faculty-1',

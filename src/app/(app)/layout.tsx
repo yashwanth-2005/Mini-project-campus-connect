@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -33,7 +34,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { FirebaseClientProvider } from "@/firebase";
 
-// This array defines all possible navigation links in the sidebar.
+// This array defines all possible navigation links for the sidebar.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/placements", icon: <Briefcase />, label: "Placement Corner", role: ['student', 'faculty'] },
@@ -52,10 +53,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Filter the navigation links based on the user's role from the URL.
+  // Filters navigation links based on the user's role from the URL.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
-  // Shows a loading screen during page transitions for a better user experience.
+  // Shows a loading screen during page transitions.
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => setIsLoading(false), 300); 
@@ -63,14 +64,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   }, [pathname, searchParams]);
 
   const handleLinkClick = (url: string) => {
-      // Don't show the loader if we are clicking on the link for the current page.
+      // Avoids showing the loader if the user clicks the current page's link.
       if (url === window.location.pathname + window.location.search) return;
       setIsLoading(true);
   };
 
   return (
     <SidebarProvider>
-      {/* The full-screen loading overlay. */}
+      {/* A full-screen loading overlay. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -114,7 +115,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex-1">
-              {/* This space can be used for things like breadcrumbs in the future. */}
+              {/* This space can be used for breadcrumbs in the future. */}
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setIsChatOpen(true)} className="font-bold rainbow-button text-white">
@@ -132,8 +133,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-// We use React Suspense to gracefully handle loading URL parameters,
-// preventing the page from rendering with incorrect roles or data.
+// Uses React Suspense to gracefully handle loading URL parameters.
 export default function AppLayout({
   children,
 }: {

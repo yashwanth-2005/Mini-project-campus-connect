@@ -19,10 +19,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
-// Defines the shape and validation rules for the main profile form.
+// Defines the shape and validation rules for the profile form.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -44,7 +44,7 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
-    // A memoized reference to the user's document in Firestore.
+    // Creates a memoized reference to the user's document in Firestore.
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [firestore, user]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
@@ -55,7 +55,7 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isRequestingUsn, setIsRequestingUsn] = useState(false);
 
-    // Initialize the main profile form with validation.
+    // Initializes the main profile form.
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -68,14 +68,14 @@ export default function ProfilePage() {
         },
     });
     
-    // Redirect to login if the user is not authenticated.
+    // Redirects to login if the user is not authenticated.
     useEffect(() => {
       if (!isUserLoading && !user) {
         router.push('/login');
       }
     }, [isUserLoading, user, router]);
 
-    // When the user's profile data loads, fill the form with it.
+    // When the user's profile data loads, fills the form.
     useEffect(() => {
         if (userProfile) {
             form.reset({
@@ -90,7 +90,7 @@ export default function ProfilePage() {
         }
     }, [userProfile, form]);
 
-    // Creates a local preview URL for a newly selected profile picture.
+    // Creates a local preview for a newly selected profile picture.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -104,7 +104,7 @@ export default function ProfilePage() {
         }
     };
 
-    // Handles saving the updated profile data to Firestore.
+    // Saves the updated profile data to Firestore.
     async function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!userDocRef) return;
         setIsSaving(true);
@@ -115,7 +115,7 @@ export default function ProfilePage() {
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            window.location.reload(); // Reload to update user nav avatar.
+            window.location.reload(); // Reload to update the user nav avatar.
         } catch(e) {
             toast({
                 title: "Update Failed",
@@ -141,7 +141,7 @@ export default function ProfilePage() {
         }, 500);
     }
 
-    // Show a loading skeleton while user data is being fetched.
+    // Shows a loading skeleton while user data is being fetched.
     if (isUserLoading || isProfileLoading || !userProfile) {
         return (
             <div className="space-y-8">

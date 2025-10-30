@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
+// A mock data array for announcements.
 const announcements = [
     {
         author: "Faculty Admin",
@@ -50,6 +50,7 @@ export default function AnnouncementsPage() {
                     <h1 className="text-3xl font-bold font-headline">Announcements</h1>
                     <p className="text-muted-foreground">Latest updates from faculty and departments.</p>
                 </div>
+                {/* Only show the "New Announcement" button to faculty. */}
                 {role === 'faculty' && (
                     <Dialog>
                         <DialogTrigger asChild>
@@ -129,5 +130,3 @@ export default function AnnouncementsPage() {
         </div>
     )
 }
-
-    

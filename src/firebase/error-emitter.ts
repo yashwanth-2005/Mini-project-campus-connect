@@ -1,8 +1,8 @@
+
 'use client';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 // This interface defines all possible events and their data types.
-// It helps ensure type safety across the app.
 export interface AppEvents {
   'permission-error': FirestorePermissionError;
 }
@@ -16,7 +16,7 @@ function createEventEmitter<T extends Record<string, any>>() {
   const events: { [K in keyof T]?: Array<Callback<T[K]>> } = {};
 
   return {
-    // Subscribe to an event.
+    // Subscribes to an event.
     on<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
       if (!events[eventName]) {
         events[eventName] = [];
@@ -24,7 +24,7 @@ function createEventEmitter<T extends Record<string, any>>() {
       events[eventName]?.push(callback);
     },
 
-    // Unsubscribe from an event.
+    // Unsubscribes from an event.
     off<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
       if (!events[eventName]) {
         return;
@@ -32,7 +32,7 @@ function createEventEmitter<T extends Record<string, any>>() {
       events[eventName] = events[eventName]?.filter(cb => cb !== callback);
     },
 
-    // Publish an event to all of its subscribers.
+    // Publishes an event to all of its subscribers.
     emit<K extends keyof T>(eventName: K, data: T[K]) {
       if (!events[eventName]) {
         return;
@@ -42,5 +42,5 @@ function createEventEmitter<T extends Record<string, any>>() {
   };
 }
 
-// Create and export a single instance of the emitter.
+// Creates and exports a single instance of the emitter.
 export const errorEmitter = createEventEmitter<AppEvents>();

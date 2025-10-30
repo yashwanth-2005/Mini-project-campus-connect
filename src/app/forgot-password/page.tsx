@@ -32,13 +32,13 @@ export default function ForgotPasswordPage() {
         event.preventDefault();
         setIsLoading(true);
 
-        // Simulate network delay for a more realistic feel.
+        // Simulate network delay.
         setTimeout(() => {
             const userExists = findUserByEmail(email);
 
             if (userExists) {
-                 // In a real app, this is where you would call an email service.
-                 // For this demo, we'll just show a success message.
+                 // For this demo, we just show a success message.
+                 // In a real app, this would trigger an email service.
                 setEmailSent(true);
             } else {
                  toast({
@@ -82,7 +82,7 @@ export default function ForgotPasswordPage() {
                             <MailCheck className="h-4 w-4" />
                             <AlertTitle>Password Reset Link Sent!</AlertTitle>
                             <AlertDescription>
-                                For demonstration purposes, you can now go back and log in with your old password. In a real app, a reset link would be sent to <strong>{email}</strong>.
+                                For demonstration, you can now log in with your old password. In a real app, a reset link would be sent to <strong>{email}</strong>.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">

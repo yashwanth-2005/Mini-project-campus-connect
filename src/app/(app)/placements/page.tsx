@@ -1,3 +1,4 @@
+
 'use client';
     
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,12 +8,14 @@ import { FileText, Link as LinkIcon, Download } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+// Mock data for interview experiences.
 const interviewExperiences = [
     { company: "TechCorp", role: "Software Engineer Intern", date: "2024-05-15", author: "Alex Doe" },
     { company: "Innovate Inc.", role: "Data Analyst", date: "2024-05-10", author: "Jane Smith" },
     { company: "Future Solutions", role: "Product Manager Intern", date: "2024-04-28", author: "Sam Wilson" },
 ];
 
+// Mock data for the document repository.
 const docRepository = [
     { name: "SDE-Resume-Template.pdf", type: "Resume Template", uploader: "Faculty" },
     { name: "Referral-Links-2024.xlsx", type: "Referral Sheet", uploader: "Alumni" },

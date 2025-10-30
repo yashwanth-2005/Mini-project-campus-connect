@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useMemo, type ReactNode } from 'react';
@@ -9,7 +10,7 @@ interface FirebaseClientProviderProps {
 }
 
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  // Initialize Firebase on the client side, but only once.
+  // Initialize Firebase on the client, but only once.
   const firebaseServices = useMemo(() => {
     return initializeFirebase();
   }, []); 

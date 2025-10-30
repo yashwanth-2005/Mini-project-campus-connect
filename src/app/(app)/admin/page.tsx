@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -83,7 +84,7 @@ export default function AdminPage() {
       <Card>
         <CardHeader>
           <CardTitle>USN Change Requests</CardTitle>
-          <CardDescription>Review and approve or deny student requests to change their University Seat Number.</CardDescription>
+          <CardDescription>Review student requests to change their University Seat Number.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="border rounded-lg">

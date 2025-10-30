@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -30,7 +31,7 @@ type Resource = {
     storagePath: string;
 };
 
-// A dialog component for uploading a new resource.
+// A dialog for uploading a new resource.
 const UploadResourceDialog = ({
     isOpen,
     onOpenChange,
@@ -107,7 +108,7 @@ const UploadResourceDialog = ({
     );
 };
 
-// A dialog component for editing an existing resource's details.
+// A dialog for editing an existing resource's details.
 const EditResourceDialog = ({
     resource,
     isOpen,
@@ -197,7 +198,7 @@ export default function ResourcesPage() {
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Get a real-time stream of resources from Firestore.
+    // Gets a real-time stream of resources from Firestore.
     const resourcesCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'resources') : null, [firestore]);
     const { data: resources, isLoading: isLoadingResources } = useCollection<Resource>(resourcesCollectionRef);
 
@@ -218,7 +219,7 @@ export default function ResourcesPage() {
         });
     };
 
-    // Uploads a file to Firebase Storage and creates its metadata in Firestore.
+    // Uploads a file to Storage and creates its metadata in Firestore.
     const handleUpload = async (title: string, description: string, file: File) => {
         if (!user || !firestore) return;
         setIsUploading(true);
@@ -249,7 +250,7 @@ export default function ResourcesPage() {
         } catch (error: any) {
             toast({
                 title: "Upload Failed",
-                description: error.message || "Could not upload the file. Check storage rules.",
+                description: error.message || "Could not upload the file.",
                 variant: "destructive",
             });
         } finally {
@@ -306,7 +307,7 @@ export default function ResourcesPage() {
         try {
             // First, delete the file from Cloud Storage.
             await deleteObject(fileRef);
-            // Then, delete the metadata from Firestore.
+            // Then, delete the document from Firestore.
             await deleteDoc(resourceDocRef);
 
             toast({
@@ -326,13 +327,13 @@ export default function ResourcesPage() {
         }
     };
 
-    // Filters the resources based on the user's search query.
+    // Filters resources based on the search query.
     const filteredResources = resources?.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
-    // A helper function to format Firestore timestamps into a readable date.
+    // Formats a Firestore timestamp into a readable date.
     const formatDate = (timestamp: any) => {
         if (timestamp && timestamp.toDate) {
             return timestamp.toDate().toLocaleDateString();
@@ -387,7 +388,7 @@ export default function ResourcesPage() {
                         ) : filteredResources.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center">
-                                    {searchQuery ? "No resources found matching your search." : "No resources available yet. Be the first to upload!"}
+                                    {searchQuery ? "No resources found." : "No resources available yet."}
                                 </TableCell>
                             </TableRow>
                         ) : (

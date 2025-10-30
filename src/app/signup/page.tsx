@@ -58,7 +58,7 @@ const facultySchema = baseSchema.extend({
     uniqueCode: z.string().min(1, "Unique code is required"),
 });
 
-// The final discriminated union schema.
+// A discriminated union schema to handle both roles.
 const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema])
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -77,7 +77,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'student' | 'faculty'>('student');
   
-  // Initialize the form with default values and the validation schema.
+  // Initialize the form with validation and default values for all fields.
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -86,16 +86,13 @@ export default function SignupPage() {
         email: searchParams.get('email') || "",
         password: "",
         confirmPassword: "",
-        // Student fields
         usn: "",
-        year: '' as any, // Use empty string to avoid uncontrolled to controlled error
-        semester: '' as any, // Use empty string to avoid uncontrolled to controlled error
+        year: '' as any,
+        semester: '' as any,
         course: "",
-        // Faculty fields
         department: "",
         facultyId: "",
         uniqueCode: "",
-        // Common optional fields
         linkedin: "",
         leetcode: "",
     }
@@ -141,7 +138,6 @@ export default function SignupPage() {
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
 
-    // Check for password strength before submitting.
     if (strength.score < 3) {
       toast({
         title: "Weak Password",
@@ -227,10 +223,10 @@ export default function SignupPage() {
   const handleRoleChange = (role: 'student' | 'faculty') => {
     setSelectedRole(role);
     form.setValue('role', role);
+    // Reset form to clear previous role's data and avoid validation errors.
     form.reset({
         ...form.getValues(),
         role: role,
-        // Reset fields to avoid validation errors on role switch
         usn: role === 'student' ? form.getValues('usn') : '',
         year: role === 'student' ? form.getValues('year') : '' as any,
         semester: role === 'student' ? form.getValues('semester') : '' as any,
@@ -309,6 +305,7 @@ export default function SignupPage() {
                         </FormItem>
                     )} />
 
+                    {/* Conditional fields for students */}
                     {selectedRole === 'student' && (
                         <>
                             <FormField control={form.control} name="usn" render={({ field }) => (
@@ -373,6 +370,7 @@ export default function SignupPage() {
                         </>
                     )}
 
+                    {/* Conditional fields for faculty */}
                     {selectedRole === 'faculty' && (
                         <>
                             <FormField
@@ -509,5 +507,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-    

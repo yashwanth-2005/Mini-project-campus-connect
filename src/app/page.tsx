@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,7 @@ import React, { useState, useRef } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 
+// An array of feature objects to be displayed on the landing page.
 const features = [
   {
     icon: <Briefcase className="h-6 w-6 text-primary-foreground" />,
@@ -54,6 +56,7 @@ const features = [
   },
 ];
 
+// An array of testimonial objects from past students.
 const testimonials = [
     {
         name: "Priya Sharma",
@@ -75,8 +78,7 @@ const testimonials = [
     }
 ]
 
-// These are animation settings for the Framer Motion library,
-// used to create smooth, staggered animations as elements appear on screen.
+// Animation settings for Framer Motion to create smooth, staggered animations.
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -95,7 +97,7 @@ const staggerItem = {
   animate: { opacity: 1, y: 0, scale: 1 },
 };
 
-// A reusable component for displaying a feature card with a subtle hover effect.
+// A reusable component for displaying a feature card with a hover effect.
 const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
     return (
         <motion.div
@@ -122,6 +124,7 @@ export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
+  // Shows a loading screen when navigating to a new page.
   const handleLinkClick = (path: string, id: string) => {
     setLoading(id);
     setTimeout(() => {
@@ -131,6 +134,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
+      {/* Loading overlay */}
       {loading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
           <div className="flex flex-col items-center gap-4">
@@ -161,6 +165,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 overflow-x-hidden">
+         {/* Hero section */}
          <motion.section 
             className="py-20 md:py-32"
             initial="initial"
@@ -193,6 +198,7 @@ export default function Home() {
           </div>
         </motion.section>
         
+        {/* Quick prep section */}
         <motion.section 
           id="quick-prep" 
           className="bg-secondary/50 py-20 my-12"
@@ -223,6 +229,7 @@ export default function Home() {
             </div>
         </motion.section>
 
+        {/* Features section */}
         <motion.section 
           id="features" 
           className="container my-20"
@@ -249,6 +256,7 @@ export default function Home() {
           </motion.div>
         </motion.section>
         
+        {/* Testimonials section */}
         <motion.section 
           id="testimonials" 
           className="my-20 py-24 bg-secondary/50"
@@ -294,6 +302,7 @@ export default function Home() {
 
       </main>
 
+      {/* Footer */}
       <motion.footer 
         className="py-12 md:py-16 border-t border-border/40 bg-secondary/30"
         initial="initial"
