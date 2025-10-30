@@ -8,6 +8,8 @@ import { useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { motion } from "framer-motion";
+import React from "react";
 
 const resources: { name: string; type: string; uploader: string; date: string; url: string; }[] = [];
 
@@ -26,47 +28,69 @@ export default function ResourcesPage() {
         document.body.removeChild(link);
     };
 
-    const UploadResourceDialog = () => (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Resource
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Upload Resource</DialogTitle>
-                    <DialogDescription>
-                        Contribute to the hub by uploading a new resource.
-                    </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title" className="text-right">
-                            Title
-                        </Label>
-                        <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="description" className="text-right">
-                            Description
-                        </Label>
-                        <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="file" className="text-right">
-                            File
-                        </Label>
-                        <Input id="file" type="file" className="col-span-3"/>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button type="submit">Upload</Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+    const UploadResourceDialog = () => {
+        const dialogContentRef = React.useRef(null);
+
+        return (
+            <Dialog>
+                <DialogTrigger asChild>
+                    <Button>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload Resource
+                    </Button>
+                </DialogTrigger>
+                <DialogContent ref={dialogContentRef} className="sm:max-w-[425px] p-0">
+                     <motion.div
+                        drag
+                        dragListener={false} // We'll use a specific drag handle
+                        dragConstraints={{ current: document.body }}
+                        className="w-full"
+                    >
+                        <div
+                            onPointerDown={(e) => {
+                                // This allows dragging only from the header
+                                const target = e.target as HTMLElement;
+                                if (target.closest('[data-drag-handle]')) {
+                                    const startEvent = new PointerEvent('pointerdown', e);
+                                    dialogContentRef.current?.dispatchEvent(startEvent);
+                                }
+                            }}
+                        >
+                            <DialogHeader className="p-6 pb-4 cursor-grab" data-drag-handle>
+                                <DialogTitle>Upload Resource</DialogTitle>
+                                <DialogDescription>
+                                    Contribute to the hub by uploading a new resource.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4 px-6">
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="title" className="text-right">
+                                        Title
+                                    </Label>
+                                    <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="description" className="text-right">
+                                        Description
+                                    </Label>
+                                    <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" />
+                                </div>
+                                <div className="grid grid-cols-4 items-center gap-4">
+                                    <Label htmlFor="file" className="text-right">
+                                        File
+                                    </Label>
+                                    <Input id="file" type="file" className="col-span-3"/>
+                                </div>
+                            </div>
+                            <DialogFooter className="p-6 pt-4">
+                                <Button type="submit">Upload</Button>
+                            </DialogFooter>
+                        </div>
+                    </motion.div>
+                </DialogContent>
+            </Dialog>
+        );
+    }
 
     return (
         <div className="space-y-8">
