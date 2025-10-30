@@ -30,8 +30,6 @@ export default function ResourcesPage() {
     };
 
     const UploadResourceDialog = () => {
-        const dialogContentRef = React.useRef<HTMLDivElement>(null);
-
         return (
             <Dialog>
                 <DialogTrigger asChild>
@@ -40,65 +38,36 @@ export default function ResourcesPage() {
                         Upload Resource
                     </Button>
                 </DialogTrigger>
-                <DialogContent ref={dialogContentRef} className="p-0">
-                     <motion.div
-                        drag
-                        dragConstraints={{ current: document.body }}
-                        dragElastic={0.1}
-                        dragListener={false} // We will control drag initiation manually
-                        onPointerDown={(e) => {
-                            // Allows dragging only from the header
-                            const target = e.target as HTMLElement;
-                            if (target.closest('[data-drag-handle]')) {
-                                // Let the drag event pass through to the motion.div
-                            } else {
-                                e.stopPropagation();
-                            }
-                        }}
-                        className="w-full"
-                    >
-                        <div
-                            onPointerDown={(e) => {
-                                const target = e.target as HTMLElement;
-                                if (target.closest('[data-drag-handle]')) {
-                                    // This custom event handling is a workaround to make dragging work
-                                    // with Radix UI's dialog and its focus trapping.
-                                    const startEvent = new PointerEvent('pointerdown', e.nativeEvent);
-                                    dialogContentRef.current?.dispatchEvent(startEvent);
-                                }
-                            }}
-                        >
-                            <DialogHeader className="p-6 pb-4 cursor-grab" data-drag-handle>
-                                <DialogTitle>Upload Resource</DialogTitle>
-                                <DialogDescription>
-                                    Contribute to the hub by uploading a new resource.
-                                </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4 px-6">
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="title" className="text-right">
-                                        Title
-                                    </Label>
-                                    <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="description" className="text-right">
-                                        Description
-                                    </Label>
-                                    <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" />
-                                </div>
-                                <div className="grid grid-cols-4 items-center gap-4">
-                                    <Label htmlFor="file" className="text-right">
-                                        File
-                                    </Label>
-                                    <Input id="file" type="file" className="col-span-3"/>
-                                </div>
-                            </div>
-                            <DialogFooter className="p-6 pt-4">
-                                <Button type="submit">Upload</Button>
-                            </DialogFooter>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Upload Resource</DialogTitle>
+                        <DialogDescription>
+                            Contribute to the hub by uploading a new resource.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="title" className="text-right">
+                                Title
+                            </Label>
+                            <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" />
                         </div>
-                    </motion.div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="description" className="text-right">
+                                Description
+                            </Label>
+                            <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="file" className="text-right">
+                                File
+                            </Label>
+                            <Input id="file" type="file" className="col-span-3"/>
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button type="submit">Upload</Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         );
