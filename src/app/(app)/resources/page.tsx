@@ -17,6 +17,7 @@ import { collection, query, where, doc, deleteDoc, updateDoc, addDoc, serverTime
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
+// The type definition for a resource object.
 type Resource = {
     id: string;
     name: string;
@@ -24,11 +25,12 @@ type Resource = {
     fileType: string;
     uploaderId: string;
     uploaderName: string;
-    uploadDate: any; // Firestore timestamp
+    uploadDate: any; 
     fileUrl: string;
     storagePath: string;
 };
 
+// A dialog component for uploading a new resource.
 const UploadResourceDialog = ({
     isOpen,
     onOpenChange,
@@ -105,6 +107,7 @@ const UploadResourceDialog = ({
     );
 };
 
+// A dialog component for editing an existing resource's details.
 const EditResourceDialog = ({
     resource,
     isOpen,
@@ -194,13 +197,16 @@ export default function ResourcesPage() {
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
+    // Get a real-time stream of resources from Firestore.
     const resourcesCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'resources') : null, [firestore]);
     const { data: resources, isLoading: isLoadingResources } = useCollection<Resource>(resourcesCollectionRef);
 
+    // Opens a file's URL in a new browser tab.
     const handleView = (url: string) => {
         window.open(url, '_blank');
     };
 
+    // Downloads a file from a given URL.
     const handleDownload = (url: string, fileName: string) => {
         fetch(url).then(response => response.blob()).then(blob => {
             const link = document.createElement('a');
@@ -212,6 +218,7 @@ export default function ResourcesPage() {
         });
     };
 
+    // Uploads a file to Firebase Storage and creates its metadata in Firestore.
     const handleUpload = async (title: string, description: string, file: File) => {
         if (!user || !firestore) return;
         setIsUploading(true);
@@ -250,11 +257,13 @@ export default function ResourcesPage() {
         }
     }
 
+    // Opens the edit dialog for a specific resource.
     const handleEditClick = (resource: Resource) => {
         setEditingResource(resource);
         setIsEditDialogOpen(true);
     };
 
+    // Updates a resource's metadata in Firestore.
     const handleUpdate = async (resourceId: string, title: string, description: string) => {
         if (!firestore) return;
         setIsUpdating(true);
@@ -278,11 +287,13 @@ export default function ResourcesPage() {
         }
     }
 
+    // Opens the delete confirmation dialog.
     const handleDeleteClick = (resourceId: string) => {
         setDeletingResourceId(resourceId);
         setIsDeleteDialogOpen(true);
     };
 
+    // Permanently deletes a resource from Storage and Firestore.
     const handleConfirmDelete = async () => {
         if (!deletingResourceId || !firestore || !resources) return;
 
@@ -293,7 +304,9 @@ export default function ResourcesPage() {
         const fileRef = ref(storage, resourceToDelete.storagePath);
 
         try {
+            // First, delete the file from Cloud Storage.
             await deleteObject(fileRef);
+            // Then, delete the metadata from Firestore.
             await deleteDoc(resourceDocRef);
 
             toast({
@@ -313,11 +326,13 @@ export default function ResourcesPage() {
         }
     };
 
+    // Filters the resources based on the user's search query.
     const filteredResources = resources?.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
+    // A helper function to format Firestore timestamps into a readable date.
     const formatDate = (timestamp: any) => {
         if (timestamp && timestamp.toDate) {
             return timestamp.toDate().toLocaleDateString();

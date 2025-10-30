@@ -20,9 +20,8 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // This effect runs when the component mounts.
-  // It checks if the user has the 'faculty' role. If not, it redirects them to the dashboard.
-  // It also fetches the initial list of pending USN change requests.
+  // When the page loads, check if the user is a faculty member.
+  // If not, send them back to the dashboard. Otherwise, load the pending requests.
   useEffect(() => {
     if (role !== 'faculty') {
       router.push('/dashboard');
@@ -32,7 +31,7 @@ export default function AdminPage() {
     setIsLoading(false);
   }, [role, router]);
 
-  // This function handles the approval of a USN change request.
+  // Approves a student's USN change request.
   const handleApprove = (requestId: string) => {
     setActionLoading(requestId);
     setTimeout(() => {
@@ -55,7 +54,7 @@ export default function AdminPage() {
     }, 500);
   };
 
-  // This function handles the denial of a USN change request.
+  // Denies a student's USN change request.
   const handleDeny = (requestId: string) => {
     setActionLoading(requestId);
     setTimeout(() => {

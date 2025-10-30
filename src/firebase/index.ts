@@ -6,33 +6,29 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION
+// This function initializes Firebase and returns the SDKs.
+// It ensures that Firebase is only initialized once.
 export function initializeFirebase() {
   if (!getApps().length) {
-    // Important! initializeApp() is called without any arguments because Firebase App Hosting
-    // integrates with the initializeApp() function to provide the environment variables needed to
-    // populate the FirebaseOptions in production. It is critical that we attempt to call initializeApp()
-    // without arguments.
+    // Firebase App Hosting provides environment variables to initialize the app.
+    // We try that first, and fall back to our local config file if it fails.
     let firebaseApp;
     try {
-      // Attempt to initialize via Firebase App Hosting environment variables
       firebaseApp = initializeApp();
     } catch (e) {
-      // Only warn in production because it's normal to use the firebaseConfig to initialize
-      // during development
       if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic initialization failed. Falling back to firebase config object.', e);
+        console.warn('Automatic Firebase initialization failed. Falling back to local config.', e);
       }
       firebaseApp = initializeApp(firebaseConfig);
     }
-
     return getSdks(firebaseApp);
   }
 
-  // If already initialized, return the SDKs with the already initialized App
+  // If already initialized, just get the existing app and return the SDKs.
   return getSdks(getApp());
 }
 
+// A helper to get all the service SDKs from a Firebase App instance.
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
@@ -42,6 +38,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   };
 }
 
+// Export all the necessary Firebase hooks and providers for easy access elsewhere.
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';

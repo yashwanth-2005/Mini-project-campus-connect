@@ -33,7 +33,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { FirebaseClientProvider } from "@/firebase";
 
-// This array defines all possible navigation items in the sidebar.
+// This array defines all possible navigation links in the sidebar.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/placements", icon: <Briefcase />, label: "Placement Corner", role: ['student', 'faculty'] },
@@ -44,7 +44,7 @@ const allNavItems = [
   { href: "/admin", icon: <Shield />, label: "Admin Panel", role: ['faculty'] },
 ];
 
-// This is the main layout component for the authenticated part of the app.
+// This is the main layout for the authenticated part of the application.
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -52,30 +52,25 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // We filter the navigation items based on the user's role, which we get from the URL.
+  // Filter the navigation links based on the user's role from the URL.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
-  // This effect simulates a loading indicator during page transitions.
-  // It listens for changes in the pathname and search params.
+  // Shows a loading screen during page transitions for a better user experience.
   useEffect(() => {
-    // We use a state variable to track the previous path.
-    // When a navigation starts, the path changes, and we show the loader.
-    // The loader is hidden in a timeout to allow the new page to render.
     setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 300); // Adjust delay as needed
+    const timer = setTimeout(() => setIsLoading(false), 300); 
     return () => clearTimeout(timer);
   }, [pathname, searchParams]);
 
   const handleLinkClick = (url: string) => {
-      // If the link is the current page, don't show the loader.
+      // Don't show the loader if we are clicking on the link for the current page.
       if (url === window.location.pathname + window.location.search) return;
       setIsLoading(true);
   };
 
-
   return (
     <SidebarProvider>
-      {/* This is the full-screen loading overlay. It appears during page navigation. */}
+      {/* The full-screen loading overlay. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -119,7 +114,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex-1">
-              {/* This space can be used for breadcrumbs or other header content. */}
+              {/* This space can be used for things like breadcrumbs in the future. */}
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setIsChatOpen(true)} className="font-bold rainbow-button text-white">
@@ -137,8 +132,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-// We use React Suspense here to handle the initial loading of URL parameters gracefully.
-// This prevents the page from rendering with incorrect roles or data.
+// We use React Suspense to gracefully handle loading URL parameters,
+// preventing the page from rendering with incorrect roles or data.
 export default function AppLayout({
   children,
 }: {

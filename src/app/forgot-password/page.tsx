@@ -32,13 +32,13 @@ export default function ForgotPasswordPage() {
         event.preventDefault();
         setIsLoading(true);
 
-        // Simulate network delay
+        // Simulate network delay for a more realistic feel.
         setTimeout(() => {
             const userExists = findUserByEmail(email);
 
             if (userExists) {
                  // In a real app, this is where you would call an email service.
-                // For this demo, we'll just show a success message.
+                 // For this demo, we'll just show a success message.
                 setEmailSent(true);
             } else {
                  toast({

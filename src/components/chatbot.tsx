@@ -31,7 +31,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // This function handles the logic for sending a message and getting a response.
+  // This function handles sending a message and getting a response from the AI.
   const handleSend = async () => {
     if (input.trim() === "") return;
 
@@ -44,12 +44,12 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
     setIsLoading(true);
 
     try {
-      // Here, we call our Genkit AI flow to get the bot's response.
+      // Call our Genkit AI flow to get the bot's response.
       const response = await chatWithBot({ query: currentInput });
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      // If the AI call fails, we show a friendly error message.
+      // If the AI call fails, we show a user-friendly error message.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",

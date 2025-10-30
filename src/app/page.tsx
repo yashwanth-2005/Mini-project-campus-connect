@@ -75,7 +75,8 @@ const testimonials = [
     }
 ]
 
-// Animation variants for Framer Motion
+// These are animation settings for the Framer Motion library,
+// used to create smooth, staggered animations as elements appear on screen.
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -94,6 +95,7 @@ const staggerItem = {
   animate: { opacity: 1, y: 0, scale: 1 },
 };
 
+// A reusable component for displaying a feature card with a subtle hover effect.
 const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
     return (
         <motion.div

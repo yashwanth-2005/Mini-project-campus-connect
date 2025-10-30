@@ -22,6 +22,7 @@ import { Loader2 } from "lucide-react";
 import { useUser, useFirestore, useDoc, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
 
+// Defines the shape and validation rules for the main profile form.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -31,6 +32,7 @@ const profileSchema = z.object({
     profilePictureUrl: z.string().optional(),
 });
 
+// Defines validation for the USN change request dialog.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -42,6 +44,7 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
+    // A memoized reference to the user's document in Firestore.
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [firestore, user]);
     const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
@@ -52,6 +55,7 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isRequestingUsn, setIsRequestingUsn] = useState(false);
 
+    // Initialize the main profile form with validation.
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -64,12 +68,14 @@ export default function ProfilePage() {
         },
     });
     
+    // Redirect to login if the user is not authenticated.
     useEffect(() => {
       if (!isUserLoading && !user) {
         router.push('/login');
       }
     }, [isUserLoading, user, router]);
 
+    // When the user's profile data loads, fill the form with it.
     useEffect(() => {
         if (userProfile) {
             form.reset({
@@ -84,6 +90,7 @@ export default function ProfilePage() {
         }
     }, [userProfile, form]);
 
+    // Creates a local preview URL for a newly selected profile picture.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -97,6 +104,7 @@ export default function ProfilePage() {
         }
     };
 
+    // Handles saving the updated profile data to Firestore.
     async function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!userDocRef) return;
         setIsSaving(true);
@@ -107,7 +115,7 @@ export default function ProfilePage() {
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            window.location.reload();
+            window.location.reload(); // Reload to update user nav avatar.
         } catch(e) {
             toast({
                 title: "Update Failed",
@@ -119,8 +127,8 @@ export default function ProfilePage() {
         }
     }
 
+    // A placeholder for handling USN change submissions.
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
-        // This is a placeholder as USN change logic is complex and out of scope for now
         setIsRequestingUsn(true);
         setTimeout(() => {
              toast({
@@ -133,6 +141,7 @@ export default function ProfilePage() {
         }, 500);
     }
 
+    // Show a loading skeleton while user data is being fetched.
     if (isUserLoading || isProfileLoading || !userProfile) {
         return (
             <div className="space-y-8">
