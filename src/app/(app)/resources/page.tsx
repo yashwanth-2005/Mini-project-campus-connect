@@ -21,7 +21,7 @@ type Resource = {
     type: string;
     uploader: string;
     date: string;
-    url: string; // For local files, this will be a Blob URL
+    url: string; // This will now be a Base64 dataURL
 };
 
 const UploadResourceDialog = ({
@@ -62,7 +62,7 @@ const UploadResourceDialog = ({
                     Upload Resource
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px]" style={{top: '35%', left: '40%'}}>
                 <DialogHeader>
                     <DialogTitle>Upload Resource</DialogTitle>
                     <DialogDescription>
@@ -134,7 +134,7 @@ const EditResourceDialog = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={onOpenChange}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px]" style={{top: '35%', left: '40%'}}>
                 <DialogHeader>
                     <DialogTitle>Edit Resource</DialogTitle>
                     <DialogDescription>
@@ -206,24 +206,28 @@ export default function ResourcesPage() {
     };
 
     const handleUpload = (title: string, description: string, file: File) => {
-        const newResource: Resource = {
-            id: `res_${Date.now()}`,
-            name: title,
-            description: description,
-            type: file.type || "File",
-            uploader: "Current User",
-            date: new Date().toLocaleDateString('en-CA'),
-            url: URL.createObjectURL(file), // Note: Blob URLs are temporary and session-based
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            const newResource: Resource = {
+                id: `res_${Date.now()}`,
+                name: title,
+                description: description,
+                type: file.type || "File",
+                uploader: "Current User", // In a real app, this would be the logged-in user's name
+                date: new Date().toLocaleDateString('en-CA'),
+                url: reader.result as string, // This is the Base64 dataURL
+            };
+    
+            setResources(prevResources => [...prevResources, newResource]);
+    
+            toast({
+                title: "Resource Uploaded",
+                description: `"${newResource.name}" has been added to the hub.`,
+            });
+    
+            setIsUploadDialogOpen(false);
         };
-
-        setResources(prevResources => [...prevResources, newResource]);
-
-        toast({
-            title: "Resource Uploaded",
-            description: `"${newResource.name}" has been added to the hub.`,
-        });
-
-        setIsUploadDialogOpen(false);
+        reader.readAsDataURL(file);
     }
 
     const handleEditClick = (resource: Resource) => {
