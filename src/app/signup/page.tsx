@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { GithubIcon, LinkedinIcon, Logo } from "@/components/icons";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -33,7 +33,7 @@ const signupSchema = z.object({
   usn: z.string().min(1, "USN is required"),
   year: z.coerce.number().min(1, "Year is required").max(4, "Year cannot be more than 4"),
   semester: z.coerce.number().min(1, "Semester is required").max(8, "Semester cannot be more than 8"),
-  course: z.string().min(1, "Please select your course"),
+  department: z.string().min(1, "Please select your department"),
   branch: z.string().min(1, "Branch is required"),
   linkedin: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   leetcode: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
@@ -57,7 +57,7 @@ export default function SignupPage() {
         usn: "",
         year: undefined,
         semester: undefined,
-        course: "",
+        department: "",
         branch: "",
         linkedin: "",
         leetcode: "",
@@ -130,7 +130,7 @@ export default function SignupPage() {
             usn: data.usn.toUpperCase(),
             year: data.year,
             semester: data.semester,
-            course: data.course,
+            course: data.department,
             branch: data.branch,
             linkedinUrl: data.linkedin,
             leetcodeUrl: data.leetcode,
@@ -236,22 +236,23 @@ export default function SignupPage() {
                     <div className="grid grid-cols-2 gap-4">
                         <FormField
                             control={form.control}
-                            name="course"
+                            name="department"
                             render={({ field }) => (
                                 <FormItem>
-                                <FormLabel>Course</FormLabel>
+                                <FormLabel>Department</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select course" />
+                                        <SelectValue placeholder="Select department" />
                                     </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                    <SelectItem value="be">B.E</SelectItem>
-                                    <SelectItem value="bca">BCA</SelectItem>
-                                    <SelectItem value="bcom">B.Com</SelectItem>
-                                    <SelectItem value="mtech">M.Tech</SelectItem>
-                                    <SelectItem value="mca">MCA</SelectItem>
+                                    <SelectItem value="cse">Computer Science Engineering</SelectItem>
+                                    <SelectItem value="ise">Information Science Engineering</SelectItem>
+                                    <SelectItem value="ece">Electronics & Communication</SelectItem>
+                                    <SelectItem value="eee">Electrical & Electronics</SelectItem>
+                                    <SelectItem value="mech">Mechanical Engineering</SelectItem>
+                                    <SelectItem value="civil">Civil Engineering</SelectItem>
                                     <SelectItem value="other">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -263,7 +264,7 @@ export default function SignupPage() {
                             <FormItem>
                                 <FormLabel>Branch</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="e.g., CSE" {...field} />
+                                    <Input placeholder="e.g., General" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
