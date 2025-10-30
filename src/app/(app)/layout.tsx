@@ -55,20 +55,23 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   // We filter the navigation items based on the user's role, which we get from the URL.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
+  // This effect simulates a loading indicator during page transitions.
+  // It listens for changes in the pathname and search params.
   useEffect(() => {
-    // This effect is used to show a loading indicator during page transitions.
-    // We'll use a simple approach based on path changes.
-    const handleStart = (url: string) => {
-      if (url !== window.location.pathname) {
-        setIsLoading(true);
-      }
-    };
-    const handleComplete = () => setIsLoading(false);
-
-    // We can't use the Next.js router events directly in the app router easily,
-    // so we'll simulate the loading for any pathname change.
-    setIsLoading(false); // Hide loader on initial load or after navigation.
+    // We use a state variable to track the previous path.
+    // When a navigation starts, the path changes, and we show the loader.
+    // The loader is hidden in a timeout to allow the new page to render.
+    setIsLoading(true);
+    const timer = setTimeout(() => setIsLoading(false), 300); // Adjust delay as needed
+    return () => clearTimeout(timer);
   }, [pathname, searchParams]);
+
+  const handleLinkClick = (url: string) => {
+      // If the link is the current page, don't show the loader.
+      if (url === window.location.pathname + window.location.search) return;
+      setIsLoading(true);
+  };
+
 
   return (
     <SidebarProvider>
@@ -90,16 +93,19 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
-            {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={`${item.href}?role=${role}`} passHref prefetch>
-                  <SidebarMenuButton tooltip={item.label} isActive={pathname === item.href}>
-                    {item.icon}
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            ))}
+            {navItems.map((item) => {
+              const itemPath = `${item.href}?role=${role}`;
+              return (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={itemPath} passHref prefetch={false} onClick={() => handleLinkClick(itemPath)}>
+                    <SidebarMenuButton tooltip={item.label} isActive={pathname === item.href}>
+                      {item.icon}
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              )
+            })}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
