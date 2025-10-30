@@ -78,18 +78,20 @@ export default function LoginPage() {
         const userDoc = await getDoc(userDocRef);
 
         if (!userDoc.exists()) {
-             throw new Error("User profile not found. Please contact support.");
+             // This case should ideally not happen if signup is working correctly.
+             throw new Error("User profile not found in database. Please contact support.");
         }
         
         const userProfile = userDoc.data();
-        const userRole = userProfile.role || 'student'; // Default to student if role is missing.
+        // Get the role from the Firestore document. Default to 'student' if missing.
+        const userRole = userProfile.role || 'student';
         
         toast({
             title: "Login Successful",
             description: `Welcome back, ${user.displayName || user.email}!`,
         });
 
-        // Redirect based on the role found in the Firestore document.
+        // Redirect to the correct dashboard based on the role found in the database.
         router.push(`/dashboard?role=${userRole}`);
 
     } catch (error: any) {
@@ -102,24 +104,28 @@ export default function LoginPage() {
             case "auth/invalid-credential":
             case "auth/invalid-email":
                 title = "Account Not Found";
-                description = "Redirecting you to the sign-up page.";
-                router.push(`/signup?email=${encodeURIComponent(email)}`);
-                // No need to set loading to false here, as we are navigating away.
+                description = "No account found with these details. Redirecting you to sign up.";
+                setIsLoading(false); // Stop loading before redirecting.
+                setTimeout(() => {
+                    router.push(`/signup?email=${encodeURIComponent(email)}`);
+                }, 1500);
                 break;
             case "auth/wrong-password":
                 description = "Invalid password. Please try again.";
                 setIsLoading(false);
                 break;
             default:
-                description = error.message;
+                description = error.message || "An unexpected error occurred.";
                 setIsLoading(false);
         }
 
-        toast({
-            title: title,
-            description: description,
-            variant: "destructive",
-        });
+        if (error.code !== "auth/user-not-found") {
+             toast({
+                title: title,
+                description: description,
+                variant: "destructive",
+            });
+        }
     }
   };
 
