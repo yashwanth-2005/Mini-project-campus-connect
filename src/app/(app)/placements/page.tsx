@@ -33,7 +33,7 @@ export default function PlacementsPage() {
                 <p className="text-muted-foreground">All-in-one hub for your placement preparation.</p>
             </div>
 
-            {/* Tabs organize the different sections of the placement corner. */}
+            {/* Tabs are used to organize the different sections of the placement corner. */}
             <Tabs defaultValue="roadmaps">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="roadmaps">Roadmaps</TabsTrigger>
@@ -121,7 +121,7 @@ export default function PlacementsPage() {
                                 <CardTitle>Document Repository</CardTitle>
                                 <CardDescription>Find resume templates, referral links, and more.</CardDescription>
                             </div>
-                             {/* Only faculty can upload new documents. */}
+                             {/* Only faculty members are allowed to upload new documents. */}
                              {role === 'faculty' && <Button>Upload Document</Button>}
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -146,5 +146,3 @@ export default function PlacementsPage() {
         </div>
     )
 }
-
-    

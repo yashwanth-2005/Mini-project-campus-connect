@@ -2,13 +2,13 @@
 'use server';
 
 /**
- * This flow takes a long piece of text and returns a concise summary.
- * It is powered by a Genkit prompt.
+ * @fileOverview This flow takes a long piece of text and returns a concise summary.
+ * It is powered by a Genkit prompt that uses the Gemini model.
  */
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
-// Defines the input schema for the summarization flow.
+// Defines the expected input for the summarization flow.
 const SummarizeDiscussionInputSchema = z.object({
   discussionText: z
     .string()
@@ -16,7 +16,7 @@ const SummarizeDiscussionInputSchema = z.object({
 });
 export type SummarizeDiscussionInput = z.infer<typeof SummarizeDiscussionInputSchema>;
 
-// Defines the output schema for the summarization flow.
+// Defines the expected output for the summarization flow.
 const SummarizeDiscussionOutputSchema = z.object({
   summary: z.string().describe('A concise summary of the discussion thread.'),
 });
@@ -27,7 +27,7 @@ export async function summarizeDiscussion(input: SummarizeDiscussionInput): Prom
   return summarizeDiscussionFlow(input);
 }
 
-// Defines the prompt for the AI model.
+// Defines the prompt and instructions for the AI model.
 const prompt = ai.definePrompt({
   name: 'summarizeDiscussionPrompt',
   input: {schema: SummarizeDiscussionInputSchema},
@@ -39,7 +39,7 @@ const prompt = ai.definePrompt({
   {{{discussionText}}}`,
 });
 
-// Defines the Genkit flow that orchestrates the summarization.
+// Defines the Genkit flow that orchestrates the summarization process.
 const summarizeDiscussionFlow = ai.defineFlow(
   {
     name: 'summarizeDiscussionFlow',

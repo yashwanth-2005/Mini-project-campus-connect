@@ -2,19 +2,19 @@
 'use server';
 
 /**
- * This flow powers the AI chatbot, allowing it to answer
+ * @fileOverview This flow powers the AI chatbot, allowing it to answer
  * general and campus-specific questions.
  */
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
-// Defines the input schema for the chatbot.
+// Defines the expected input for the chatbot.
 const ChatWithBotInputSchema = z.object({
   query: z.string().describe('The user query or question.'),
 });
 export type ChatWithBotInput = z.infer<typeof ChatWithBotInputSchema>;
 
-// Defines the output schema for the chatbot.
+// Defines the expected output for the chatbot.
 const ChatWithBotOutputSchema = z.object({
   answer: z.string().describe('The AI Chatbot response to the user query.'),
 });
@@ -26,6 +26,7 @@ export async function chatWithBot(input: ChatWithBotInput): Promise<ChatWithBotO
 }
 
 // Defines a tool the AI can use for campus-specific questions.
+// This allows the AI to "look up" information it doesn't already know.
 const useCampusInfoTool = ai.defineTool({
   name: 'getCampusInformation',
   description: 'This tool retrieves information about campus resources, placements, and events.',

@@ -8,19 +8,19 @@ export interface AppEvents {
   'permission-error': FirestorePermissionError;
 }
 
-// A generic type for a callback function.
+// This is a generic type for a callback function.
 type Callback<T> = (data: T) => void;
 
 /**
- * A strongly-typed pub/sub event emitter. It allows different parts of the
- * application to communicate without being directly coupled.
+ * A strongly-typed event system (also known as a "pub/sub" model).
+ * It allows different parts of the application to communicate without being directly linked.
  */
 function createEventEmitter<T extends Record<string, any>>() {
-  // Stores arrays of callbacks, keyed by the event name.
+  // Stores arrays of callbacks, organized by the event name.
   const events: { [K in keyof T]?: Array<Callback<T[K]>> } = {};
 
   return {
-    // Subscribes to an event.
+    // Subscribes a function to an event.
     on<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
       if (!events[eventName]) {
         events[eventName] = [];
@@ -28,7 +28,7 @@ function createEventEmitter<T extends Record<string, any>>() {
       events[eventName]?.push(callback);
     },
 
-    // Unsubscribes from an event.
+    // Unsubscribes a function from an event.
     off<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
       if (!events[eventName]) {
         return;
@@ -36,7 +36,7 @@ function createEventEmitter<T extends Record<string, any>>() {
       events[eventName] = events[eventName]?.filter(cb => cb !== callback);
     },
 
-    // Publishes an event to all of its subscribers.
+    // Publishes an event, calling all subscribed functions.
     emit<K extends keyof T>(eventName: K, data: T[K]) {
       if (!events[eventName]) {
         return;
@@ -46,7 +46,5 @@ function createEventEmitter<T extends Record<string, any>>() {
   };
 }
 
-// Creates and exports a single, global instance of the event emitter.
+// Creates and exports a single, global instance of the event emitter for the app.
 export const errorEmitter = createEventEmitter<AppEvents>();
-
-    

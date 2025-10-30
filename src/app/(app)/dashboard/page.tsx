@@ -10,7 +10,7 @@ import { useUser } from "@/firebase";
 import React from "react";
 
 // Defines the quick links available on the dashboard.
-// Each link has a role property to control who can see it.
+// The `role` property controls which users can see each link.
 const allQuickLinks = [
     {
         title: "Placement Corner",
@@ -45,13 +45,13 @@ const allQuickLinks = [
 export default function DashboardPage() {
     const searchParams = useSearchParams();
     const { user } = useUser();
-    // The user's role is determined by the URL parameter.
+    // The user's role is read from the URL parameter.
     const role = searchParams.get('role') || 'student';
     
     // Filters the quick links based on the user's role.
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     
-    // Generates a personalized welcome message.
+    // Generates a personalized welcome message for the user.
     const welcomeMessage = () => {
         if (role === 'faculty') return "Welcome back, Faculty!";
         if (user) return `Welcome back, ${user.displayName?.split(' ')[0] || 'Student'}!`;
@@ -65,7 +65,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground">Here&apos;s a quick overview of what&apos;s happening on campus.</p>
             </div>
 
-            {/* A grid of quick links to other pages. */}
+            {/* A grid of cards that link to other pages in the app. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {quickLinks.map(link => (
                     <Card key={link.title} className="hover:shadow-lg transition-shadow">
@@ -85,7 +85,7 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            {/* A card showing the most recent announcements. */}
+            {/* A card that shows the most recent campus announcements. */}
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Announcements</CardTitle>
@@ -116,5 +116,3 @@ export default function DashboardPage() {
         </div>
     )
 }
-
-    

@@ -13,7 +13,7 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// A utility type that adds a mandatory 'id' field to a given type.
+// A utility type that adds a mandatory 'id' field to another type.
 export type WithId<T> = T & { id: string };
 
 // The shape of the object returned by the useCollection hook.
@@ -23,7 +23,7 @@ export interface UseCollectionResult<T> {
   error: FirestoreError | Error | null; 
 }
 
-// An internal type definition that helps us access the path of a Firestore query.
+// An internal type that helps us access the path of a Firestore query.
 export interface InternalQuery extends Query<DocumentData> {
   _query: {
     path: {
@@ -37,7 +37,7 @@ export interface InternalQuery extends Query<DocumentData> {
  * A React hook to subscribe to a Firestore collection or query in real-time.
  * 
  * IMPORTANT: The query or reference passed to this hook MUST be memoized
- * using `useMemo` or `useMemoFirebase` to prevent infinite re-renders.
+ * with `useMemo` or `useMemoFirebase` to prevent infinite re-renders.
  *  
  * @param memoizedTargetRefOrQuery The Firestore query or reference to listen to.
  * @returns An object with the data, loading state, and any error that occurred.
@@ -53,7 +53,7 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If the query isn't ready yet (e.g., waiting for a user ID), reset the state.
+    // If the query isn't ready yet (e.g., waiting for a user ID), do nothing.
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -64,7 +64,7 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
 
-    // Sets up the real-time listener on the provided query.
+    // Sets up the real-time listener on the provided Firestore query.
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
@@ -78,7 +78,7 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        // If an error occurs (e.g., permission denied), create a more detailed error.
+        // If an error occurs (like a permissions issue), create a more detailed error.
         const path: string =
           memoizedTargetRefOrQuery.type === 'collection'
             ? (memoizedTargetRefOrQuery as CollectionReference).path
@@ -93,7 +93,7 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // Sends the detailed error to a global listener for display.
+        // Sends the detailed error to a global listener to be displayed.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
@@ -102,11 +102,9 @@ export function useCollection<T = any>(
     return () => unsubscribe();
   }, [memoizedTargetRefOrQuery]); 
 
-  // This is a development-only check to enforce memoization of the query.
+  // This is a safety check for development to enforce memoization of the query.
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
     throw new Error('The query passed to useCollection was not memoized. Use useMemoFirebase to prevent re-renders.');
   }
   return { data, isLoading, error };
 }
-
-    

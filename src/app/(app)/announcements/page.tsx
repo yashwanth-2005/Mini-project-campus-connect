@@ -50,7 +50,7 @@ export default function AnnouncementsPage() {
                     <h1 className="text-3xl font-bold font-headline">Announcements</h1>
                     <p className="text-muted-foreground">Latest updates from faculty and departments.</p>
                 </div>
-                {/* Only show the "New Announcement" button to faculty members. */}
+                {/* The "New Announcement" button is only shown to faculty members. */}
                 {role === 'faculty' && (
                     <Dialog>
                         <DialogTrigger asChild>
@@ -112,7 +112,7 @@ export default function AnnouncementsPage() {
                         <CardContent>
                             <p className="text-sm text-foreground">{ann.content}</p>
                         </CardContent>
-                        {/* Shows attachments if they exist. */}
+                        {/* Shows the attachments section if any files are attached. */}
                         {ann.attachments.length > 0 && (
                             <CardFooter className="flex-col items-start gap-2">
                                 <h4 className="text-sm font-semibold">Attachments:</h4>
@@ -132,5 +132,3 @@ export default function AnnouncementsPage() {
         </div>
     )
 }
-
-    

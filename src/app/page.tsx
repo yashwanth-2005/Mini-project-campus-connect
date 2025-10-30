@@ -22,7 +22,7 @@ import React, { useState, useRef } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 
-// An array of feature objects to be displayed on the landing page.
+// An array of feature objects to display on the landing page.
 const features = [
   {
     icon: <Briefcase className="h-6 w-6 text-primary-foreground" />,
@@ -78,12 +78,13 @@ const testimonials = [
     }
 ]
 
-// Animation settings for Framer Motion to create smooth, staggered animations.
+// Defines animation variants for Framer Motion to create a fade-in effect.
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
 };
 
+// Defines a container variant for staggering animations of child elements.
 const staggerContainer = {
   animate: {
     transition: {
@@ -92,6 +93,7 @@ const staggerContainer = {
   },
 };
 
+// Defines an item variant for staggered animations.
 const staggerItem = {
   initial: { opacity: 0, y: 20, scale: 0.95 },
   animate: { opacity: 1, y: 0, scale: 1 },
@@ -124,7 +126,7 @@ export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
-  // Shows a loading screen when navigating to a new page.
+  // Navigates to a new page and shows a loading screen.
   const handleLinkClick = (path: string, id: string) => {
     setLoading(id);
     setTimeout(() => {
@@ -134,7 +136,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      {/* Shows a loading overlay during page transitions. */}
+      {/* This loading overlay is shown during page transitions. */}
       {loading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
           <div className="flex flex-col items-center gap-4">
@@ -165,7 +167,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 overflow-x-hidden">
-         {/* Hero Section: The main title and call-to-action buttons. */}
+         {/* The main title and call-to-action buttons. */}
          <motion.section 
             className="py-20 md:py-32"
             initial="initial"
@@ -198,7 +200,7 @@ export default function Home() {
           </div>
         </motion.section>
         
-        {/* Quick Prep Section: A feature highlight for placement preparation. */}
+        {/* A special feature highlight for placement preparation. */}
         <motion.section 
           id="quick-prep" 
           className="bg-secondary/50 py-20 my-12"
@@ -229,7 +231,7 @@ export default function Home() {
             </div>
         </motion.section>
 
-        {/* Features Section: Displays the main features of the application. */}
+        {/* This section displays the main features of the application. */}
         <motion.section 
           id="features" 
           className="container my-20"
@@ -256,7 +258,7 @@ export default function Home() {
           </motion.div>
         </motion.section>
         
-        {/* Testimonials Section: Shows quotes from satisfied students. */}
+        {/* This section shows quotes from satisfied students. */}
         <motion.section 
           id="testimonials" 
           className="my-20 py-24 bg-secondary/50"
@@ -302,7 +304,7 @@ export default function Home() {
 
       </main>
 
-      {/* Footer: Contains navigation links and social media icons. */}
+      {/* The footer contains navigation links and social media icons. */}
       <motion.footer 
         className="py-12 md:py-16 border-t border-border/40 bg-secondary/30"
         initial="initial"
@@ -370,5 +372,3 @@ export default function Home() {
     </div>
   );
 }
-
-    

@@ -27,18 +27,17 @@ export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
-    // This function simulates sending a password reset link.
+    // This function simulates sending a password reset email.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
 
-        // Simulate network delay for a better user experience.
+        // A short delay to simulate a network request.
         setTimeout(() => {
             const userExists = findUserByEmail(email);
 
             if (userExists) {
-                 // In a real app, this would trigger an email service.
-                 // For this demo, we just show a success message.
+                 // For this demo, we just show a success message instead of sending an email.
                 setEmailSent(true);
             } else {
                  toast({
@@ -55,7 +54,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-             {/* Shows a loading overlay while the request is being processed. */}
+             {/* This loading overlay is shown while the request is being processed. */}
              {isLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
                     <div className="flex flex-col items-center gap-4">
@@ -125,5 +124,3 @@ export default function ForgotPasswordPage() {
         </div>
     )
 }
-
-    

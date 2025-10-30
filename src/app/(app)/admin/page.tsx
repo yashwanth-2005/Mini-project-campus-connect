@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getPendingUsnRequests, approveUsnChange, denyUsnChange, UsnChangeRequest } from '@/lib/mock-db';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Check, X, Loader2 } from 'lucide-react';
+import { Check, X, Loader2 } from 'lucide-react';
 
 export default function AdminPage() {
   const searchParams = useSearchParams();
@@ -21,18 +21,19 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // When the page loads, checks if the user is a faculty member.
-  // If not, it sends them back to the dashboard. Otherwise, it loads the pending requests.
+  // When the page loads, it checks if the user is a faculty member.
+  // If not, it sends them back to the dashboard.
   useEffect(() => {
     if (role !== 'faculty') {
       router.push('/dashboard');
       return;
     }
+    // Otherwise, it loads the pending requests.
     setRequests(getPendingUsnRequests());
     setIsLoading(false);
   }, [role, router]);
 
-  // Approves a student's USN change request and shows a toast notification.
+  // Approves a student's USN change request and shows a success message.
   const handleApprove = (requestId: string) => {
     setActionLoading(requestId);
     setTimeout(() => {
@@ -52,10 +53,10 @@ export default function AdminPage() {
       } finally {
         setActionLoading(null);
       }
-    }, 500); // Simulates a network delay.
+    }, 500); // A small delay to simulate a network request.
   };
 
-  // Denies a student's USN change request and shows a toast notification.
+  // Denies a student's USN change request and shows a message.
   const handleDeny = (requestId: string) => {
     setActionLoading(requestId);
     setTimeout(() => {
@@ -67,7 +68,7 @@ export default function AdminPage() {
         variant: 'destructive',
       });
       setActionLoading(null);
-    }, 500); // Simulates a network delay.
+    }, 500); // A small delay to simulate a network request.
   };
 
   if (isLoading) {
@@ -108,7 +109,7 @@ export default function AdminPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  // Renders a row for each pending request.
+                  // Renders a table row for each pending request.
                   requests.map((req) => (
                     <TableRow key={req.id}>
                       <TableCell className="font-medium">{req.studentName}</TableCell>
@@ -145,5 +146,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

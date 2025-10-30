@@ -19,12 +19,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
-import { useDoc } from "@/firebase/firestore/use-doc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-// Defines the validation for the profile form.
+// Defines the validation schema for the profile form.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -32,7 +31,7 @@ const profileSchema = z.object({
     githubUrl: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
     leetcodeUrl: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
     profilePictureUrl: z.string().optional(),
-    // Faculty specific
+    // Faculty specific fields
     department: z.string().optional(),
     facultyId: z.string().optional(),
     uniqueCode: z.string().optional(),
@@ -44,15 +43,16 @@ const usnChangeSchema = z.object({
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
 });
 
-// The main component for the user profile page.
+// This is the main component for the user profile page.
 export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
-    // Creates a memoized reference to the user's document in Firestore.
+    // Creates a memoized reference to the user's document in Firestore to prevent unnecessary re-renders.
     const userDocRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [firestore, user]);
+    // Fetches the user's profile data in real-time.
     const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
 
     const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -62,7 +62,7 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isRequestingUsn, setIsRequestingUsn] = useState(false);
 
-    // Initializes the main profile form.
+    // Initializes the main profile form with validation and default values.
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -78,14 +78,14 @@ export default function ProfilePage() {
         },
     });
     
-    // Redirects to login if the user is not authenticated.
+    // Redirects to the login page if the user is not authenticated.
     useEffect(() => {
       if (!isUserLoading && !user) {
         router.push('/login');
       }
     }, [isUserLoading, user, router]);
 
-    // When the user's profile data loads from Firestore, this fills the form.
+    // When the user's profile data loads from Firestore, this effect fills the form.
     useEffect(() => {
         if (userProfile) {
             form.reset({
@@ -103,7 +103,7 @@ export default function ProfilePage() {
         }
     }, [userProfile, form]);
 
-    // Creates a local preview for a newly selected profile picture.
+    // Creates a local preview URL for a newly selected profile picture.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -123,13 +123,13 @@ export default function ProfilePage() {
         setIsSaving(true);
         
         try {
-            // Update the user's document in Firestore with the new data.
+            // Updates the user's document in Firestore with the new data.
             await updateDoc(userDocRef, data);
             toast({
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            // Reload the page to update the user's avatar in the navigation bar.
+            // Reloads the page to update the user's avatar in the navigation bar.
             window.location.reload(); 
         } catch(e) {
             toast({

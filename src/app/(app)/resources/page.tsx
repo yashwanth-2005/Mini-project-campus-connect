@@ -18,7 +18,7 @@ import { collection, query, where, doc, deleteDoc, updateDoc, addDoc, serverTime
 import { useCollection } from "@/firebase/firestore/use-collection";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
-// The type definition for a resource object.
+// The type definition for a resource object stored in Firestore.
 type Resource = {
     id: string;
     name: string;
@@ -31,7 +31,7 @@ type Resource = {
     storagePath: string;
 };
 
-// A dialog for uploading a new resource.
+// A dialog component for uploading a new resource.
 const UploadResourceDialog = ({
     isOpen,
     onOpenChange,
@@ -48,7 +48,7 @@ const UploadResourceDialog = ({
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const { toast } = useToast();
 
-    // Handles the click of the upload button inside the dialog.
+    // Handles the click of the "Upload" button inside the dialog.
     const handleUploadClick = () => {
         if (!uploadTitle || !uploadFile) {
             toast({
@@ -63,7 +63,7 @@ const UploadResourceDialog = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => {
-            // Prevents closing the dialog while an upload is in progress.
+            // Prevents the user from closing the dialog while an upload is in progress.
             if (!isUploading) onOpenChange(open);
         }}>
             <DialogTrigger asChild>
@@ -110,7 +110,7 @@ const UploadResourceDialog = ({
     );
 };
 
-// A dialog for editing an existing resource's details.
+// A dialog component for editing an existing resource's details.
 const EditResourceDialog = ({
     resource,
     isOpen,
@@ -128,7 +128,7 @@ const EditResourceDialog = ({
     const [editDescription, setEditDescription] = useState('');
     const { toast } = useToast();
 
-    // Pre-fills the form when a resource is selected for editing.
+    // Pre-fills the form with the resource's current data when opened.
     React.useEffect(() => {
         if(resource) {
             setEditTitle(resource.name);
@@ -136,7 +136,7 @@ const EditResourceDialog = ({
         }
     }, [resource]);
 
-    // Handles the click of the update button inside the dialog.
+    // Handles the click of the "Save Changes" button inside the dialog.
     const handleUpdateClick = () => {
         if(!resource) return;
         if (!editTitle) {
@@ -202,11 +202,11 @@ export default function ResourcesPage() {
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Gets a real-time stream of resources from Firestore.
+    // Gets a real-time stream of all resources from Firestore.
     const resourcesCollectionRef = useMemoFirebase(() => firestore ? collection(firestore, 'resources') : null, [firestore]);
     const { data: resources, isLoading: isLoadingResources } = useCollection<Resource>(resourcesCollectionRef);
 
-    // Opens a file's URL in a new browser tab.
+    // Opens a file's URL in a new browser tab for viewing.
     const handleView = (url: string) => {
         window.open(url, '_blank');
     };
@@ -223,7 +223,7 @@ export default function ResourcesPage() {
         });
     };
 
-    // Uploads a file to Storage and creates its metadata in Firestore.
+    // Uploads a file to Storage and creates its metadata document in Firestore.
     const handleUpload = async (title: string, description: string, file: File) => {
         if (!user || !firestore) return;
         setIsUploading(true);
@@ -262,7 +262,7 @@ export default function ResourcesPage() {
         }
     }
 
-    // Opens the edit dialog for a specific resource.
+    // Opens the edit dialog and sets the resource to be edited.
     const handleEditClick = (resource: Resource) => {
         setEditingResource(resource);
         setIsEditDialogOpen(true);
@@ -298,7 +298,7 @@ export default function ResourcesPage() {
         setIsDeleteDialogOpen(true);
     };
 
-    // Permanently deletes a resource from Storage and Firestore.
+    // Permanently deletes a resource from both Storage and Firestore.
     const handleConfirmDelete = async () => {
         if (!deletingResourceId || !firestore || !resources) return;
 
@@ -331,13 +331,13 @@ export default function ResourcesPage() {
         }
     };
 
-    // Filters resources based on the user's search query.
+    // Filters the displayed resources based on the user's search query.
     const filteredResources = resources?.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
-    // Formats a Firestore timestamp into a readable date string.
+    // Formats a Firestore timestamp into a more readable date string.
     const formatDate = (timestamp: any) => {
         if (timestamp && timestamp.toDate) {
             return timestamp.toDate().toLocaleDateString();
@@ -352,7 +352,7 @@ export default function ResourcesPage() {
                     <h1 className="text-3xl font-bold font-headline">Resource Hub</h1>
                     <p className="text-muted-foreground">Central repository for notes, papers, and other materials.</p>
                 </div>
-                {/* Only shows the upload button to logged-in users. */}
+                {/* The upload button is only shown to logged-in users. */}
                 {user && <UploadResourceDialog 
                     isOpen={isUploadDialogOpen}
                     onOpenChange={setIsUploadDialogOpen}
@@ -385,7 +385,7 @@ export default function ResourcesPage() {
                     </TableHeader>
                     <TableBody>
                         {isLoadingResources ? (
-                            // Shows a loader while resources are being fetched.
+                            // Shows a spinner while resources are being fetched.
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center">
                                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
@@ -399,7 +399,7 @@ export default function ResourcesPage() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            // Renders the list of resources.
+                            // Renders the list of filtered resources.
                             filteredResources.map((resource) => (
                                 <TableRow key={resource.id}>
                                     <TableCell className="font-medium">{resource.name}</TableCell>
@@ -424,7 +424,7 @@ export default function ResourcesPage() {
                                                     <Download className="mr-2 h-4 w-4"/>
                                                     Download
                                                 </DropdownMenuItem>
-                                                {/* Only allows editing/deleting for faculty or the original uploader. */}
+                                                {/* Edit/Delete options are only shown to faculty or the original uploader. */}
                                                 {(role === 'faculty' || resource.uploaderId === user?.uid) && (
                                                     <>
                                                         <DropdownMenuItem onClick={() => handleEditClick(resource)}>
@@ -456,7 +456,7 @@ export default function ResourcesPage() {
                 onUpdate={handleUpdate}
                 isUpdating={isUpdating}
             />
-            {/* A confirmation dialog for deleting a resource. */}
+            {/* A confirmation dialog to prevent accidental deletion. */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -477,5 +477,3 @@ export default function ResourcesPage() {
         </div>
     )
 }
-
-    

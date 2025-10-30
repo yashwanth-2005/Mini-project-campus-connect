@@ -11,5 +11,3 @@ export type ImagePlaceholder = {
 
 // Exports the array of placeholder images from the JSON file for use in the app.
 export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;
-
-    

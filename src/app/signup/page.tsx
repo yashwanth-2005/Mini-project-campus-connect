@@ -18,7 +18,7 @@ import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Controller, useForm } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -28,7 +28,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Base schema defines fields common to both students and faculty.
+// The base schema defines fields common to both students and faculty.
 const baseSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
@@ -38,7 +38,7 @@ const baseSchema = z.object({
   confirmPassword: z.string().min(8, "Please confirm your password"),
 });
 
-// Schema for student-specific fields.
+// The schema for student-specific fields.
 const studentSchema = baseSchema.extend({
   role: z.literal('student'),
   usn: z.string().min(1, "USN is required"),
@@ -49,7 +49,7 @@ const studentSchema = baseSchema.extend({
   course: z.string().min(1, "Please select your course"),
 });
 
-// Schema for faculty-specific fields.
+// The schema for faculty-specific fields.
 const facultySchema = baseSchema.extend({
     role: z.literal('faculty'),
     department: z.string().min(1, "Department is required"),
@@ -57,7 +57,7 @@ const facultySchema = baseSchema.extend({
     uniqueCode: z.string().min(1, "Unique code is required"),
 });
 
-// A discriminated union schema handles validation based on the selected role.
+// This combined schema handles validation based on the selected role.
 const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema])
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -65,7 +65,7 @@ const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema]
 });
 
 
-// The main component for the user signup page.
+// This is the main component for the user signup page.
 export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -77,7 +77,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'student' | 'faculty'>('student');
   
-  // Initializes the form with validation and default values for all fields.
+  // Initializes the form with validation rules and default values for all fields.
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -86,13 +86,16 @@ export default function SignupPage() {
         email: searchParams.get('email') || "",
         password: "",
         confirmPassword: "",
+        // Student fields
         usn: "",
         year: '' as any,
         semester: '' as any,
         course: "",
+        // Faculty fields
         department: "",
         facultyId: "",
         uniqueCode: "",
+        // Common optional fields
         linkedin: "",
         leetcode: "",
     }
@@ -100,7 +103,7 @@ export default function SignupPage() {
   
   const password = form.watch("password");
 
-  // Calculates the strength of the entered password and provides feedback.
+  // Calculates the strength of the password and gives the user feedback.
   const getPasswordStrength = (pass: string) => {
     let score = 0;
     if (!pass) return { score: 0, label: '', color: '' };
@@ -111,30 +114,26 @@ export default function SignupPage() {
     if (/[^A-Za-z0-9]/.test(pass)) score++;
 
     let label = '';
-    let color = '';
     switch (score) {
       case 0:
       case 1:
       case 2:
         label = 'Weak';
-        color = 'bg-red-500';
         break;
       case 3:
         label = 'Medium';
-        color = 'bg-yellow-500';
         break;
       case 4:
       case 5:
         label = 'Strong';
-        color = 'bg-green-500';
         break;
     }
-    return { score, label, color };
+    return { score, label };
   };
 
   const strength = getPasswordStrength(password);
 
-  // Handles the form submission, user creation, and database entry.
+  // Handles form submission, user creation, and saving data to Firestore.
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
 
@@ -176,7 +175,7 @@ export default function SignupPage() {
             role: data.role,
         };
 
-        // Adds role-specific data based on the selection.
+        // Adds role-specific data to the profile object.
         if (data.role === 'student') {
             userProfileData = {
                 ...userProfileData,
@@ -184,14 +183,14 @@ export default function SignupPage() {
                 year: data.year,
                 semester: data.semester,
                 course: data.course,
-                branch: data.course, // Using course as branch for students.
+                branch: data.course, // Using 'course' as 'branch' for students.
             }
         } else {
              userProfileData = {
                 ...userProfileData,
                 department: data.department,
                 facultyId: data.facultyId,
-                branch: data.department, // Using department as branch for faculty.
+                branch: data.department, // Using 'department' as 'branch' for faculty.
                 uniqueCode: data.uniqueCode,
              }
         }
@@ -308,7 +307,7 @@ export default function SignupPage() {
                         </FormItem>
                     )} />
 
-                    {/* Displays fields only for students. */}
+                    {/* These fields are displayed only for students. */}
                     {selectedRole === 'student' && (
                         <>
                             <FormField control={form.control} name="usn" render={({ field }) => (
@@ -373,7 +372,7 @@ export default function SignupPage() {
                         </>
                     )}
 
-                    {/* Displays fields only for faculty. */}
+                    {/* These fields are displayed only for faculty. */}
                     {selectedRole === 'faculty' && (
                         <>
                             <FormField
@@ -510,5 +509,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-    

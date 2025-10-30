@@ -1,6 +1,6 @@
 
-// This file contains mock data and functions for prototyping.
-// In a real application, this would be replaced by a proper database.
+// This file contains mock data and functions for prototyping purposes.
+// In a real application, this would be replaced by a proper database like Firestore.
 export type User = {
     id: string;
     fullName: string;
@@ -16,7 +16,7 @@ export type User = {
     profilePicture?: string;
 };
 
-// Represents a request to change a University Seat Number.
+// Represents a request to change a University Seat Number (USN).
 export type UsnChangeRequest = {
     id: string;
     userId: string;
@@ -28,7 +28,7 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
-// Our mock database, stored in the browser's localStorage for persistence.
+// Our mock database, stored in the browser's localStorage for data persistence across refreshes.
 const defaultUsers: Record<string, User> = {
     'user-faculty-1': {
         id: 'user-faculty-1',
@@ -96,17 +96,17 @@ export const findUserByEmail = (email: string): User | null => {
     return Object.values(users).find(user => user.email === email) || null;
 };
 
-// Finds a user profile by their ID.
+// Finds a user profile by their unique ID.
 export const findUserById = (userId: string): User | null => {
     const users = getUsers();
     return users[userId] || null;
 }
 
-// A helper to get the default faculty user for prototype login.
+// A helper to get the default faculty user for easy prototype login.
 export const getFacultyUser = (): User => {
     const users = getUsers();
     const facultyId = 'user-faculty-1';
-    // Ensures the default faculty user exists.
+    // Ensures the default faculty user always exists.
     if (!users[facultyId]) {
         users[facultyId] = defaultUsers[facultyId];
         saveUsers(users);
@@ -181,14 +181,14 @@ export const getUsnRequestForUser = (userId: string): UsnChangeRequest | undefin
     return requests.find(r => r.userId === userId && r.status === 'pending');
 }
 
-// Approves a USN change request.
+// Approves a USN change request and updates the user's profile.
 export const approveUsnChange = (requestId: string) => {
     let requests = getRequests();
     const requestIndex = requests.findIndex(r => r.id === requestId);
     if (requestIndex === -1) throw new Error("Request not found.");
 
     const request = requests[requestIndex];
-    if (request.status !== 'pending') throw new Error("This request has already been actioned.");
+    if (request.status !== 'pending') throw new Error("This request has already been processed.");
     
     const users = getUsers();
     if (!users[request.userId]) throw new Error("User associated with this request not found.");
@@ -207,10 +207,8 @@ export const denyUsnChange = (requestId: string) => {
     if (requestIndex === -1) throw new Error("Request not found.");
 
     const request = requests[requestIndex];
-    if (request.status !== 'pending') throw new Error("This request has already been actioned.");
+    if (request.status !== 'pending') throw new Error("This request has already been processed.");
 
     requests[requestIndex].status = 'denied';
     saveRequests(requests);
 };
-
-    

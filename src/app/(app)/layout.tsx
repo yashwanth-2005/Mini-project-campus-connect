@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { FirebaseClientProvider } from "@/firebase";
 
 // This array defines all possible navigation links for the sidebar.
-// The `role` property determines who can see the link.
+// The `role` property determines which users can see each link.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/placements", icon: <Briefcase />, label: "Placement Corner", role: ['student', 'faculty'] },
@@ -46,7 +46,7 @@ const allNavItems = [
   { href: "/admin", icon: <Shield />, label: "Admin Panel", role: ['faculty'] },
 ];
 
-// This is the main layout for the authenticated part of the application.
+// This is the main layout for the authenticated part of the app.
 // It includes the sidebar, header, and main content area.
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
@@ -66,14 +66,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   }, [pathname, searchParams]);
 
   const handleLinkClick = (url: string) => {
-      // Avoids showing the loader if the user clicks the current page's link.
+      // Prevents the loader from showing if the user clicks the current page's link.
       if (url === window.location.pathname + window.location.search) return;
       setIsLoading(true);
   };
 
   return (
     <SidebarProvider>
-      {/* A full-screen loading overlay. */}
+      {/* This is the full-screen loading overlay. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -117,7 +117,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex-1">
-              {/* This space can be used for breadcrumbs in the future. */}
+              {/* This space can be used for breadcrumbs or other header content. */}
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setIsChatOpen(true)} className="font-bold rainbow-button text-white">
@@ -135,7 +135,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Uses React Suspense to gracefully handle loading URL parameters.
+// Uses React Suspense to gracefully handle the loading of URL parameters.
 export default function AppLayout({
   children,
 }: {
@@ -149,5 +149,3 @@ export default function AppLayout({
     </React.Suspense>
   )
 }
-
-    

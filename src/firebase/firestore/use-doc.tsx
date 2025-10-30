@@ -12,7 +12,7 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// A utility type that adds a mandatory 'id' field to a given type.
+// A utility type that adds a mandatory 'id' field to another type.
 type WithId<T> = T & { id: string };
 
 // The shape of the object returned by the useDoc hook.
@@ -41,7 +41,7 @@ export function useDoc<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If the reference isn't ready yet, reset the state.
+    // If the reference isn't ready yet, do nothing.
     if (!memoizedDocRef) {
       setData(null);
       setIsLoading(false);
@@ -60,14 +60,14 @@ export function useDoc<T = any>(
           // If the document exists, set its data in state, including the ID.
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
-          // If the document does not exist, set data to null.
+          // If the document does not exist, set the data to null.
           setData(null);
         }
         setError(null); 
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        // If an error occurs (e.g., permission denied), create a more detailed error.
+        // If an error occurs (like a permissions issue), create a more detailed error.
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
@@ -77,7 +77,7 @@ export function useDoc<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // Sends the detailed error to a global listener for display.
+        // Sends the detailed error to a global listener to be displayed.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
@@ -88,5 +88,3 @@ export function useDoc<T = any>(
 
   return { data, isLoading, error };
 }
-
-    

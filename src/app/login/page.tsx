@@ -48,7 +48,7 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    // Checks for a valid email format.
+    // A simple check for a valid email format.
     if (!/^\S+@\S+\.\S+$/.test(email)) {
         toast({
             title: "Invalid Email",
@@ -74,7 +74,7 @@ export default function LoginPage() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // After successful sign-in, fetches the user's profile from Firestore.
+        // After successful sign-in, gets the user's profile from Firestore.
         const userDocRef = doc(firestore, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -82,8 +82,8 @@ export default function LoginPage() {
              throw new Error("User profile not found. Please contact support.");
         }
         
-        const userProfile = userDoc.data();
         // Gets the role from the Firestore document to ensure correct redirection.
+        const userProfile = userDoc.data();
         const userRole = userProfile.role || 'student';
         
         toast({
@@ -98,7 +98,7 @@ export default function LoginPage() {
         let title = "Login Failed";
         let description = "An unexpected error occurred. Please try again.";
 
-        // Provides user-friendly error messages for common auth issues.
+        // Provides user-friendly error messages for common issues.
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/invalid-credential":
@@ -123,10 +123,10 @@ export default function LoginPage() {
     }
   };
 
-  // Renders the email and password form fields.
+  // Renders the email and password form fields for a given role.
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
-      {/* Social login buttons for students. */}
+      {/* Social login buttons are shown only for students. */}
       {currentRole === 'student' && (
         <>
             <div className="grid grid-cols-2 gap-2">
@@ -182,7 +182,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
-        {/* Shows a loading overlay while processing login. */}
+        {/* A loading overlay is shown while processing the login. */}
         {isLoading && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
             <div className="flex flex-col items-center gap-4">
@@ -232,5 +232,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

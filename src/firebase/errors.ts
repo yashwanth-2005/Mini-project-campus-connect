@@ -2,14 +2,14 @@
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
-// Defines the context of a Firestore security rule failure.
+// This defines the context of a Firestore security rule failure.
 type SecurityRuleContext = {
   path: string;
   operation: 'get' | 'list' | 'create' | 'update' | 'delete' | 'write';
   requestResourceData?: any;
 };
 
-// A simplified version of the Firebase Auth token available in security rules.
+// This is a simplified version of the Firebase Auth token available in security rules.
 interface FirebaseAuthToken {
   name: string | null;
   email: string | null;
@@ -23,13 +23,13 @@ interface FirebaseAuthToken {
   };
 }
 
-// The `request.auth` object as it appears in security rules.
+// This represents the `request.auth` object as it appears in security rules.
 interface FirebaseAuthObject {
   uid: string;
   token: FirebaseAuthToken;
 }
 
-// The simulated request object that failed security rules.
+// This represents the simulated request object that failed the security rules.
 interface SecurityRuleRequest {
   auth: FirebaseAuthObject | null;
   method: string;
@@ -39,7 +39,7 @@ interface SecurityRuleRequest {
   };
 }
 
-// Builds an auth object from a Firebase User, mimicking security rules.
+// This function builds an auth object from a Firebase User, mimicking what security rules see.
 function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
   if (!currentUser) {
     return null;
@@ -69,18 +69,18 @@ function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
   };
 }
 
-// Builds the complete, simulated request object for the error message.
+// This function builds the complete, simulated request object for the error message.
 function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   let authObject: FirebaseAuthObject | null = null;
   try {
-    // Safely attempt to get the current user.
+    // Safely attempts to get the current user, failing gracefully if Firebase isn't ready.
     const firebaseAuth = getAuth();
     const currentUser = firebaseAuth.currentUser;
     if (currentUser) {
       authObject = buildAuthObject(currentUser);
     }
   } catch {
-    // Fails silently if Firebase isn't initialized yet.
+    // Fails silently.
   }
 
   return {
@@ -91,16 +91,16 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   };
 }
 
-// Builds the final, formatted error message to be displayed.
+// This function builds the final, formatted error message to be displayed to the developer.
 function buildErrorMessage(requestObject: SecurityRuleRequest): string {
   return `Missing or insufficient permissions: The following request was denied by Firestore Security Rules:
 ${JSON.stringify(requestObject, null, 2)}`;
 }
 
 /**
- * A custom error class designed to provide rich, contextual information about
+ * A custom error class that gives rich, contextual information about
  * a Firestore permission error. It helps developers debug security rules by
- * showing what the failed request looked like.
+ * showing exactly what the failed request looked like.
  */
 export class FirestorePermissionError extends Error {
   public readonly request: SecurityRuleRequest;
@@ -112,5 +112,3 @@ export class FirestorePermissionError extends Error {
     this.request = requestObject;
   }
 }
-
-    

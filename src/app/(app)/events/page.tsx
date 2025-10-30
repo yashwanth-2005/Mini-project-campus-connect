@@ -47,7 +47,7 @@ export default function EventsPage() {
                 <h1 className="text-3xl font-bold font-headline">Events & Workshops</h1>
                 <p className="text-muted-foreground">Discover, learn, and participate in campus happenings.</p>
             </div>
-            {/* A grid that displays the event cards. */}
+            {/* A responsive grid that displays the event cards. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {events.map((event, index) => (
                     <Card key={index} className="overflow-hidden flex flex-col">
@@ -82,5 +82,3 @@ export default function EventsPage() {
         </div>
     )
 }
-
-    

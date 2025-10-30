@@ -24,24 +24,24 @@ export function UserNav() {
   const auth = useAuth();
   const router = useRouter();
 
-  // Handles the user logout process using Firebase Auth.
+  // Handles the user logout process using Firebase's `signOut` function.
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      // Redirects the user to the homepage after logging out.
+      // Redirects the user to the homepage after a successful logout.
       router.push('/');
     } catch (error) {
       console.error("Error signing out: ", error);
     }
   }
 
-  // Shows a skeleton loader while the user's authentication state is being determined.
+  // Shows a loading skeleton while the user's authentication state is being checked.
   if (isUserLoading) {
     return <Skeleton className="h-9 w-9 rounded-full" />
   }
   
   // If no user is logged in, this component doesn't render anything.
-  // The login button is handled elsewhere in the layout.
+  // The main login button is handled by the page layout.
   if (!user) {
      return null;
   }
@@ -84,5 +84,3 @@ export function UserNav() {
     </DropdownMenu>
   )
 }
-
-    
