@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { MoreHorizontal, Upload, Download, Edit, Trash } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -173,6 +174,8 @@ export default function ResourcesPage() {
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
+    const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+    const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     
     const handleDownload = (url: string, fileName: string) => {
         const link = document.createElement('a');
@@ -209,7 +212,7 @@ export default function ResourcesPage() {
         setIsEditDialogOpen(true);
     };
 
-    const handleEdit = (resourceId: string, title: string, description: string) => {
+    const handleUpdate = (resourceId: string, title: string, description: string) => {
         setResources(prevResources => 
             prevResources.map(res => 
                 res.id === resourceId ? { ...res, name: title, description: description } : res
@@ -222,6 +225,28 @@ export default function ResourcesPage() {
         setIsEditDialogOpen(false);
         setEditingResource(null);
     }
+
+    const handleDeleteClick = (resourceId: string) => {
+        setDeletingResourceId(resourceId);
+        setIsDeleteDialogOpen(true);
+    };
+
+    const handleConfirmDelete = () => {
+        if (!deletingResourceId) return;
+
+        const resourceToDelete = resources.find(res => res.id === deletingResourceId);
+        
+        setResources(prevResources => prevResources.filter(res => res.id !== deletingResourceId));
+        
+        toast({
+            title: "Resource Deleted",
+            description: `"${resourceToDelete?.name}" has been removed.`,
+            variant: "destructive"
+        });
+
+        setIsDeleteDialogOpen(false);
+        setDeletingResourceId(null);
+    };
 
     return (
         <div className="space-y-8">
@@ -281,7 +306,10 @@ export default function ResourcesPage() {
                                                             <Edit className="mr-2 h-4 w-4"/>
                                                             Edit
                                                         </DropdownMenuItem>
-                                                        <DropdownMenuItem className="text-destructive">
+                                                        <DropdownMenuItem 
+                                                            className="text-destructive"
+                                                            onClick={() => handleDeleteClick(resource.id)}
+                                                        >
                                                             <Trash className="mr-2 h-4 w-4"/>
                                                             Delete
                                                         </DropdownMenuItem>
@@ -300,8 +328,25 @@ export default function ResourcesPage() {
                 resource={editingResource}
                 isOpen={isEditDialogOpen}
                 onOpenChange={setIsEditDialogOpen}
-                onUpdate={handleEdit}
+                onUpdate={handleUpdate}
             />
+            <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete the
+                        resource from our servers.
+                    </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive/90">
+                        Delete
+                    </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
 }
