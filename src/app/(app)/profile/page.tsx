@@ -11,16 +11,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
+import { useUser, useFirestore, useMemoFirebase } from "@/firebase";
 import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { useDoc } from "@/firebase/firestore/use-doc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Defines the validation for the profile form.
@@ -88,8 +89,8 @@ export default function ProfilePage() {
     useEffect(() => {
         if (userProfile) {
             form.reset({
-                firstName: userProfile.firstName,
-                lastName: userProfile.lastName,
+                firstName: userProfile.firstName || "",
+                lastName: userProfile.lastName || "",
                 linkedinUrl: userProfile.linkedinUrl || "",
                 githubUrl: userProfile.githubUrl || "",
                 leetcodeUrl: userProfile.leetcodeUrl || "",
@@ -305,7 +306,7 @@ export default function ProfilePage() {
                                     <div className="space-y-2">
                                         <Label>Unique Code</Label>
                                         <Input value={userProfile.uniqueCode || 'Not Set'} readOnly className="bg-muted/50" />
-                                        <FormDescription>This is your one-time verification code.</FormDescription>
+                                        <FormDescription>This is your faculty verification code.</FormDescription>
                                     </div>
                                 </>
                             )}
@@ -371,5 +372,3 @@ export default function ProfilePage() {
         </Form>
     );
 }
-
-    
