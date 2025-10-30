@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,7 @@ export default function ResourcesPage() {
     };
 
     const UploadResourceDialog = () => {
-        const dialogContentRef = React.useRef(null);
+        const dialogContentRef = React.useRef<HTMLDivElement>(null);
 
         return (
             <Dialog>
@@ -39,19 +40,30 @@ export default function ResourcesPage() {
                         Upload Resource
                     </Button>
                 </DialogTrigger>
-                <DialogContent ref={dialogContentRef} className="sm:max-w-[425px] p-0">
+                <DialogContent ref={dialogContentRef} className="p-0">
                      <motion.div
                         drag
-                        dragListener={false} // We'll use a specific drag handle
+                        dragListener={false}
                         dragConstraints={{ current: document.body }}
+                        dragElastic={0.1}
+                        onPointerDown={(e) => {
+                            // Allows dragging only from the header
+                            const target = e.target as HTMLElement;
+                            if (target.closest('[data-drag-handle]')) {
+                                // Let the drag event pass through to the motion.div
+                            } else {
+                                e.stopPropagation();
+                            }
+                        }}
                         className="w-full"
                     >
                         <div
                             onPointerDown={(e) => {
-                                // This allows dragging only from the header
                                 const target = e.target as HTMLElement;
                                 if (target.closest('[data-drag-handle]')) {
-                                    const startEvent = new PointerEvent('pointerdown', e);
+                                    // This custom event handling is a workaround to make dragging work
+                                    // with Radix UI's dialog and its focus trapping.
+                                    const startEvent = new PointerEvent('pointerdown', e.nativeEvent);
                                     dialogContentRef.current?.dispatchEvent(startEvent);
                                 }
                             }}
