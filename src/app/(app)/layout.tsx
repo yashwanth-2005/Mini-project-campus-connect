@@ -10,9 +10,8 @@ import {
   LayoutDashboard,
   Megaphone,
   MessageSquare,
-  User,
   Shield,
-  Bot,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -36,7 +35,6 @@ import { Button } from "@/components/ui/button";
 // This array defines all possible navigation items in the sidebar.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
-  { href: "/profile", icon: <User />, label: "Profile", role: ['student', 'faculty'] },
   { href: "/placements", icon: <Briefcase />, label: "Placement Corner", role: ['student', 'faculty'] },
   { href: "/announcements", icon: <Megaphone />, label: "Announcements", role: ['student', 'faculty'] },
   { href: "/events", icon: <Calendar />, label: "Events", role: ['student', 'faculty'] },
@@ -116,7 +114,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setIsChatOpen(true)} className="font-bold rainbow-button text-white">
-                <Bot className="mr-2 h-4 w-4" />
+                <Sparkles className="mr-2 h-4 w-4" />
                 <span>Ask me anything?</span>
               </Button>
               <ThemeToggle />
