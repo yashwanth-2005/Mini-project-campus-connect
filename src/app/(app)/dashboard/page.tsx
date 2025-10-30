@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { findUserById, User } from "@/lib/mock-db";
 import React, { useEffect, useState } from "react";
-import { useUser } from "@/firebase";
+import { useRouter } from "next/navigation";
 
 const allQuickLinks = [
     {
@@ -42,18 +42,20 @@ const allQuickLinks = [
 
 export default function DashboardPage() {
     const searchParams = useSearchParams();
-    const { user: firebaseUser } = useUser();
+    const router = useRouter();
     const role = searchParams.get('role') || 'student';
     const [userProfile, setUserProfile] = useState<User | null>(null);
     
     useEffect(() => {
-        if (firebaseUser) {
-            // After the user logs in via Firebase, we find their profile
-            // in our mock database to get additional details like their name.
-            const profile = findUserById(firebaseUser.uid);
+        const loggedInUserId = localStorage.getItem('loggedInUser');
+        if (loggedInUserId) {
+            const profile = findUserById(loggedInUserId);
             setUserProfile(profile);
+        } else {
+            // If no one is logged in, redirect to the login page.
+            router.push('/login');
         }
-    }, [firebaseUser])
+    }, [router])
 
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     

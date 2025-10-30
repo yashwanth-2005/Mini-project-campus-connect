@@ -18,7 +18,6 @@ import { findUserById, updateUser, User, getUsnRequestForUser, createUsnChangeRe
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { useUser } from "@/firebase";
 import { Loader2 } from "lucide-react";
 
 // Defines the shape and validation rules for the profile form.
@@ -42,8 +41,8 @@ const usnChangeSchema = z.object({
 export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user: firebaseUser, isUserLoading } = useUser();
     const [userProfile, setUserProfile] = useState<User | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUsnDialogOpen, setIsUsnDialogOpen] = useState(false);
@@ -61,13 +60,13 @@ export default function ProfilePage() {
         defaultValues: { newUsn: "", reason: "" }
     });
 
-    // When the Firebase user is loaded, fetch their profile from our mock database.
+    // When the component mounts, fetch the logged-in user's profile from localStorage.
     useEffect(() => {
-        if (firebaseUser) {
-            const profile = findUserById(firebaseUser.uid);
-            setUserProfile(profile);
-            
+        const loggedInUserId = localStorage.getItem('loggedInUser');
+        if (loggedInUserId) {
+            const profile = findUserById(loggedInUserId);
             if (profile) {
+                setUserProfile(profile);
                 setPreviewImage(profile.profilePicture || null);
                 // Pre-fill the form with the fetched profile data.
                 form.reset({
@@ -84,12 +83,17 @@ export default function ProfilePage() {
                 // Check if this user has a pending USN change request.
                 const pendingRequest = getUsnRequestForUser(profile.id);
                 setPendingUsnRequest(!!pendingRequest);
+            } else {
+                 // If the ID in localStorage is invalid, clear it and redirect.
+                localStorage.removeItem('loggedInUser');
+                router.push('/login');
             }
-        } else if (!isUserLoading) {
-            // If Firebase is done loading and there's no user, redirect to login.
+        } else {
+            // If no one is logged in, redirect to the login page.
             router.push('/login');
         }
-    }, [firebaseUser, isUserLoading, form, router]);
+        setIsLoading(false);
+    }, [form, router]);
 
     // Create a local preview when a new profile picture is selected.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +168,7 @@ export default function ProfilePage() {
     }
 
     // Displays a loading skeleton while fetching user data.
-    if (isUserLoading || !userProfile) {
+    if (isLoading || !userProfile) {
         return (
             <div className="space-y-8">
                 <div>
