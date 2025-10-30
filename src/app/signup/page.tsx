@@ -20,15 +20,50 @@ import { useRouter } from "next/navigation";
 import { createUser as createMockUser } from "@/lib/mock-db";
 import { useAuth } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Controller, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+
+
+// This schema defines the shape and validation rules for our signup form.
+const signupSchema = z.object({
+  fullName: z.string().min(1, "Full name is required"),
+  email: z.string().email("Please enter a valid email address"),
+  usn: z.string().min(1, "USN is required"),
+  year: z.coerce.number().min(1, "Year is required").max(4, "Year cannot be more than 4"),
+  semester: z.coerce.number().min(1, "Semester is required").max(8, "Semester cannot be more than 8"),
+  course: z.string().min(1, "Please select your course"),
+  linkedin: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  leetcode: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+});
+
 
 export default function SignupPage() {
   const auth = useAuth();
   const { toast } = useToast();
   const router = useRouter();
-  const [password, setPassword] = useState('');
-  const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
   const [isLoading, setIsLoading] = useState(false);
-  const [usn, setUsn] = useState('');
+  
+  const form = useForm<z.infer<typeof signupSchema>>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+        fullName: "",
+        email: "",
+        usn: "",
+        year: undefined,
+        semester: undefined,
+        course: "",
+        linkedin: "",
+        leetcode: "",
+        password: "",
+    }
+  });
+  
+  const password = form.watch("password");
+  const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
 
   // This function checks the strength of the entered password.
   const checkPasswordStrength = (pass: string) => {
@@ -72,17 +107,13 @@ export default function SignupPage() {
   }, [password]);
 
   // This function handles the form submission to create a new user account.
-  const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
-
-    const formData = new FormData(event.currentTarget);
-    const data = Object.fromEntries(formData.entries());
 
     if (strength.score < 3) {
       toast({
         title: "Weak Password",
-        description: "Please choose a stronger password (at least 8 characters, with letters and numbers).",
+        description: "Please choose a stronger password.",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -91,24 +122,25 @@ export default function SignupPage() {
     
     try {
         // Create the user in Firebase Authentication.
-        const userCredential = await createUserWithEmailAndPassword(auth, data.email as string, data.password as string);
+        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         const user = userCredential.user;
 
         // Set the user's display name in their Firebase profile.
         await updateProfile(user, {
-            displayName: data.fullName as string,
+            displayName: data.fullName,
         });
 
         // Also create a corresponding user profile in our mock database.
         createMockUser({
             id: user.uid,
-            fullName: data.fullName as string,
-            email: data.email as string,
-            usn: data.usn as string,
-            year: Number(data.year),
-            semester: Number(data.semester),
-            linkedin: data.linkedin as string,
-            leetcode: data.leetcode as string,
+            fullName: data.fullName,
+            email: data.email,
+            usn: data.usn.toUpperCase(),
+            year: data.year,
+            semester: data.semester,
+            course: data.course,
+            linkedin: data.linkedin,
+            leetcode: data.leetcode,
         });
 
         toast({
@@ -144,88 +176,151 @@ export default function SignupPage() {
             Enter your details below to get started
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSignup}>
-            <CardContent className="grid gap-4">
-            <div className="grid grid-cols-2 gap-2">
-                <Button variant="outline" type="button" className="transition-transform hover:scale-105">
-                    <GithubIcon className="h-4 w-4" />
-                </Button>
-                <Button variant="outline" type="button" className="transition-transform hover:scale-105">
-                    <LinkedinIcon className="h-4 w-4" />
-                </Button>
-            </div>
-            <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                <span className="w-full border-t" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">
-                    Or continue with
-                </span>
-                </div>
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="fullName">Full name</Label>
-                <Input name="fullName" id="fullName" placeholder="Max Robinson" required />
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input name="email" id="email" type="email" placeholder="m@example.com" required/>
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="usn">USN</Label>
-                <Input name="usn" id="usn" type="text" placeholder="1CR21CS001" required value={usn} onChange={(e) => setUsn(e.target.value.toUpperCase())}/>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                <Label htmlFor="year">Year</Label>
-                <Input name="year" id="year" type="number" placeholder="3" required />
-                </div>
-                <div className="grid gap-2">
-                <Label htmlFor="semester">Semester</Label>
-                <Input name="semester" id="semester" type="number" placeholder="6" required />
-                </div>
-            </div>
-             <div className="grid gap-2">
-                <Label htmlFor="linkedin">LinkedIn Profile (Optional)</Label>
-                <Input name="linkedin" id="linkedin" type="url" placeholder="https://linkedin.com/in/yourprofile" />
-            </div>
-             <div className="grid gap-2">
-                <Label htmlFor="leetcode">LeetCode Profile (Optional)</Label>
-                <Input name="leetcode" id="leetcode" type="url" placeholder="https://leetcode.com/yourusername" />
-            </div>
-            <div className="grid gap-2">
-                <Label htmlFor="password">Password</Label>
-                <Input 
-                name="password"
-                id="password" 
-                type="password" 
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                />
-            </div>
-            {password && (
-                <div className="space-y-2">
-                <Progress value={strength.score * 20} className="h-2 [&>div]:transition-all [&>div]:duration-300" />
-                <p className="text-xs text-muted-foreground">
-                    Password strength: <span className={`font-bold ${strength.color}`}>{strength.label}</span>
-                </p>
-                </div>
-            )}
-            </CardContent>
-            <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full shine-button" disabled={isLoading}>
-                {isLoading ? "Creating Account..." : "Create Account"}
-            </Button>
-            <div className="text-center text-sm">
-                Already have an account?{" "}
-                <Link href="/login" className="underline">
-                Login
-                </Link>
-            </div>
-            </CardFooter>
-        </form>
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)}>
+                <CardContent className="grid gap-4">
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button variant="outline" type="button" className="transition-transform hover:scale-105">
+                            <GithubIcon className="h-4 w-4" />
+                        </Button>
+                        <Button variant="outline" type="button" className="transition-transform hover:scale-105">
+                            <LinkedinIcon className="h-4 w-4" />
+                        </Button>
+                    </div>
+                    <div className="relative">
+                        <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-card px-2 text-muted-foreground">
+                            Or continue with
+                        </span>
+                        </div>
+                    </div>
+                    <FormField control={form.control} name="fullName" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Full name</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Max Robinson" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="email" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                                <Input type="email" placeholder="m@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                     <FormField control={form.control} name="usn" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>USN</FormLabel>
+                            <FormControl>
+                                <Input placeholder="1CR21CS001" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())}/>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+
+                    <FormField
+                        control={form.control}
+                        name="course"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Course</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select your course of study" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="btech">B.Tech</SelectItem>
+                                <SelectItem value="bca">BCA</SelectItem>
+                                <SelectItem value="bcom">B.Com</SelectItem>
+                                <SelectItem value="mtech">M.Tech</SelectItem>
+                                <SelectItem value="mca">MCA</SelectItem>
+                                <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="grid grid-cols-2 gap-4">
+                         <FormField control={form.control} name="year" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Year</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="3" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                         <FormField control={form.control} name="semester" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Semester</FormLabel>
+                                <FormControl>
+                                    <Input type="number" placeholder="6" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                    </div>
+                    <FormField control={form.control} name="linkedin" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>LinkedIn Profile (Optional)</FormLabel>
+                            <FormControl>
+                                <Input type="url" placeholder="https://linkedin.com/in/yourprofile" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="leetcode" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>LeetCode Profile (Optional)</FormLabel>
+                            <FormControl>
+                                <Input type="url" placeholder="https://leetcode.com/yourusername" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                    <FormField control={form.control} name="password" render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                                <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )} />
+                
+                    {password && (
+                        <div className="space-y-2">
+                        <Progress value={strength.score * 20} className="h-2 [&>div]:transition-all [&>div]:duration-300" />
+                        <p className="text-xs text-muted-foreground">
+                            Password strength: <span className={`font-bold ${strength.color}`}>{strength.label}</span>
+                        </p>
+                        </div>
+                    )}
+                </CardContent>
+                <CardFooter className="flex flex-col gap-4">
+                    <Button type="submit" className="w-full shine-button" disabled={isLoading}>
+                        {isLoading ? "Creating Account..." : "Create Account"}
+                    </Button>
+                    <div className="text-center text-sm">
+                        Already have an account?{" "}
+                        <Link href="/login" className="underline">
+                        Login
+                        </Link>
+                    </div>
+                </CardFooter>
+            </form>
+        </Form>
       </Card>
     </div>
   );

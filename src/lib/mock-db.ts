@@ -8,6 +8,7 @@ export type User = {
     usn: string;
     year: number;
     semester: number;
+    course: string;
     linkedin: string;
     leetcode: string;
     bio?: string;
@@ -36,6 +37,7 @@ const defaultUsers: Record<string, User> = {
         usn: 'FAC001',
         year: 0,
         semester: 0,
+        course: 'Faculty',
         linkedin: '',
         leetcode: '',
         bio: 'Faculty member in the Computer Science department.',
@@ -49,6 +51,7 @@ const defaultUsers: Record<string, User> = {
         usn: '1CR21CS001',
         year: 3,
         semester: 6,
+        course: 'btech',
         linkedin: 'https://www.linkedin.com/in/alex-doe',
         leetcode: 'https://leetcode.com/alexdoe',
         bio: 'Aspiring Software Engineer, passionate about open-source and web development.',
