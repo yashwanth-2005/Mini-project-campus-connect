@@ -16,7 +16,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -43,6 +43,7 @@ const signupSchema = z.object({
 export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const auth = useAuth();
   const firestore = useFirestore();
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +52,7 @@ export default function SignupPage() {
     resolver: zodResolver(signupSchema),
     defaultValues: {
         fullName: "",
-        email: "",
+        email: searchParams.get('email') || "",
         usn: "",
         year: undefined,
         semester: undefined,

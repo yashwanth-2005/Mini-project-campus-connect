@@ -77,12 +77,16 @@ export default function LoginPage() {
         let errorMessage = "An unexpected error occurred.";
         switch (error.code) {
             case "auth/user-not-found":
-            case "auth/wrong-password":
-                errorMessage = "Invalid email or password. Please try again.";
-                break;
             case "auth/invalid-credential":
-                 errorMessage = "Invalid email or password. Please try again.";
-                 break;
+                toast({
+                    title: "Account Not Found",
+                    description: "Redirecting you to the sign-up page.",
+                });
+                router.push(`/signup?email=${encodeURIComponent(email)}`);
+                return;
+            case "auth/wrong-password":
+                errorMessage = "Invalid password. Please try again.";
+                break;
             default:
                 errorMessage = error.message;
         }
