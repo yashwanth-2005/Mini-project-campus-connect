@@ -30,6 +30,8 @@ const profileSchema = z.object({
     githubUrl: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
     leetcodeUrl: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
     profilePictureUrl: z.string().optional(),
+    department: z.string().optional(),
+    facultyId: z.string().optional(),
 });
 
 // Defines validation for the USN change request form.
@@ -64,7 +66,9 @@ export default function ProfilePage() {
             linkedinUrl: '',
             githubUrl: '',
             leetcodeUrl: '',
-            profilePictureUrl: ''
+            profilePictureUrl: '',
+            department: '',
+            facultyId: '',
         },
     });
     
@@ -85,6 +89,8 @@ export default function ProfilePage() {
                 githubUrl: userProfile.githubUrl || "",
                 leetcodeUrl: userProfile.leetcodeUrl || "",
                 profilePictureUrl: userProfile.profilePictureUrl || "",
+                department: userProfile.department || "",
+                facultyId: userProfile.facultyId || "",
             });
             setPreviewImage(userProfile.profilePictureUrl || null);
         }
@@ -190,7 +196,7 @@ export default function ProfilePage() {
                     <CardContent className="space-y-6">
                         <div className="flex items-center gap-6">
                             <Avatar className="h-24 w-24 border">
-                                <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${userProfile.usn}`} />
+                                <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${user?.uid}`} />
                                 <AvatarFallback>{userProfile.firstName.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-2">
@@ -229,11 +235,27 @@ export default function ProfilePage() {
                         </div>
 
                          <div className="grid md:grid-cols-2 gap-4">
-                           <div className="space-y-2">
-                                <Label>USN (University Seat Number)</Label>
-                                <Input value={userProfile.usn} readOnly className="bg-muted/50" />
-                                <FormDescription>USN cannot be changed directly. Please contact admin.</FormDescription>
-                           </div>
+                           {userProfile.role === 'student' ? (
+                               <div className="space-y-2">
+                                    <Label>USN (University Seat Number)</Label>
+                                    <Input value={userProfile.usn} readOnly className="bg-muted/50" />
+                                    <FormDescription>USN cannot be changed directly. Please contact admin.</FormDescription>
+                               </div>
+                           ) : (
+                                <FormField
+                                    control={form.control}
+                                    name="facultyId"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Faculty ID</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Your Faculty ID" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                           )}
                              <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
                                 <Input id="email" type="email" value={userProfile.email} disabled />
@@ -241,10 +263,26 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         <div className="grid md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Course</Label>
-                                <Input value={userProfile.course} readOnly className="bg-muted/50" />
-                            </div>
+                            {userProfile.role === 'student' ? (
+                                <div className="space-y-2">
+                                    <Label>Course</Label>
+                                    <Input value={userProfile.course} readOnly className="bg-muted/50" />
+                                </div>
+                            ) : (
+                                <FormField
+                                    control={form.control}
+                                    name="department"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Department</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Your Department" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            )}
                         </div>
                     </CardContent>
                 </Card>
