@@ -6,18 +6,74 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Upload, Download, Edit, Trash } from "lucide-react";
 import { useSearchParams } from "next/navigation";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const resources = [
-  { name: "Data Structures & Algorithms Notes", type: "PDF", uploader: "Jane Smith", date: "2024-05-20" },
-  { name: "Operating Systems PYQs", type: "PDF", uploader: "Admin", date: "2024-05-18" },
-  { name: "Database Management Systems Slides", type: "PPTX", uploader: "Prof. Davis", date: "2024-05-15" },
-  { name: "SDE Internship Resume Template", type: "DOCX", uploader: "Alumni Cell", date: "2024-05-12" },
-  { name: "Project-Based Learning Videos", type: "Video Link", uploader: "John Doe", date: "2024-05-10" },
+  { name: "Data Structures & Algorithms Notes", type: "PDF", uploader: "Jane Smith", date: "2024-05-20", url: "/mock-files/dsa-notes.pdf" },
+  { name: "Operating Systems PYQs", type: "PDF", uploader: "Admin", date: "2024-05-18", url: "/mock-files/os-pyqs.pdf" },
+  { name: "Database Management Systems Slides", type: "PPTX", uploader: "Prof. Davis", date: "2024-05-15", url: "/mock-files/dbms-slides.pptx" },
+  { name: "SDE Internship Resume Template", type: "DOCX", uploader: "Alumni Cell", date: "2024-05-12", url: "/mock-files/sde-resume.docx" },
+  { name: "Project-Based Learning Videos", type: "Video Link", uploader: "John Doe", date: "2024-05-10", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
 ];
 
 export default function ResourcesPage() {
     const searchParams = useSearchParams();
     const role = searchParams.get('role') || 'student';
+    
+    // This function simulates downloading a file.
+    const handleDownload = (url: string, fileName: string) => {
+        const link = document.createElement('a');
+        link.href = url;
+        // In a real app, the backend would provide a proper download name.
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const UploadResourceDialog = () => (
+        <Dialog>
+            <DialogTrigger asChild>
+                <Button>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Resource
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                    <DialogTitle>Upload Resource</DialogTitle>
+                    <DialogDescription>
+                        Contribute to the hub by uploading a new resource.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="title" className="text-right">
+                            Title
+                        </Label>
+                        <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" />
+                    </div>
+                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="description" className="text-right">
+                            Description
+                        </Label>
+                        <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="file" className="text-right">
+                            File
+                        </Label>
+                        <Input id="file" type="file" className="col-span-3"/>
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="submit">Upload</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
 
     return (
         <div className="space-y-8">
@@ -26,10 +82,7 @@ export default function ResourcesPage() {
                     <h1 className="text-3xl font-bold font-headline">Resource Hub</h1>
                     <p className="text-muted-foreground">Central repository for notes, papers, and other materials.</p>
                 </div>
-                <Button>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Resource
-                </Button>
+                {role === 'faculty' && <UploadResourceDialog />}
             </div>
 
             <div className="border rounded-lg">
@@ -59,7 +112,7 @@ export default function ResourcesPage() {
                                         </Button>
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
-                                            <DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleDownload(resource.url, resource.name)}>
                                                 <Download className="mr-2 h-4 w-4"/>
                                                 Download
                                             </DropdownMenuItem>
@@ -86,5 +139,3 @@ export default function ResourcesPage() {
         </div>
     )
 }
-
-    
