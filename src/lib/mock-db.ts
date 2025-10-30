@@ -96,6 +96,38 @@ export const findUserByEmail = (email: string): User | null => {
     return Object.values(users).find(user => user.email === email) || null;
 };
 
+// Creates a new user in the mock database.
+export const createUser = (userData: Omit<User, 'id'>): User => {
+    const users = getUsers();
+    const email = userData.email.toLowerCase();
+    if (findUserByEmail(email)) {
+        throw new Error("User with this email already exists.");
+    }
+    const id = `user_${Date.now()}`;
+    const newUser: User = { 
+        id, 
+        ...userData,
+        linkedin: userData.linkedin || "",
+        leetcode: userData.leetcode || ""
+    };
+    users[id] = newUser;
+    saveUsers(users);
+    return newUser;
+};
+
+// Updates an existing user's data.
+export const updateUser = (userId: string, updatedData: Partial<User>): User | null => {
+    const users = getUsers();
+    if (!users[userId]) return null;
+
+    users[userId] = {
+        ...users[userId],
+        ...updatedData,
+    };
+    saveUsers(users);
+    return users[userId];
+};
+
 // Creates a new request for a USN change.
 export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' | 'status' | 'requestedAt'>) => {
     let requests = getRequests();
