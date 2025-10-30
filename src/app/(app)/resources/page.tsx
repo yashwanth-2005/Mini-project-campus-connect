@@ -21,29 +21,21 @@ type Resource = {
     url: string;
 };
 
-export default function ResourcesPage() {
-    const searchParams = useSearchParams();
-    const { toast } = useToast();
-    const role = searchParams.get('role') || 'student';
-    const [resources, setResources] = useState<Resource[]>([]);
-    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
-
+const UploadResourceDialog = ({
+    isOpen,
+    onOpenChange,
+    onUpload,
+}: {
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+    onUpload: (title: string, description: string, file: File) => void;
+}) => {
     const [uploadTitle, setUploadTitle] = useState("");
     const [uploadDescription, setUploadDescription] = useState("");
     const [uploadFile, setUploadFile] = useState<File | null>(null);
-    
-    // This function simulates downloading a file.
-    const handleDownload = (url: string, fileName: string) => {
-        const link = document.createElement('a');
-        link.href = url;
-        // In a real app, the backend would provide a proper download name.
-        link.setAttribute('download', fileName);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    const { toast } = useToast();
 
-    const handleUpload = () => {
+    const handleUploadClick = () => {
         if (!uploadTitle || !uploadFile) {
             toast({
                 title: "Upload Failed",
@@ -52,13 +44,80 @@ export default function ResourcesPage() {
             });
             return;
         }
+        onUpload(uploadTitle, uploadDescription, uploadFile);
+        // Reset state after upload
+        setUploadTitle("");
+        setUploadDescription("");
+        setUploadFile(null);
+    };
 
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogTrigger asChild>
+                <Button>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Resource
+                </Button>
+            </DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Upload Resource</DialogTitle>
+                    <DialogDescription>
+                        Contribute to the hub by uploading a new resource.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="title" className="text-right">
+                            Title
+                        </Label>
+                        <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="description" className="text-right">
+                            Description
+                        </Label>
+                        <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="file" className="text-right">
+                            File
+                        </Label>
+                        <Input id="file" type="file" className="col-span-3" onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="submit" onClick={handleUploadClick}>Upload</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+};
+
+
+export default function ResourcesPage() {
+    const searchParams = useSearchParams();
+    const { toast } = useToast();
+    const role = searchParams.get('role') || 'student';
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    
+    const handleDownload = (url: string, fileName: string) => {
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', fileName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    const handleUpload = (title: string, description: string, file: File) => {
         const newResource: Resource = {
-            name: uploadTitle,
-            type: uploadFile.type || "File",
-            uploader: "Current User", // In a real app, this would be the logged-in user's name
+            name: title,
+            type: file.type || "File",
+            uploader: "Current User",
             date: new Date().toLocaleDateString('en-CA'),
-            url: URL.createObjectURL(uploadFile), // Create a temporary local URL for the file
+            url: URL.createObjectURL(file),
         };
 
         setResources(prevResources => [...prevResources, newResource]);
@@ -68,56 +127,7 @@ export default function ResourcesPage() {
             description: `"${newResource.name}" has been added to the hub.`,
         });
 
-        // Reset form and close dialog
         setIsUploadDialogOpen(false);
-        setUploadTitle("");
-        setUploadDescription("");
-        setUploadFile(null);
-    }
-
-
-    const UploadResourceDialog = () => {
-        return (
-            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
-                <DialogTrigger asChild>
-                    <Button>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Upload Resource
-                    </Button>
-                </DialogTrigger>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Upload Resource</DialogTitle>
-                        <DialogDescription>
-                            Contribute to the hub by uploading a new resource.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="grid gap-4 py-4">
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="title" className="text-right">
-                                Title
-                            </Label>
-                            <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="description" className="text-right">
-                                Description
-                            </Label>
-                            <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
-                        </div>
-                        <div className="grid grid-cols-4 items-center gap-4">
-                            <Label htmlFor="file" className="text-right">
-                                File
-                            </Label>
-                            <Input id="file" type="file" className="col-span-3" onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)} />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <Button type="submit" onClick={handleUpload}>Upload</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-        );
     }
 
     return (
@@ -127,7 +137,11 @@ export default function ResourcesPage() {
                     <h1 className="text-3xl font-bold font-headline">Resource Hub</h1>
                     <p className="text-muted-foreground">Central repository for notes, papers, and other materials.</p>
                 </div>
-                <UploadResourceDialog />
+                <UploadResourceDialog 
+                    isOpen={isUploadDialogOpen}
+                    onOpenChange={setIsUploadDialogOpen}
+                    onUpload={handleUpload}
+                />
             </div>
 
             <div className="border rounded-lg">
