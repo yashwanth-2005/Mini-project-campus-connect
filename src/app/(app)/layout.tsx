@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { FirebaseClientProvider } from "@/firebase";
 
 // This array defines all possible navigation links for the sidebar.
+// The `role` property determines who can see the link.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/placements", icon: <Briefcase />, label: "Placement Corner", role: ['student', 'faculty'] },
@@ -46,6 +47,7 @@ const allNavItems = [
 ];
 
 // This is the main layout for the authenticated part of the application.
+// It includes the sidebar, header, and main content area.
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -56,7 +58,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   // Filters navigation links based on the user's role from the URL.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
-  // Shows a loading screen during page transitions.
+  // Shows a loading screen during page transitions for a smoother experience.
   useEffect(() => {
     setIsLoading(true);
     const timer = setTimeout(() => setIsLoading(false), 300); 
@@ -147,3 +149,5 @@ export default function AppLayout({
     </React.Suspense>
   )
 }
+
+    

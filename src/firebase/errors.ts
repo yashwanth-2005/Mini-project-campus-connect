@@ -2,14 +2,14 @@
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
-// The context of a Firestore security rule failure.
+// Defines the context of a Firestore security rule failure.
 type SecurityRuleContext = {
   path: string;
   operation: 'get' | 'list' | 'create' | 'update' | 'delete' | 'write';
   requestResourceData?: any;
 };
 
-// A simplified version of the Firebase Auth token.
+// A simplified version of the Firebase Auth token available in security rules.
 interface FirebaseAuthToken {
   name: string | null;
   email: string | null;
@@ -23,13 +23,13 @@ interface FirebaseAuthToken {
   };
 }
 
-// The auth object as seen in security rules.
+// The `request.auth` object as it appears in security rules.
 interface FirebaseAuthObject {
   uid: string;
   token: FirebaseAuthToken;
 }
 
-// The simulated request that failed security rules.
+// The simulated request object that failed security rules.
 interface SecurityRuleRequest {
   auth: FirebaseAuthObject | null;
   method: string;
@@ -73,6 +73,7 @@ function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
 function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   let authObject: FirebaseAuthObject | null = null;
   try {
+    // Safely attempt to get the current user.
     const firebaseAuth = getAuth();
     const currentUser = firebaseAuth.currentUser;
     if (currentUser) {
@@ -90,13 +91,17 @@ function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   };
 }
 
-// Builds the final, formatted error message.
+// Builds the final, formatted error message to be displayed.
 function buildErrorMessage(requestObject: SecurityRuleRequest): string {
   return `Missing or insufficient permissions: The following request was denied by Firestore Security Rules:
 ${JSON.stringify(requestObject, null, 2)}`;
 }
 
-// A custom error class that structures information to mimic the request object in security rules.
+/**
+ * A custom error class designed to provide rich, contextual information about
+ * a Firestore permission error. It helps developers debug security rules by
+ * showing what the failed request looked like.
+ */
 export class FirestorePermissionError extends Error {
   public readonly request: SecurityRuleRequest;
 
@@ -107,3 +112,5 @@ export class FirestorePermissionError extends Error {
     this.request = requestObject;
   }
 }
+
+    

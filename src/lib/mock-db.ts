@@ -1,5 +1,5 @@
 
-// This file contains mock data and functions for a prototype.
+// This file contains mock data and functions for prototyping.
 // In a real application, this would be replaced by a proper database.
 export type User = {
     id: string;
@@ -16,6 +16,7 @@ export type User = {
     profilePicture?: string;
 };
 
+// Represents a request to change a University Seat Number.
 export type UsnChangeRequest = {
     id: string;
     userId: string;
@@ -27,7 +28,7 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
-// Our mock database, stored in the browser's localStorage.
+// Our mock database, stored in the browser's localStorage for persistence.
 const defaultUsers: Record<string, User> = {
     'user-faculty-1': {
         id: 'user-faculty-1',
@@ -59,7 +60,7 @@ const defaultUsers: Record<string, User> = {
     }
 }
 
-// Safely gets user profiles from localStorage.
+// Safely gets user profiles from localStorage, handling server-side rendering.
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return defaultUsers;
     let usersJson = localStorage.getItem('users');
@@ -105,7 +106,7 @@ export const findUserById = (userId: string): User | null => {
 export const getFacultyUser = (): User => {
     const users = getUsers();
     const facultyId = 'user-faculty-1';
-    // Ensure faculty user exists, otherwise create it.
+    // Ensures the default faculty user exists.
     if (!users[facultyId]) {
         users[facultyId] = defaultUsers[facultyId];
         saveUsers(users);
@@ -211,3 +212,5 @@ export const denyUsnChange = (requestId: string) => {
     requests[requestIndex].status = 'denied';
     saveRequests(requests);
 };
+
+    

@@ -32,13 +32,13 @@ export default function ForgotPasswordPage() {
         event.preventDefault();
         setIsLoading(true);
 
-        // Simulate network delay.
+        // Simulate network delay for a better user experience.
         setTimeout(() => {
             const userExists = findUserByEmail(email);
 
             if (userExists) {
-                 // For this demo, we just show a success message.
                  // In a real app, this would trigger an email service.
+                 // For this demo, we just show a success message.
                 setEmailSent(true);
             } else {
                  toast({
@@ -55,6 +55,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
+             {/* Shows a loading overlay while the request is being processed. */}
              {isLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
                     <div className="flex flex-col items-center gap-4">
@@ -77,6 +78,7 @@ export default function ForgotPasswordPage() {
                     </CardDescription>
                 </CardHeader>
                 {emailSent ? (
+                    // This view is shown after the email is "sent".
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
@@ -90,6 +92,7 @@ export default function ForgotPasswordPage() {
                         </Button>
                     </CardContent>
                 ) : (
+                    // This is the initial form for entering an email.
                     <form onSubmit={handleSubmit}>
                         <CardContent className="grid gap-4">
                             <div className="grid gap-2">
@@ -122,3 +125,5 @@ export default function ForgotPasswordPage() {
         </div>
     )
 }
+
+    

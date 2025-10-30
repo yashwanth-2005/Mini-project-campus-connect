@@ -48,6 +48,7 @@ const UploadResourceDialog = ({
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const { toast } = useToast();
 
+    // Handles the click of the upload button inside the dialog.
     const handleUploadClick = () => {
         if (!uploadTitle || !uploadFile) {
             toast({
@@ -62,6 +63,7 @@ const UploadResourceDialog = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => {
+            // Prevents closing the dialog while an upload is in progress.
             if (!isUploading) onOpenChange(open);
         }}>
             <DialogTrigger asChild>
@@ -126,6 +128,7 @@ const EditResourceDialog = ({
     const [editDescription, setEditDescription] = useState('');
     const { toast } = useToast();
 
+    // Pre-fills the form when a resource is selected for editing.
     React.useEffect(() => {
         if(resource) {
             setEditTitle(resource.name);
@@ -133,6 +136,7 @@ const EditResourceDialog = ({
         }
     }, [resource]);
 
+    // Handles the click of the update button inside the dialog.
     const handleUpdateClick = () => {
         if(!resource) return;
         if (!editTitle) {
@@ -207,7 +211,7 @@ export default function ResourcesPage() {
         window.open(url, '_blank');
     };
 
-    // Downloads a file from a given URL.
+    // Downloads a file from a given URL using the Fetch API.
     const handleDownload = (url: string, fileName: string) => {
         fetch(url).then(response => response.blob()).then(blob => {
             const link = document.createElement('a');
@@ -264,7 +268,7 @@ export default function ResourcesPage() {
         setIsEditDialogOpen(true);
     };
 
-    // Updates a resource's metadata in Firestore.
+    // Updates a resource's metadata (title and description) in Firestore.
     const handleUpdate = async (resourceId: string, title: string, description: string) => {
         if (!firestore) return;
         setIsUpdating(true);
@@ -327,13 +331,13 @@ export default function ResourcesPage() {
         }
     };
 
-    // Filters resources based on the search query.
+    // Filters resources based on the user's search query.
     const filteredResources = resources?.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
-    // Formats a Firestore timestamp into a readable date.
+    // Formats a Firestore timestamp into a readable date string.
     const formatDate = (timestamp: any) => {
         if (timestamp && timestamp.toDate) {
             return timestamp.toDate().toLocaleDateString();
@@ -348,6 +352,7 @@ export default function ResourcesPage() {
                     <h1 className="text-3xl font-bold font-headline">Resource Hub</h1>
                     <p className="text-muted-foreground">Central repository for notes, papers, and other materials.</p>
                 </div>
+                {/* Only shows the upload button to logged-in users. */}
                 {user && <UploadResourceDialog 
                     isOpen={isUploadDialogOpen}
                     onOpenChange={setIsUploadDialogOpen}
@@ -380,18 +385,21 @@ export default function ResourcesPage() {
                     </TableHeader>
                     <TableBody>
                         {isLoadingResources ? (
+                            // Shows a loader while resources are being fetched.
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center">
                                     <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
                                 </TableCell>
                             </TableRow>
                         ) : filteredResources.length === 0 ? (
+                            // Shows a message if no resources are found.
                             <TableRow>
                                 <TableCell colSpan={6} className="h-24 text-center">
                                     {searchQuery ? "No resources found." : "No resources available yet."}
                                 </TableCell>
                             </TableRow>
                         ) : (
+                            // Renders the list of resources.
                             filteredResources.map((resource) => (
                                 <TableRow key={resource.id}>
                                     <TableCell className="font-medium">{resource.name}</TableCell>
@@ -416,6 +424,7 @@ export default function ResourcesPage() {
                                                     <Download className="mr-2 h-4 w-4"/>
                                                     Download
                                                 </DropdownMenuItem>
+                                                {/* Only allows editing/deleting for faculty or the original uploader. */}
                                                 {(role === 'faculty' || resource.uploaderId === user?.uid) && (
                                                     <>
                                                         <DropdownMenuItem onClick={() => handleEditClick(resource)}>
@@ -447,6 +456,7 @@ export default function ResourcesPage() {
                 onUpdate={handleUpdate}
                 isUpdating={isUpdating}
             />
+            {/* A confirmation dialog for deleting a resource. */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -467,3 +477,5 @@ export default function ResourcesPage() {
         </div>
     )
 }
+
+    

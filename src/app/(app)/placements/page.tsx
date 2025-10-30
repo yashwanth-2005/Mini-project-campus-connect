@@ -8,7 +8,7 @@ import { FileText, Link as LinkIcon, Download } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 
-// Mock data for interview experiences.
+// Mock data for interview experiences. In a real app, this would come from a database.
 const interviewExperiences = [
     { company: "TechCorp", role: "Software Engineer Intern", date: "2024-05-15", author: "Alex Doe" },
     { company: "Innovate Inc.", role: "Data Analyst", date: "2024-05-10", author: "Jane Smith" },
@@ -33,6 +33,7 @@ export default function PlacementsPage() {
                 <p className="text-muted-foreground">All-in-one hub for your placement preparation.</p>
             </div>
 
+            {/* Tabs organize the different sections of the placement corner. */}
             <Tabs defaultValue="roadmaps">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="roadmaps">Roadmaps</TabsTrigger>
@@ -120,6 +121,7 @@ export default function PlacementsPage() {
                                 <CardTitle>Document Repository</CardTitle>
                                 <CardDescription>Find resume templates, referral links, and more.</CardDescription>
                             </div>
+                             {/* Only faculty can upload new documents. */}
                              {role === 'faculty' && <Button>Upload Document</Button>}
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -144,3 +146,5 @@ export default function PlacementsPage() {
         </div>
     )
 }
+
+    

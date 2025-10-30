@@ -10,6 +10,7 @@ import { useUser } from "@/firebase";
 import React from "react";
 
 // Defines the quick links available on the dashboard.
+// Each link has a role property to control who can see it.
 const allQuickLinks = [
     {
         title: "Placement Corner",
@@ -34,7 +35,7 @@ const allQuickLinks = [
     },
     {
         title: "Admin Panel",
-        description: "Manage students, content, and approvals.",
+        description: "Manage campus content and approvals.",
         href: "/admin",
         icon: <Shield className="h-6 w-6 text-primary" />,
         role: ['faculty']
@@ -44,11 +45,13 @@ const allQuickLinks = [
 export default function DashboardPage() {
     const searchParams = useSearchParams();
     const { user } = useUser();
+    // The user's role is determined by the URL parameter.
     const role = searchParams.get('role') || 'student';
     
-    // Filters quick links based on the user's role.
+    // Filters the quick links based on the user's role.
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     
+    // Generates a personalized welcome message.
     const welcomeMessage = () => {
         if (role === 'faculty') return "Welcome back, Faculty!";
         if (user) return `Welcome back, ${user.displayName?.split(' ')[0] || 'Student'}!`;
@@ -62,6 +65,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground">Here&apos;s a quick overview of what&apos;s happening on campus.</p>
             </div>
 
+            {/* A grid of quick links to other pages. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {quickLinks.map(link => (
                     <Card key={link.title} className="hover:shadow-lg transition-shadow">
@@ -81,6 +85,7 @@ export default function DashboardPage() {
                 ))}
             </div>
 
+            {/* A card showing the most recent announcements. */}
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Announcements</CardTitle>
@@ -111,3 +116,5 @@ export default function DashboardPage() {
         </div>
     )
 }
+
+    

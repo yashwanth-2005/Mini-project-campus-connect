@@ -1,6 +1,8 @@
+
 "use client"
 
-// Inspired by react-hot-toast library
+// This custom hook is inspired by the react-hot-toast library.
+// It provides a simple way to create and manage toast notifications.
 import * as React from "react"
 
 import type {
@@ -8,8 +10,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 3000
+const TOAST_LIMIT = 1;
+const TOAST_REMOVE_DELAY = 3000;
 
 type ToasterToast = ToastProps & {
   id: string
@@ -27,6 +29,7 @@ const actionTypes = {
 
 let count = 0
 
+// Generates a unique ID for each toast.
 function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER
   return count.toString()
@@ -58,6 +61,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
+// Schedules a toast to be removed from the DOM after a delay.
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
@@ -74,6 +78,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
+// The reducer function manages the state of the toasts.
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -93,8 +98,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -133,6 +136,7 @@ const listeners: Array<(state: State) => void> = []
 
 let memoryState: State = { toasts: [] }
 
+// Dispatches an action to all subscribed components.
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
@@ -142,6 +146,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
+// The main function to create a new toast.
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -171,6 +176,7 @@ function toast({ ...props }: Toast) {
   }
 }
 
+// The hook that components use to interact with the toast system.
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 
@@ -192,3 +198,5 @@ function useToast() {
 }
 
 export { useToast, toast }
+
+    

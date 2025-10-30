@@ -21,8 +21,8 @@ export default function AdminPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // When the page loads, check if the user is a faculty member.
-  // If not, send them back to the dashboard. Otherwise, load the pending requests.
+  // When the page loads, checks if the user is a faculty member.
+  // If not, it sends them back to the dashboard. Otherwise, it loads the pending requests.
   useEffect(() => {
     if (role !== 'faculty') {
       router.push('/dashboard');
@@ -32,7 +32,7 @@ export default function AdminPage() {
     setIsLoading(false);
   }, [role, router]);
 
-  // Approves a student's USN change request.
+  // Approves a student's USN change request and shows a toast notification.
   const handleApprove = (requestId: string) => {
     setActionLoading(requestId);
     setTimeout(() => {
@@ -52,10 +52,10 @@ export default function AdminPage() {
       } finally {
         setActionLoading(null);
       }
-    }, 500);
+    }, 500); // Simulates a network delay.
   };
 
-  // Denies a student's USN change request.
+  // Denies a student's USN change request and shows a toast notification.
   const handleDeny = (requestId: string) => {
     setActionLoading(requestId);
     setTimeout(() => {
@@ -67,7 +67,7 @@ export default function AdminPage() {
         variant: 'destructive',
       });
       setActionLoading(null);
-    }, 500);
+    }, 500); // Simulates a network delay.
   };
 
   if (isLoading) {
@@ -101,12 +101,14 @@ export default function AdminPage() {
               </TableHeader>
               <TableBody>
                 {requests.length === 0 ? (
+                  // Shows a message if there are no pending requests.
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
                       No pending requests.
                     </TableCell>
                   </TableRow>
                 ) : (
+                  // Renders a row for each pending request.
                   requests.map((req) => (
                     <TableRow key={req.id}>
                       <TableCell className="font-medium">{req.studentName}</TableCell>
@@ -143,3 +145,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

@@ -2,7 +2,8 @@
 'use client';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// This interface defines all possible events and their data types.
+// This interface defines all possible events and their corresponding data types.
+// It centralizes event definitions for type safety across the application.
 export interface AppEvents {
   'permission-error': FirestorePermissionError;
 }
@@ -10,7 +11,10 @@ export interface AppEvents {
 // A generic type for a callback function.
 type Callback<T> = (data: T) => void;
 
-// A strongly-typed event emitter for pub/sub patterns.
+/**
+ * A strongly-typed pub/sub event emitter. It allows different parts of the
+ * application to communicate without being directly coupled.
+ */
 function createEventEmitter<T extends Record<string, any>>() {
   // Stores arrays of callbacks, keyed by the event name.
   const events: { [K in keyof T]?: Array<Callback<T[K]>> } = {};
@@ -42,5 +46,7 @@ function createEventEmitter<T extends Record<string, any>>() {
   };
 }
 
-// Creates and exports a single instance of the emitter.
+// Creates and exports a single, global instance of the event emitter.
 export const errorEmitter = createEventEmitter<AppEvents>();
+
+    

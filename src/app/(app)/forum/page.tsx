@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 
+// Defines the structure for a discussion post.
 type Discussion = {
     id: number;
     title: string;
@@ -65,7 +66,7 @@ export default function ForumPage() {
     const [newDiscussionContent, setNewDiscussionContent] = useState('');
     const { toast } = useToast();
 
-    // Loads discussions from localStorage or uses initial data.
+    // Loads discussions from localStorage on initial render, or uses mock data.
     useEffect(() => {
         try {
             const storedDiscussions = localStorage.getItem('discussions');
@@ -80,10 +81,10 @@ export default function ForumPage() {
         }
     }, []);
 
-    // Saves discussions to localStorage whenever they change.
+    // Saves discussions to localStorage whenever the discussions state changes.
     useEffect(() => {
         try {
-            // Avoids overwriting initial discussions on first render.
+            // This check prevents overwriting localStorage with initial data on first render.
             if (discussions.length > 0 && discussions !== initialDiscussions) {
                  localStorage.setItem('discussions', JSON.stringify(discussions));
             }
@@ -108,7 +109,7 @@ export default function ForumPage() {
             id: Date.now(),
             title: newDiscussionTitle,
             content: newDiscussionContent,
-            author: "Demo User", // Placeholder for logged-in user
+            author: "Demo User", // In a real app, this would be the logged-in user.
             avatar: "https://picsum.photos/seed/user-avatar/40/40",
             time: "Just now",
             replies: 0,
@@ -116,8 +117,10 @@ export default function ForumPage() {
             tags: ["new"],
         };
 
+        // Adds the new discussion to the top of the list.
         setDiscussions(prevDiscussions => [newDiscussion, ...prevDiscussions]);
         
+        // Resets the form fields and closes the dialog.
         setNewDiscussionTitle('');
         setNewDiscussionContent('');
         setIsDialogOpen(false);
@@ -135,6 +138,7 @@ export default function ForumPage() {
                     <h1 className="text-3xl font-bold font-headline">Discussion Forum</h1>
                     <p className="text-muted-foreground">Connect with peers, seniors, and faculty.</p>
                 </div>
+                {/* A dialog for creating a new discussion post. */}
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -177,6 +181,7 @@ export default function ForumPage() {
                 </Dialog>
             </div>
             
+            {/* A quick-post input field. */}
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10 border">
                     <AvatarImage src="https://picsum.photos/seed/user-avatar/40/40" />
@@ -185,6 +190,7 @@ export default function ForumPage() {
                 <Input placeholder="What's on your mind?" className="h-12" />
             </div>
 
+            {/* Renders a list of discussion cards. */}
             <div className="space-y-4">
                 {discussions.map(d => (
                     <Card key={d.id} className="hover:border-primary cursor-pointer transition-colors">
@@ -227,3 +233,5 @@ export default function ForumPage() {
         </div>
     )
 }
+
+    

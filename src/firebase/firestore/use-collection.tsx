@@ -13,17 +13,17 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// A utility type to add an 'id' field to a given type.
+// A utility type that adds a mandatory 'id' field to a given type.
 export type WithId<T> = T & { id: string };
 
-// The return value of the useCollection hook.
+// The shape of the object returned by the useCollection hook.
 export interface UseCollectionResult<T> {
   data: WithId<T>[] | null; 
   isLoading: boolean;       
   error: FirestoreError | Error | null; 
 }
 
-// An internal type for Firestore queries to access the path.
+// An internal type definition that helps us access the path of a Firestore query.
 export interface InternalQuery extends Query<DocumentData> {
   _query: {
     path: {
@@ -37,10 +37,10 @@ export interface InternalQuery extends Query<DocumentData> {
  * A React hook to subscribe to a Firestore collection or query in real-time.
  * 
  * IMPORTANT: The query or reference passed to this hook MUST be memoized
- * with useMemo or useMemoFirebase to prevent infinite re-renders.
+ * using `useMemo` or `useMemoFirebase` to prevent infinite re-renders.
  *  
- * @param {CollectionReference | Query | null | undefined} memoizedTargetRefOrQuery The Firestore query or reference.
- * @returns {UseCollectionResult<T>} An object with the data, loading state, and error.
+ * @param memoizedTargetRefOrQuery The Firestore query or reference to listen to.
+ * @returns An object with the data, loading state, and any error that occurred.
  */
 export function useCollection<T = any>(
     memoizedTargetRefOrQuery: ((CollectionReference<DocumentData> | Query<DocumentData>) & {__memo?: boolean})  | null | undefined,
@@ -53,7 +53,7 @@ export function useCollection<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If the query isn't ready, reset the state.
+    // If the query isn't ready yet (e.g., waiting for a user ID), reset the state.
     if (!memoizedTargetRefOrQuery) {
       setData(null);
       setIsLoading(false);
@@ -64,11 +64,11 @@ export function useCollection<T = any>(
     setIsLoading(true);
     setError(null);
 
-    // Sets up the real-time listener.
+    // Sets up the real-time listener on the provided query.
     const unsubscribe = onSnapshot(
       memoizedTargetRefOrQuery,
       (snapshot: QuerySnapshot<DocumentData>) => {
-        // On success, map the documents to include their IDs.
+        // On success, map the documents to a new array, including their IDs.
         const results: ResultItemType[] = [];
         for (const doc of snapshot.docs) {
           results.push({ ...(doc.data() as T), id: doc.id });
@@ -78,7 +78,7 @@ export function useCollection<T = any>(
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        // On error, create a more detailed error for better debugging.
+        // If an error occurs (e.g., permission denied), create a more detailed error.
         const path: string =
           memoizedTargetRefOrQuery.type === 'collection'
             ? (memoizedTargetRefOrQuery as CollectionReference).path
@@ -93,18 +93,20 @@ export function useCollection<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // Sends the error to a global listener.
+        // Sends the detailed error to a global listener for display.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
 
-    // Cleans up the listener when the component unmounts.
+    // Cleans up the listener when the component unmounts or the query changes.
     return () => unsubscribe();
   }, [memoizedTargetRefOrQuery]); 
 
-  // Enforces memoization of the query.
+  // This is a development-only check to enforce memoization of the query.
   if(memoizedTargetRefOrQuery && !memoizedTargetRefOrQuery.__memo) {
-    throw new Error('The query passed to useCollection was not memoized. Use useMemoFirebase.');
+    throw new Error('The query passed to useCollection was not memoized. Use useMemoFirebase to prevent re-renders.');
   }
   return { data, isLoading, error };
 }
+
+    

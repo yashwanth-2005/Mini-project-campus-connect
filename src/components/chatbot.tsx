@@ -17,11 +17,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { chatWithBot } from "@/ai/flows/ai-chatbot-assistance";
 
+// Defines the structure for a single chat message.
 type Message = {
   sender: "user" | "bot";
   text: string;
 };
 
+// Defines the properties for the Chatbot component.
 type ChatbotProps = {
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
@@ -36,7 +38,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    // Adds the user's message to the chat history right away.
+    // Adds the user's message to the chat history right away for a responsive feel.
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     
@@ -50,7 +52,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      // If the AI call fails, show a user-friendly error message.
+      // If the AI call fails, show a user-friendly error message in the chat.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",
@@ -79,11 +81,13 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
                   message.sender === "user" ? "justify-end" : ""
                 }`}
               >
+                {/* Bot's avatar */}
                 {message.sender === "bot" && (
                   <Avatar className="h-8 w-8">
                     <AvatarFallback><Bot size={20}/></AvatarFallback>
                   </Avatar>
                 )}
+                {/* The chat message bubble */}
                 <div
                   className={`rounded-lg p-3 text-sm ${
                     message.sender === "user"
@@ -93,6 +97,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
                 >
                   {message.text}
                 </div>
+                 {/* User's avatar */}
                  {message.sender === "user" && (
                   <Avatar className="h-8 w-8">
                     <AvatarFallback><User size={20}/></AvatarFallback>
@@ -100,6 +105,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
                 )}
               </div>
             ))}
+            {/* Loading indicator for when the bot is "typing". */}
             {isLoading && (
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">
@@ -131,3 +137,5 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
     </Sheet>
   );
 }
+
+    

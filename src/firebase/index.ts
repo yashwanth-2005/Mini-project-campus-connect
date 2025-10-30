@@ -8,15 +8,17 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Initializes Firebase and returns the SDKs.
-// It ensures that Firebase is only initialized once.
+// This function ensures that Firebase is only initialized once.
 export function initializeFirebase() {
   if (!getApps().length) {
-    // Try to initialize using App Hosting env variables first.
-    // Fall back to local config if it fails.
+    // When deployed on Firebase App Hosting, environment variables are automatically
+    // available. We try to initialize with those first.
     let firebaseApp;
     try {
       firebaseApp = initializeApp();
     } catch (e) {
+      // If auto-initialization fails (e.g., in local development),
+      // we fall back to using our local firebaseConfig object.
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic Firebase initialization failed. Falling back to local config.', e);
       }
@@ -25,11 +27,11 @@ export function initializeFirebase() {
     return getSdks(firebaseApp);
   }
 
-  // If already initialized, get the existing app.
+  // If Firebase is already initialized, we get the existing app instance.
   return getSdks(getApp());
 }
 
-// A helper to get all service SDKs from a Firebase App instance.
+// A helper function to get all the necessary service SDKs from a Firebase App instance.
 export function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
@@ -39,10 +41,12 @@ export function getSdks(firebaseApp: FirebaseApp) {
   };
 }
 
-// Export hooks and providers for easy access elsewhere.
+// Export hooks and providers for easy access throughout the application.
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export * from './errors';
 export * from './error-emitter';
+
+    

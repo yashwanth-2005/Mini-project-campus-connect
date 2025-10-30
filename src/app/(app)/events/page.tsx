@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Calendar, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 
-// A mock data array for campus events.
+// A mock data array for campus events. In a real app, this would come from a database.
 const events = [
     {
         title: "AI & Machine Learning Workshop",
@@ -47,6 +47,7 @@ export default function EventsPage() {
                 <h1 className="text-3xl font-bold font-headline">Events & Workshops</h1>
                 <p className="text-muted-foreground">Discover, learn, and participate in campus happenings.</p>
             </div>
+            {/* A grid that displays the event cards. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {events.map((event, index) => (
                     <Card key={index} className="overflow-hidden flex flex-col">
@@ -81,3 +82,5 @@ export default function EventsPage() {
         </div>
     )
 }
+
+    

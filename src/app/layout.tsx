@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 // This is the root layout for the entire application.
-// It wraps all pages with essential providers.
+// It wraps every page with essential context providers.
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -14,12 +14,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* Adds the Inter font from Google Fonts. */}
+        {/* Adds the Inter font from Google Fonts for a modern look. */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased">
+        {/* The ThemeProvider handles light and dark mode switching. */}
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -30,10 +31,12 @@ export default function RootLayout({
           <FirebaseClientProvider>
             {children}
           </FirebaseClientProvider>
-          {/* Renders toast notifications. */}
+          {/* The Toaster component renders toast notifications. */}
           <Toaster />
         </ThemeProvider>
       </body>
     </html>
   );
 }
+
+    

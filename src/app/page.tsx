@@ -134,7 +134,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      {/* Loading overlay */}
+      {/* Shows a loading overlay during page transitions. */}
       {loading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
           <div className="flex flex-col items-center gap-4">
@@ -165,7 +165,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 overflow-x-hidden">
-         {/* Hero section */}
+         {/* Hero Section: The main title and call-to-action buttons. */}
          <motion.section 
             className="py-20 md:py-32"
             initial="initial"
@@ -198,7 +198,7 @@ export default function Home() {
           </div>
         </motion.section>
         
-        {/* Quick prep section */}
+        {/* Quick Prep Section: A feature highlight for placement preparation. */}
         <motion.section 
           id="quick-prep" 
           className="bg-secondary/50 py-20 my-12"
@@ -229,7 +229,7 @@ export default function Home() {
             </div>
         </motion.section>
 
-        {/* Features section */}
+        {/* Features Section: Displays the main features of the application. */}
         <motion.section 
           id="features" 
           className="container my-20"
@@ -256,7 +256,7 @@ export default function Home() {
           </motion.div>
         </motion.section>
         
-        {/* Testimonials section */}
+        {/* Testimonials Section: Shows quotes from satisfied students. */}
         <motion.section 
           id="testimonials" 
           className="my-20 py-24 bg-secondary/50"
@@ -302,7 +302,7 @@ export default function Home() {
 
       </main>
 
-      {/* Footer */}
+      {/* Footer: Contains navigation links and social media icons. */}
       <motion.footer 
         className="py-12 md:py-16 border-t border-border/40 bg-secondary/30"
         initial="initial"
@@ -370,3 +370,5 @@ export default function Home() {
     </div>
   );
 }
+
+    
