@@ -62,7 +62,7 @@ export default function SignupPage() {
   const password = form.watch("password");
   const [strength, setStrength] = useState({ score: 0, label: '', color: '' });
 
-  // This function checks the strength of the entered password.
+  // This function checks the strength of the entered password and provides visual feedback.
   const checkPasswordStrength = (pass: string) => {
     let score = 0;
     if (!pass) {
@@ -103,7 +103,7 @@ export default function SignupPage() {
     checkPasswordStrength(password);
   }, [password]);
 
-  // This function handles the form submission to create a new user account.
+  // This function handles creating a new user account.
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
 
@@ -117,38 +117,50 @@ export default function SignupPage() {
       return;
     }
     
-    try {
-        // Create a user in our mock database.
-        createUser({
-            id: `user-${Date.now()}`,
-            fullName: data.fullName,
-            email: data.email,
-            usn: data.usn.toUpperCase(),
-            year: data.year,
-            semester: data.semester,
-            course: data.course,
-            linkedin: data.linkedin,
-            leetcode: data.leetcode,
-        });
+    // Simulate a network delay
+    setTimeout(() => {
+      try {
+          // Create a user in our mock database.
+          createUser({
+              id: `user-${Date.now()}`,
+              fullName: data.fullName,
+              email: data.email,
+              usn: data.usn.toUpperCase(),
+              year: data.year,
+              semester: data.semester,
+              course: data.course,
+              linkedin: data.linkedin,
+              leetcode: data.leetcode,
+          });
 
-        toast({
-            title: "Account Created!",
-            description: "You can now log in with your new account.",
-        });
-        router.push('/login');
-    } catch (error: any) {
-        toast({
-            title: "Signup Failed",
-            description: "This email is already registered. Please try logging in.",
-            variant: "destructive",
-        });
-    } finally {
-        setIsLoading(false);
-    }
+          toast({
+              title: "Account Created!",
+              description: "You can now log in with your new account.",
+          });
+          router.push('/login');
+      } catch (error: any) {
+          toast({
+              title: "Signup Failed",
+              description: "This email is already registered. Please try logging in.",
+              variant: "destructive",
+          });
+      } finally {
+          setIsLoading(false);
+      }
+    }, 500);
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
+       {/* The loading overlay appears when the signup process is initiated. */}
+       {isLoading && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
+          <div className="flex flex-col items-center gap-4">
+            <Logo className="h-16 w-16 text-primary animate-pulse-grow" />
+            <p className="text-muted-foreground">Creating your account...</p>
+          </div>
+        </div>
+      )}
       <Card className="w-full max-w-md mx-auto shadow-xl">
         <CardHeader className="space-y-1 text-center">
             <Link href="/" className="flex items-center justify-center space-x-2 mb-4">

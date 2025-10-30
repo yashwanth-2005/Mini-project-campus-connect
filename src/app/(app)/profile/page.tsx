@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { useUser } from "@/firebase";
+import { Loader2 } from "lucide-react";
 
 // Defines the shape and validation rules for the profile form.
 const profileSchema = z.object({
@@ -47,6 +48,8 @@ export default function ProfilePage() {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUsnDialogOpen, setIsUsnDialogOpen] = useState(false);
     const [pendingUsnRequest, setPendingUsnRequest] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isRequestingUsn, setIsRequestingUsn] = useState(false);
 
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
@@ -105,49 +108,59 @@ export default function ProfilePage() {
     // Handles saving the main profile form.
     function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!userProfile) return;
-
-        try {
-            updateUser(userProfile.id, data);
-            toast({
-                title: "Profile Updated!",
-                description: "Your profile has been successfully updated.",
-            });
-            // Force a reload to update the user avatar in the main navigation.
-            window.location.reload();
-        } catch(e) {
-            toast({
-                title: "Update Failed",
-                description: "Could not update your profile. Please try again.",
-                variant: 'destructive'
-            });
-        }
+        setIsSaving(true);
+        
+        setTimeout(() => {
+            try {
+                updateUser(userProfile.id, data);
+                toast({
+                    title: "Profile Updated!",
+                    description: "Your profile has been successfully updated.",
+                });
+                // Force a reload to update the user avatar in the main navigation.
+                window.location.reload();
+            } catch(e) {
+                toast({
+                    title: "Update Failed",
+                    description: "Could not update your profile. Please try again.",
+                    variant: 'destructive'
+                });
+            } finally {
+                setIsSaving(false);
+            }
+        }, 500);
     }
 
     // Handles the submission of the USN change request.
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
         if (!userProfile) return;
-        try {
-            createUsnChangeRequest({
-                userId: userProfile.id,
-                studentName: userProfile.fullName,
-                currentUsn: userProfile.usn,
-                newUsn: data.newUsn.toUpperCase(),
-                reason: data.reason
-            });
-            toast({
-                title: "Request Submitted",
-                description: "Your USN change request has been submitted for faculty approval."
-            });
-            setPendingUsnRequest(true);
-            setIsUsnDialogOpen(false);
-            usnForm.reset();
-        } catch (error: any) {
-             toast({
-                title: "Submission Failed",
-                description: error.message,
-                variant: 'destructive'
-            });
-        }
+        setIsRequestingUsn(true);
+        setTimeout(() => {
+            try {
+                createUsnChangeRequest({
+                    userId: userProfile.id,
+                    studentName: userProfile.fullName,
+                    currentUsn: userProfile.usn,
+                    newUsn: data.newUsn.toUpperCase(),
+                    reason: data.reason
+                });
+                toast({
+                    title: "Request Submitted",
+                    description: "Your USN change request has been submitted for faculty approval."
+                });
+                setPendingUsnRequest(true);
+                setIsUsnDialogOpen(false);
+                usnForm.reset();
+            } catch (error: any) {
+                 toast({
+                    title: "Submission Failed",
+                    description: error.message,
+                    variant: 'destructive'
+                });
+            } finally {
+                setIsRequestingUsn(false);
+            }
+        }, 500);
     }
 
     // Displays a loading skeleton while fetching user data.
@@ -266,7 +279,10 @@ export default function ProfilePage() {
                                                         )}
                                                     />
                                                     <DialogFooter>
-                                                        <Button type="submit">Submit Request</Button>
+                                                        <Button type="submit" disabled={isRequestingUsn}>
+                                                            {isRequestingUsn && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                            Submit Request
+                                                        </Button>
                                                     </DialogFooter>
                                                 </form>
                                             </Form>
@@ -368,7 +384,10 @@ export default function ProfilePage() {
                 </Card>
 
                 <div className="flex justify-end">
-                    <Button type="submit">Save Changes</Button>
+                    <Button type="submit" disabled={isSaving}>
+                        {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Save Changes
+                    </Button>
                 </div>
             </form>
         </Form>

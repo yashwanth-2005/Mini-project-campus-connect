@@ -28,8 +28,8 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // This function handles the mock login for demonstration purposes.
-  // It allows login with any valid email format and any non-empty password.
+  // This function simulates a login process for demonstration.
+  // It allows any valid email format and any non-empty password to succeed.
   const handleLogin = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -45,7 +45,7 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    // Basic validation for email format and password presence.
+    // Basic validation to ensure email format is correct and password is not empty.
     if (!/^\S+@\S+\.\S+$/.test(email)) {
         toast({
             title: "Invalid Email",
@@ -65,57 +65,59 @@ export default function LoginPage() {
         return;
     }
 
-    try {
-        let userToLogin;
+    // Simulate a network delay for a more realistic loading experience.
+    setTimeout(() => {
+        try {
+            let userToLogin;
 
-        if (role === 'faculty') {
-            // For faculty, we always log in with the default faculty user.
-            userToLogin = getFacultyUser();
-        } else {
-            // For students, we check if a user exists. If not, we create one on-the-fly.
-            let studentUser = findUserByEmail(email);
-            if (!studentUser) {
-                studentUser = createUser({
-                    id: `user-${Date.now()}`,
-                    fullName: "Demo User",
-                    email: email,
-                    usn: "1CR21CS999",
-                    year: 1,
-                    semester: 1,
-                    course: 'btech',
-                    linkedin: '',
-                    leetcode: '',
-                });
+            if (role === 'faculty') {
+                // For faculty, we always log in with a default faculty user profile.
+                userToLogin = getFacultyUser();
+            } else {
+                // For students, check if a user exists. If not, create one on-the-fly.
+                let studentUser = findUserByEmail(email);
+                if (!studentUser) {
+                    studentUser = createUser({
+                        id: `user-${Date.now()}`,
+                        fullName: "Demo User",
+                        email: email,
+                        usn: "1CR21CS999",
+                        year: 1,
+                        semester: 1,
+                        course: 'btech',
+                        linkedin: '',
+                        leetcode: '',
+                    });
+                }
+                userToLogin = studentUser;
             }
-            userToLogin = studentUser;
-        }
 
-        if (userToLogin) {
-            // In a real app, we'd store a session token. For this mock,
-            // we'll just store the user's ID in localStorage to "log them in".
-            localStorage.setItem('loggedInUser', userToLogin.id);
-            
+            if (userToLogin) {
+                // In this mock setup, we store the user's ID in localStorage to "log them in".
+                localStorage.setItem('loggedInUser', userToLogin.id);
+                
+                toast({
+                    title: "Login Successful",
+                    description: `Welcome back, ${userToLogin.fullName}!`,
+                });
+                // Redirect to the appropriate dashboard based on the selected role.
+                router.push(`/dashboard?role=${role}`);
+            } else {
+                 throw new Error("Could not find or create a user profile.");
+            }
+
+        } catch (error: any) {
             toast({
-                title: "Login Successful",
-                description: `Welcome back, ${userToLogin.fullName}!`,
+                title: "Login Failed",
+                description: error.message || "An unexpected error occurred.",
+                variant: "destructive",
             });
-            // Redirect to the dashboard, passing the role as a URL parameter.
-            router.push(`/dashboard?role=${role}`);
-        } else {
-             throw new Error("Could not find or create a user profile.");
+            setIsLoading(false);
         }
-
-    } catch (error: any) {
-        toast({
-            title: "Login Failed",
-            description: error.message || "An unexpected error occurred.",
-            variant: "destructive",
-        });
-        setIsLoading(false);
-    }
+    }, 500);
   };
 
-  // This function renders the login form fields, reused for both tabs.
+  // This function renders the login form fields, which are reused for both student and faculty tabs.
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
       {currentRole === 'student' && (
@@ -173,6 +175,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
+        {/* The loading overlay appears when the login process is initiated. */}
         {isLoading && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
             <div className="flex flex-col items-center gap-4">
@@ -207,7 +210,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
             <Button className="w-full shine-button" onClick={handleLogin} disabled={isLoading}>
-              {`Login as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
+              {isLoading ? "Logging in..." : `Login as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
             </Button>
             {role === 'student' && (
               <div className="text-center text-sm">

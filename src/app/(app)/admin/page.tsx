@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { getPendingUsnRequests, approveUsnChange, denyUsnChange, UsnChangeRequest } from '@/lib/mock-db';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, Check, X } from 'lucide-react';
+import { ArrowRight, Check, X, Loader2 } from 'lucide-react';
 
 export default function AdminPage() {
   const searchParams = useSearchParams();
@@ -18,6 +18,7 @@ export default function AdminPage() {
 
   const [requests, setRequests] = useState<UsnChangeRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   // This effect runs when the component mounts.
   // It checks if the user has the 'faculty' role. If not, it redirects them to the dashboard.
@@ -33,31 +34,40 @@ export default function AdminPage() {
 
   // This function handles the approval of a USN change request.
   const handleApprove = (requestId: string) => {
-    try {
-      approveUsnChange(requestId);
-      setRequests(getPendingUsnRequests()); 
-      toast({
-        title: 'Request Approved',
-        description: "The student's USN has been successfully updated.",
-      });
-    } catch (error: any) {
-      toast({
-        title: 'Approval Failed',
-        description: error.message,
-        variant: 'destructive',
-      });
-    }
+    setActionLoading(requestId);
+    setTimeout(() => {
+      try {
+        approveUsnChange(requestId);
+        setRequests(getPendingUsnRequests()); 
+        toast({
+          title: 'Request Approved',
+          description: "The student's USN has been successfully updated.",
+        });
+      } catch (error: any) {
+        toast({
+          title: 'Approval Failed',
+          description: error.message,
+          variant: 'destructive',
+        });
+      } finally {
+        setActionLoading(null);
+      }
+    }, 500);
   };
 
   // This function handles the denial of a USN change request.
   const handleDeny = (requestId: string) => {
-    denyUsnChange(requestId);
-    setRequests(getPendingUsnRequests()); 
-    toast({
-      title: 'Request Denied',
-      description: 'The USN change request has been denied.',
-      variant: 'destructive',
-    });
+    setActionLoading(requestId);
+    setTimeout(() => {
+      denyUsnChange(requestId);
+      setRequests(getPendingUsnRequests()); 
+      toast({
+        title: 'Request Denied',
+        description: 'The USN change request has been denied.',
+        variant: 'destructive',
+      });
+      setActionLoading(null);
+    }, 500);
   };
 
   if (isLoading) {
@@ -111,11 +121,13 @@ export default function AdminPage() {
                       <TableCell className="text-right">
                         {req.status === 'pending' && (
                           <div className="space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleApprove(req.id)}>
-                              <Check className="mr-2 h-4 w-4" /> Approve
+                            <Button variant="outline" size="sm" onClick={() => handleApprove(req.id)} disabled={actionLoading === req.id}>
+                              {actionLoading === req.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
+                               Approve
                             </Button>
-                            <Button variant="destructive" size="sm" onClick={() => handleDeny(req.id)}>
-                              <X className="mr-2 h-4 w-4" /> Deny
+                            <Button variant="destructive" size="sm" onClick={() => handleDeny(req.id)} disabled={actionLoading === req.id}>
+                               {actionLoading === req.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <X className="mr-2 h-4 w-4" />}
+                               Deny
                             </Button>
                           </div>
                         )}

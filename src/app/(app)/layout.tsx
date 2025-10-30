@@ -58,6 +58,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   // This function shows a loading screen to make page transitions feel smoother.
   const handleLinkClick = (href: string) => {
+    // Only show loader if navigating to a different page.
     if (pathname !== href) {
       setIsLoading(true);
     }
@@ -70,7 +71,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <SidebarProvider>
-      {/* This is the full-screen loading overlay. */}
+      {/* This is the full-screen loading overlay. It appears during page navigation. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
