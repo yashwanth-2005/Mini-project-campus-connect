@@ -31,6 +31,7 @@ import { UserNav } from "@/components/user-nav";
 import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { FirebaseClientProvider } from "@/firebase";
 
 // This array defines all possible navigation items in the sidebar.
 const allNavItems = [
@@ -137,7 +138,9 @@ export default function AppLayout({
 }) {
   return (
     <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"><Logo className="h-16 w-16 text-primary animate-pulse-grow" /></div>}>
-      <AppLayoutContent>{children}</AppLayoutContent>
+      <FirebaseClientProvider>
+        <AppLayoutContent>{children}</AppLayoutContent>
+      </FirebaseClientProvider>
     </React.Suspense>
   )
 }
