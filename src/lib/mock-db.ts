@@ -4,7 +4,6 @@ export type User = {
     id: string;
     fullName: string;
     email: string;
-    password?: string; // Password is now optional as it's managed by Firebase Auth
     usn: string;
     year: number;
     semester: number;
@@ -33,7 +32,6 @@ const defaultUsers: Record<string, User> = {
         id: 'user-faculty-1',
         fullName: 'Suraj Rao',
         email: 'surajrao081005@gmail.com',
-        // No password stored here for security. It's handled by Firebase.
         usn: 'FAC001',
         year: 0,
         semester: 0,
@@ -103,24 +101,33 @@ export const findUserById = (userId: string): User | null => {
 }
 
 // A helper to get the default faculty user for prototype login.
-export const getFacultyUser = (): User | null => {
+export const getFacultyUser = (): User => {
     const users = getUsers();
-    return users['user-faculty-1'] || null;
+    const facultyId = 'user-faculty-1';
+    // Ensure faculty user exists, otherwise create it.
+    if (!users[facultyId]) {
+        users[facultyId] = defaultUsers[facultyId];
+        saveUsers(users);
+    }
+    return users[facultyId];
 }
 
 
 // Creates a new user profile in our mock database.
-export const createUser = (userData: Omit<User, 'password'>): User => {
+export const createUser = (userData: Partial<User> & { email: string, fullName: string, usn: string }): User => {
     const users = getUsers();
     const email = userData.email.toLowerCase();
     if (findUserByEmail(email)) {
-        // This check is a fallback, Firebase Auth will be the primary guard.
         throw new Error("User with this email already exists.");
     }
-    const newUser: User = { 
+     const newUser: User = { 
+        id: `user-${Date.now()}`,
+        year: 1,
+        semester: 1,
+        course: 'btech',
+        linkedin: '',
+        leetcode: '',
         ...userData,
-        linkedin: userData.linkedin || "",
-        leetcode: userData.leetcode || ""
     };
     users[newUser.id] = newUser;
     saveUsers(users);

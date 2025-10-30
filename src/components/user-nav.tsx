@@ -1,3 +1,4 @@
+
 "use client"
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -16,38 +17,37 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { Skeleton } from "./ui/skeleton"
-import { useAuth, useUser } from "@/firebase"
-import { signOut } from "firebase/auth"
 
 export function UserNav() {
-  const auth = useAuth();
-  const { user: firebaseUser, isUserLoading } = useUser();
   const [userProfile, setUserProfile] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    if (firebaseUser) {
-      // Once Firebase confirms the user is logged in, we fetch their profile
-      // from our mock database. In a real app, this would come from Firestore.
-      const profile = findUserById(firebaseUser.uid);
-      setUserProfile(profile);
-    } else {
-      setUserProfile(null);
+    // In our mock setup, the logged-in user's ID is stored in localStorage.
+    // We retrieve it here to fetch the full user profile.
+    const loggedInUserId = localStorage.getItem('loggedInUser');
+    if (loggedInUserId) {
+        const profile = findUserById(loggedInUserId);
+        setUserProfile(profile);
     }
-  }, [firebaseUser]);
+    setIsLoading(false);
+  }, []);
 
   const handleLogout = async () => {
-    await signOut(auth);
+    // Clear the logged-in user state and redirect to the landing page.
+    localStorage.removeItem('loggedInUser');
+    setUserProfile(null);
     router.push('/');
   }
 
-  // Show a skeleton loader while Firebase is checking the auth state.
-  if (isUserLoading) {
+  // Show a skeleton loader while we check for a logged-in user.
+  if (isLoading) {
     return <Skeleton className="h-9 w-9 rounded-full" />
   }
   
-  // If no user is logged in, show a login button.
-  if (!firebaseUser || !userProfile) {
+  // If no user is found, show a login button.
+  if (!userProfile) {
      return (
       <Button asChild>
         <Link href="/login">Login</Link>

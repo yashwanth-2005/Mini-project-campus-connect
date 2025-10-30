@@ -19,19 +19,17 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
-import { useAuth } from "@/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { findUserByEmail, getFacultyUser } from "@/lib/mock-db";
+import { findUserByEmail, getFacultyUser, createUser } from "@/lib/mock-db";
 
 export default function LoginPage() {
   const router = useRouter();
-  const auth = useAuth();
   const { toast } = useToast();
   const [role, setRole] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // This function handles the login attempt for both students and faculty.
+  // This function handles the mock login for demonstration purposes.
+  // It allows login with any valid email format and any non-empty password.
   const handleLogin = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -47,34 +45,72 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
+    // Basic validation for email format and password presence.
+    if (!/^\S+@\S+\.\S+$/.test(email)) {
+        toast({
+            title: "Invalid Email",
+            description: "Please enter a valid email address.",
+            variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+    }
+    if (!password) {
+        toast({
+            title: "Password Required",
+            description: "Please enter a password.",
+            variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+    }
 
-        // For this prototype, we'll determine the role from the tab selection.
-        // In a real app, you would fetch the user's role from your database.
-        let userProfile = findUserByEmail(email);
+    try {
+        let userToLogin;
+
         if (role === 'faculty') {
-            userProfile = getFacultyUser();
+            // For faculty, we always log in with the default faculty user.
+            userToLogin = getFacultyUser();
+        } else {
+            // For students, we check if a user exists. If not, we create one on-the-fly.
+            let studentUser = findUserByEmail(email);
+            if (!studentUser) {
+                studentUser = createUser({
+                    id: `user-${Date.now()}`,
+                    fullName: "Demo User",
+                    email: email,
+                    usn: "1CR21CS999",
+                    year: 1,
+                    semester: 1,
+                    course: 'btech',
+                    linkedin: '',
+                    leetcode: '',
+                });
+            }
+            userToLogin = studentUser;
         }
 
-        if (userProfile) {
+        if (userToLogin) {
+            // In a real app, we'd store a session token. For this mock,
+            // we'll just store the user's ID in localStorage to "log them in".
+            localStorage.setItem('loggedInUser', userToLogin.id);
+            
             toast({
                 title: "Login Successful",
-                description: `Welcome back, ${userProfile.fullName}!`,
+                description: `Welcome back, ${userToLogin.fullName}!`,
             });
+            // Redirect to the dashboard, passing the role as a URL parameter.
             router.push(`/dashboard?role=${role}`);
         } else {
-             throw new Error("User profile not found in mock database.");
+             throw new Error("Could not find or create a user profile.");
         }
 
     } catch (error: any) {
         toast({
             title: "Login Failed",
-            description: "Invalid credentials or user does not exist. Please try again.",
+            description: error.message || "An unexpected error occurred.",
             variant: "destructive",
         });
-    } finally {
         setIsLoading(false);
     }
   };

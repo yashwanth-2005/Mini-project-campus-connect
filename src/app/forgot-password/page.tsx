@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -17,40 +18,38 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MailCheck } from "lucide-react";
-import { useAuth } from "@/firebase";
-import { sendPasswordResetEmail } from "firebase/auth";
+import { findUserByEmail } from "@/lib/mock-db";
 
 export default function ForgotPasswordPage() {
-    const auth = useAuth();
     const { toast } = useToast();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
-    // This function handles the password reset request.
+    // This function simulates sending a password reset link.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
 
-        try {
-            // Use Firebase's built-in function to send a password reset email.
-            // On local development, this logs the reset link to the console instead of sending a real email.
-            // We've added a toast to make this clear to the user.
-            await sendPasswordResetEmail(auth, email);
-            setEmailSent(true);
-            toast({
-              title: "Check your browser console!",
-              description: "For local testing, the password reset link has been logged to the browser console."
-            })
-        } catch (error: any) {
-            toast({
-                title: "Error",
-                description: "Failed to send password reset email. Please check the email address and try again.",
-                variant: "destructive",
-            });
-        } finally {
+        // Simulate network delay
+        setTimeout(() => {
+            const userExists = findUserByEmail(email);
+
+            if (userExists) {
+                 // In a real app, this is where you would call an email service.
+                // For this demo, we'll just show a success message.
+                setEmailSent(true);
+            } else {
+                 toast({
+                    title: "Email not found",
+                    description: "No account is associated with this email.",
+                    variant: "destructive",
+                });
+            }
             setIsLoading(false);
-        }
+        }, 500);
+
+       
     }
 
     return (
@@ -72,7 +71,7 @@ export default function ForgotPasswordPage() {
                     <CardTitle className="text-2xl font-headline">Forgot Password</CardTitle>
                     <CardDescription>
                         {emailSent 
-                            ? "Check your browser console for the reset link."
+                            ? "A password reset link has been sent to your email."
                             : "Enter your registered email to reset your password."}
                     </CardDescription>
                 </CardHeader>
@@ -80,9 +79,9 @@ export default function ForgotPasswordPage() {
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
-                            <AlertTitle>Password Reset Link Generated!</AlertTitle>
+                            <AlertTitle>Password Reset Link Sent!</AlertTitle>
                             <AlertDescription>
-                                For local testing, the reset link has been printed to your browser's developer console. Please copy it from there to reset your password. In a live deployed app, this would be sent as an email.
+                                For demonstration purposes, you can now go back and log in with your old password. In a real app, a reset link would be sent to <strong>{email}</strong>.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">

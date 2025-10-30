@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -10,16 +11,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { GithubIcon, LinkedinIcon, Logo } from "@/components/icons";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { createUser as createMockUser } from "@/lib/mock-db";
-import { useAuth } from "@/firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUser } from "@/lib/mock-db";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -42,7 +40,6 @@ const signupSchema = z.object({
 
 
 export default function SignupPage() {
-  const auth = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -121,18 +118,9 @@ export default function SignupPage() {
     }
     
     try {
-        // Create the user in Firebase Authentication.
-        const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-        const user = userCredential.user;
-
-        // Set the user's display name in their Firebase profile.
-        await updateProfile(user, {
-            displayName: data.fullName,
-        });
-
-        // Also create a corresponding user profile in our mock database.
-        createMockUser({
-            id: user.uid,
+        // Create a user in our mock database.
+        createUser({
+            id: `user-${Date.now()}`,
             fullName: data.fullName,
             email: data.email,
             usn: data.usn.toUpperCase(),
@@ -149,13 +137,9 @@ export default function SignupPage() {
         });
         router.push('/login');
     } catch (error: any) {
-        let description = "An unexpected error occurred. Please try again.";
-        if (error.code === 'auth/email-already-in-use') {
-            description = "This email is already registered. Please try logging in.";
-        }
         toast({
             title: "Signup Failed",
-            description: description,
+            description: "This email is already registered. Please try logging in.",
             variant: "destructive",
         });
     } finally {
