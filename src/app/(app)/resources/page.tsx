@@ -10,13 +10,27 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import React from "react";
+import React, { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
-const resources: { name: string; type: string; uploader: string; date: string; url: string; }[] = [];
+type Resource = {
+    name: string;
+    type: string;
+    uploader: string;
+    date: string;
+    url: string;
+};
 
 export default function ResourcesPage() {
     const searchParams = useSearchParams();
+    const { toast } = useToast();
     const role = searchParams.get('role') || 'student';
+    const [resources, setResources] = useState<Resource[]>([]);
+    const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+
+    const [uploadTitle, setUploadTitle] = useState("");
+    const [uploadDescription, setUploadDescription] = useState("");
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
     
     // This function simulates downloading a file.
     const handleDownload = (url: string, fileName: string) => {
@@ -29,9 +43,42 @@ export default function ResourcesPage() {
         document.body.removeChild(link);
     };
 
+    const handleUpload = () => {
+        if (!uploadTitle || !uploadFile) {
+            toast({
+                title: "Upload Failed",
+                description: "Please provide a title and select a file.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        const newResource: Resource = {
+            name: uploadTitle,
+            type: uploadFile.type || "File",
+            uploader: "Current User", // In a real app, this would be the logged-in user's name
+            date: new Date().toLocaleDateString('en-CA'),
+            url: URL.createObjectURL(uploadFile), // Create a temporary local URL for the file
+        };
+
+        setResources(prevResources => [...prevResources, newResource]);
+
+        toast({
+            title: "Resource Uploaded",
+            description: `"${newResource.name}" has been added to the hub.`,
+        });
+
+        // Reset form and close dialog
+        setIsUploadDialogOpen(false);
+        setUploadTitle("");
+        setUploadDescription("");
+        setUploadFile(null);
+    }
+
+
     const UploadResourceDialog = () => {
         return (
-            <Dialog>
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
                 <DialogTrigger asChild>
                     <Button>
                         <Upload className="mr-2 h-4 w-4" />
@@ -50,23 +97,23 @@ export default function ResourcesPage() {
                             <Label htmlFor="title" className="text-right">
                                 Title
                             </Label>
-                            <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" />
+                            <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="description" className="text-right">
                                 Description
                             </Label>
-                            <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" />
+                            <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
                         </div>
                         <div className="grid grid-cols-4 items-center gap-4">
                             <Label htmlFor="file" className="text-right">
                                 File
                             </Label>
-                            <Input id="file" type="file" className="col-span-3"/>
+                            <Input id="file" type="file" className="col-span-3" onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)} />
                         </div>
                     </div>
                     <DialogFooter>
-                        <Button type="submit">Upload</Button>
+                        <Button type="submit" onClick={handleUpload}>Upload</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
