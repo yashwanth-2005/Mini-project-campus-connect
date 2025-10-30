@@ -12,9 +12,13 @@ import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+
 
 type Resource = {
+    id: string;
     name: string;
+    description: string;
     type: string;
     uploader: string;
     date: string;
@@ -77,7 +81,7 @@ const UploadResourceDialog = ({
                         <Label htmlFor="description" className="text-right">
                             Description
                         </Label>
-                        <Input id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
+                        <Textarea id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="file" className="text-right">
@@ -94,6 +98,72 @@ const UploadResourceDialog = ({
     );
 };
 
+const EditResourceDialog = ({
+    resource,
+    isOpen,
+    onOpenChange,
+    onUpdate,
+} : {
+    resource: Resource | null;
+    isOpen: boolean;
+    onOpenChange: (isOpen: boolean) => void;
+    onUpdate: (resourceId: string, title: string, description: string) => void;
+}) => {
+    const [editTitle, setEditTitle] = useState('');
+    const [editDescription, setEditDescription] = useState('');
+    const { toast } = useToast();
+
+    React.useEffect(() => {
+        if(resource) {
+            setEditTitle(resource.name);
+            setEditDescription(resource.description);
+        }
+    }, [resource]);
+
+    const handleUpdateClick = () => {
+        if(!resource) return;
+        if (!editTitle) {
+            toast({
+                title: "Update Failed",
+                description: "Title cannot be empty.",
+                variant: "destructive",
+            });
+            return;
+        }
+        onUpdate(resource.id, editTitle, editDescription);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Edit Resource</DialogTitle>
+                    <DialogDescription>
+                        Update the details for this resource.
+                    </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-title" className="text-right">
+                            Title
+                        </Label>
+                        <Input id="edit-title" className="col-span-3" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="edit-description" className="text-right">
+                            Description
+                        </Label>
+                        <Textarea id="edit-description" className="col-span-3" value={editDescription} onChange={(e) => setEditDescription(e.target.value)} />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button type="submit" onClick={handleUpdateClick}>Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 
 export default function ResourcesPage() {
     const searchParams = useSearchParams();
@@ -101,6 +171,8 @@ export default function ResourcesPage() {
     const role = searchParams.get('role') || 'student';
     const [resources, setResources] = useState<Resource[]>([]);
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+    const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+    const [editingResource, setEditingResource] = useState<Resource | null>(null);
     
     const handleDownload = (url: string, fileName: string) => {
         const link = document.createElement('a');
@@ -113,7 +185,9 @@ export default function ResourcesPage() {
 
     const handleUpload = (title: string, description: string, file: File) => {
         const newResource: Resource = {
+            id: `res_${Date.now()}`,
             name: title,
+            description: description,
             type: file.type || "File",
             uploader: "Current User",
             date: new Date().toLocaleDateString('en-CA'),
@@ -128,6 +202,25 @@ export default function ResourcesPage() {
         });
 
         setIsUploadDialogOpen(false);
+    }
+
+    const handleEditClick = (resource: Resource) => {
+        setEditingResource(resource);
+        setIsEditDialogOpen(true);
+    };
+
+    const handleEdit = (resourceId: string, title: string, description: string) => {
+        setResources(prevResources => 
+            prevResources.map(res => 
+                res.id === resourceId ? { ...res, name: title, description: description } : res
+            )
+        );
+        toast({
+            title: "Resource Updated",
+            description: "The resource details have been saved.",
+        });
+        setIsEditDialogOpen(false);
+        setEditingResource(null);
     }
 
     return (
@@ -164,7 +257,7 @@ export default function ResourcesPage() {
                             </TableRow>
                         ) : (
                             resources.map((resource) => (
-                                <TableRow key={resource.name}>
+                                <TableRow key={resource.id}>
                                     <TableCell className="font-medium">{resource.name}</TableCell>
                                     <TableCell>{resource.type}</TableCell>
                                     <TableCell>{resource.uploader}</TableCell>
@@ -184,7 +277,7 @@ export default function ResourcesPage() {
                                                 </DropdownMenuItem>
                                                 {(role === 'faculty' || resource.uploader === 'Current User') && (
                                                     <>
-                                                        <DropdownMenuItem>
+                                                        <DropdownMenuItem onClick={() => handleEditClick(resource)}>
                                                             <Edit className="mr-2 h-4 w-4"/>
                                                             Edit
                                                         </DropdownMenuItem>
@@ -203,6 +296,12 @@ export default function ResourcesPage() {
                     </TableBody>
                 </Table>
             </div>
+             <EditResourceDialog 
+                resource={editingResource}
+                isOpen={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+                onUpdate={handleEdit}
+            />
         </div>
     )
 }
