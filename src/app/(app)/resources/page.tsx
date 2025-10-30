@@ -10,11 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { motion } from "framer-motion";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
-
 
 type Resource = {
     id: string;
@@ -23,7 +21,7 @@ type Resource = {
     type: string;
     uploader: string;
     date: string;
-    url: string;
+    url: string; // For local files, this will be a Blob URL
 };
 
 const UploadResourceDialog = ({
@@ -165,7 +163,6 @@ const EditResourceDialog = ({
     );
 }
 
-
 export default function ResourcesPage() {
     const searchParams = useSearchParams();
     const { toast } = useToast();
@@ -177,6 +174,28 @@ export default function ResourcesPage() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     
+    // Load resources from localStorage on initial render
+    useEffect(() => {
+        try {
+            const storedResources = localStorage.getItem('resources');
+            if (storedResources) {
+                setResources(JSON.parse(storedResources));
+            }
+        } catch (error) {
+            console.error("Failed to load resources from localStorage", error);
+        }
+    }, []);
+
+    // Save resources to localStorage whenever they change
+    useEffect(() => {
+        try {
+            localStorage.setItem('resources', JSON.stringify(resources));
+        } catch (error) {
+            console.error("Failed to save resources to localStorage", error);
+        }
+    }, [resources]);
+
+
     const handleDownload = (url: string, fileName: string) => {
         const link = document.createElement('a');
         link.href = url;
@@ -194,7 +213,7 @@ export default function ResourcesPage() {
             type: file.type || "File",
             uploader: "Current User",
             date: new Date().toLocaleDateString('en-CA'),
-            url: URL.createObjectURL(file),
+            url: URL.createObjectURL(file), // Note: Blob URLs are temporary and session-based
         };
 
         setResources(prevResources => [...prevResources, newResource]);
@@ -350,3 +369,5 @@ export default function ResourcesPage() {
         </div>
     )
 }
+
+    
