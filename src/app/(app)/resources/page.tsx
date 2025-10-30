@@ -24,6 +24,13 @@ type Resource = {
     url: string; // This will now be a Base64 dataURL
 };
 
+const initialResources: Resource[] = [
+    { id: 'res_1', name: "Data Structures & Algorithms Notes", description: "Comprehensive notes on core DSA concepts.", type: "PDF", uploader: "Jane Smith", date: "2024-05-20", url: "" },
+    { id: 'res_2', name: "Operating Systems PYQs", description: "Previous year questions for OS.", type: "PDF", uploader: "Admin", date: "2024-05-18", url: "" },
+    { id: 'res_3', name: "Database Management Systems Slides", description: "Lecture slides for DBMS.", type: "PPTX", uploader: "Prof. Davis", date: "2024-05-15", url: "" },
+];
+
+
 const UploadResourceDialog = ({
     isOpen,
     onOpenChange,
@@ -175,22 +182,28 @@ export default function ResourcesPage() {
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     
-    // Load resources from localStorage on initial render
+    // Load resources from localStorage on initial render, or use initialResources
     useEffect(() => {
         try {
             const storedResources = localStorage.getItem('resources');
             if (storedResources) {
                 setResources(JSON.parse(storedResources));
+            } else {
+                setResources(initialResources);
             }
         } catch (error) {
             console.error("Failed to load resources from localStorage", error);
+            setResources(initialResources);
         }
     }, []);
 
     // Save resources to localStorage whenever they change
     useEffect(() => {
         try {
-            localStorage.setItem('resources', JSON.stringify(resources));
+            // Do not save the initial empty state
+            if (resources.length > 0) {
+              localStorage.setItem('resources', JSON.stringify(resources));
+            }
         } catch (error) {
             console.error("Failed to save resources to localStorage", error);
         }
@@ -198,6 +211,14 @@ export default function ResourcesPage() {
 
 
     const handleDownload = (url: string, fileName: string) => {
+        if (!url) {
+            toast({
+                title: "Download Unavailable",
+                description: "This is a default resource and does not have a file to download.",
+                variant: "destructive"
+            });
+            return;
+        }
         const link = document.createElement('a');
         link.href = url;
         link.setAttribute('download', fileName);
@@ -391,5 +412,3 @@ export default function ResourcesPage() {
         </div>
     )
 }
-
-    
