@@ -30,6 +30,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // This function handles the user's login attempt.
   const handleLogin = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -45,6 +46,7 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
+    // Basic email and password validation before hitting Firebase.
     if (!/^\S+@\S+\.\S+$/.test(email)) {
         toast({
             title: "Invalid Email",
@@ -65,6 +67,7 @@ export default function LoginPage() {
     }
 
     try {
+        // Attempt to sign in with Firebase Authentication.
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
@@ -73,9 +76,8 @@ export default function LoginPage() {
             description: `Welcome back, ${user.displayName || user.email}!`,
         });
         router.push(`/dashboard?role=${role}`);
-        // No need to set isLoading to false here as we are navigating away
     } catch (error: any) {
-        let errorMessage = "An unexpected error occurred.";
+        // Handle different kinds of authentication errors.
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/invalid-credential":
@@ -84,24 +86,28 @@ export default function LoginPage() {
                     title: "Account Not Found",
                     description: "Redirecting you to the sign-up page.",
                 });
+                // If the user doesn't exist, redirect them to sign up.
                 router.push(`/signup?email=${encodeURIComponent(email)}`);
-                // Do not set isLoading to false here, let the redirect happen.
-                return;
+                return; // Prevent further execution.
             case "auth/wrong-password":
-                errorMessage = "Invalid password. Please try again.";
+                toast({
+                    title: "Login Failed",
+                    description: "Invalid password. Please try again.",
+                    variant: "destructive",
+                });
                 break;
             default:
-                errorMessage = error.message;
+                 toast({
+                    title: "Login Failed",
+                    description: error.message,
+                    variant: "destructive",
+                });
         }
-        toast({
-            title: "Login Failed",
-            description: errorMessage,
-            variant: "destructive",
-        });
-        setIsLoading(false); // Set loading to false only on caught errors that don't redirect
+        setIsLoading(false); // Only stop loading on errors that don't redirect.
     }
   };
 
+  // This function renders the core email/password form fields.
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
       {currentRole === 'student' && (
@@ -196,14 +202,12 @@ export default function LoginPage() {
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isLoading ? "Logging in..." : `Login as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
             </Button>
-            {role === 'student' && (
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link href="/signup" className="underline">
-                  Sign up
-                </Link>
-              </div>
-            )}
+            <div className="text-center text-sm">
+              Don&apos;t have an account?{" "}
+              <Link href="/signup" className="underline">
+                Sign up
+              </Link>
+            </div>
           </CardFooter>
         </Tabs>
       </Card>
