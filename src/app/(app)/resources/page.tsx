@@ -82,7 +82,7 @@ export default function ResourcesPage() {
                     <h1 className="text-3xl font-bold font-headline">Resource Hub</h1>
                     <p className="text-muted-foreground">Central repository for notes, papers, and other materials.</p>
                 </div>
-                {role === 'faculty' && <UploadResourceDialog />}
+                <UploadResourceDialog />
             </div>
 
             <div className="border rounded-lg">
