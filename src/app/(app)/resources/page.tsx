@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, Upload, Download, Edit, Trash, Search } from "lucide-react";
+import { MoreHorizontal, Upload, Download, Edit, Trash, Search, Eye } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -200,14 +200,26 @@ export default function ResourcesPage() {
     // Save resources to localStorage whenever they change
     useEffect(() => {
         try {
-            // Do not save the initial empty state
-            if (resources.length > 0) {
+            // Do not save the initial empty state if it's the default
+            if (resources.length > 0 && resources !== initialResources) {
               localStorage.setItem('resources', JSON.stringify(resources));
             }
         } catch (error) {
             console.error("Failed to save resources to localStorage", error);
         }
     }, [resources]);
+
+    const handleView = (url: string, fileName: string) => {
+        if (!url) {
+            toast({
+                title: "View Unavailable",
+                description: "This is a default resource and does not have a file to view.",
+                variant: "destructive"
+            });
+            return;
+        }
+        window.open(url, '_blank');
+    };
 
 
     const handleDownload = (url: string, fileName: string) => {
@@ -358,6 +370,10 @@ export default function ResourcesPage() {
                                             </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleView(resource.url, resource.name)}>
+                                                    <Eye className="mr-2 h-4 w-4"/>
+                                                    View
+                                                </DropdownMenuItem>
                                                 <DropdownMenuItem onClick={() => handleDownload(resource.url, resource.name)}>
                                                     <Download className="mr-2 h-4 w-4"/>
                                                     Download
@@ -412,3 +428,5 @@ export default function ResourcesPage() {
         </div>
     )
 }
+
+    
