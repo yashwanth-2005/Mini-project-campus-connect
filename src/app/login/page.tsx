@@ -19,14 +19,16 @@ import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
-  const [role, setRole] = useState("student");
+  const firestore = useFirestore();
+  const [selectedRole, setSelectedRole] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -35,8 +37,8 @@ export default function LoginPage() {
     event.preventDefault();
     setIsLoading(true);
 
-    const emailInput = document.getElementById(`${role}-email`) as HTMLInputElement;
-    const passwordInput = document.getElementById(`${role}-password`) as HTMLInputElement;
+    const emailInput = document.getElementById(`${selectedRole}-email`) as HTMLInputElement;
+    const passwordInput = document.getElementById(`${selectedRole}-password`) as HTMLInputElement;
     
     if (!emailInput || !passwordInput) {
         setIsLoading(false);
@@ -71,39 +73,53 @@ export default function LoginPage() {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
+        // After successful sign-in, fetch the user's profile from Firestore.
+        const userDocRef = doc(firestore, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+             throw new Error("User profile not found. Please contact support.");
+        }
+        
+        const userProfile = userDoc.data();
+        const userRole = userProfile.role || 'student'; // Default to student if role is missing.
+        
         toast({
             title: "Login Successful",
             description: `Welcome back, ${user.displayName || user.email}!`,
         });
-        router.push(`/dashboard?role=${role}`);
+
+        // Redirect based on the role found in the Firestore document.
+        router.push(`/dashboard?role=${userRole}`);
+
     } catch (error: any) {
+        let title = "Login Failed";
+        let description = "An unexpected error occurred. Please try again.";
+
         // Handle different kinds of authentication errors.
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/invalid-credential":
             case "auth/invalid-email":
-                toast({
-                    title: "Account Not Found",
-                    description: "Redirecting you to the sign-up page.",
-                });
-                // If the user doesn't exist, redirect them to sign up.
+                title = "Account Not Found";
+                description = "Redirecting you to the sign-up page.";
                 router.push(`/signup?email=${encodeURIComponent(email)}`);
-                return; // Prevent further execution.
+                // No need to set loading to false here, as we are navigating away.
+                break;
             case "auth/wrong-password":
-                toast({
-                    title: "Login Failed",
-                    description: "Invalid password. Please try again.",
-                    variant: "destructive",
-                });
+                description = "Invalid password. Please try again.";
+                setIsLoading(false);
                 break;
             default:
-                 toast({
-                    title: "Login Failed",
-                    description: error.message,
-                    variant: "destructive",
-                });
+                description = error.message;
+                setIsLoading(false);
         }
-        setIsLoading(false); // Only stop loading on errors that don't redirect.
+
+        toast({
+            title: title,
+            description: description,
+            variant: "destructive",
+        });
     }
   };
 
@@ -184,7 +200,7 @@ export default function LoginPage() {
             Select your role and enter your details to login.
           </CardDescription>
         </CardHeader>
-        <Tabs defaultValue="student" className="w-full" onValueChange={(value) => setRole(value as 'student' | 'faculty')}>
+        <Tabs defaultValue="student" className="w-full" onValueChange={(value) => setSelectedRole(value as 'student' | 'faculty')}>
           <CardContent className="grid gap-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="student">Student</TabsTrigger>
@@ -200,7 +216,7 @@ export default function LoginPage() {
           <CardFooter className="flex flex-col gap-4">
             <Button className="w-full shine-button" onClick={handleLogin} disabled={isLoading}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isLoading ? "Logging in..." : `Login as ${role.charAt(0).toUpperCase() + role.slice(1)}`}
+              {isLoading ? "Logging in..." : `Login as ${selectedRole.charAt(0).toUpperCase() + selectedRole.slice(1)}`}
             </Button>
             <div className="text-center text-sm">
               Don&apos;t have an account?{" "}
