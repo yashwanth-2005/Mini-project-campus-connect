@@ -25,15 +25,17 @@ export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
+    // This function is called when the user submits the form.
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
 
+        // We use a timeout to simulate a network request.
         setTimeout(() => {
             const user = findUserByEmail(email);
 
             if (user) {
-                // In a real app, you would trigger an email service here.
+                // In a real application, this is where you would call a service to send a password reset email.
                 setEmailSent(true);
             } else {
                 toast({

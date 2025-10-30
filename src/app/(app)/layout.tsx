@@ -33,6 +33,7 @@ import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 
+// This array defines all possible navigation items in the sidebar.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/profile", icon: <User />, label: "Profile", role: ['student', 'faculty'] },
@@ -44,6 +45,7 @@ const allNavItems = [
   { href: "/admin", icon: <Shield />, label: "Admin Panel", role: ['faculty'] },
 ];
 
+// This is the main layout component for the authenticated part of the app.
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -51,24 +53,24 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Filter navigation items based on the current user's role.
+  // We filter the navigation items based on the user's role, which we get from the URL.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
-  // A loading indicator for better perceived performance on page transitions.
+  // This function shows a loading screen to make page transitions feel smoother.
   const handleLinkClick = (href: string) => {
     if (pathname !== href) {
       setIsLoading(true);
     }
   };
 
-  // Reset the loading indicator after a page transition is complete.
+  // When a new page finishes loading, we hide the loading screen.
   useEffect(() => {
     setIsLoading(false);
   }, [pathname, searchParams]);
 
   return (
     <SidebarProvider>
-      {/* Full-screen overlay shown during page transitions. */}
+      {/* This is the full-screen loading overlay. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -109,7 +111,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex-1">
-              {/* Space for breadcrumbs or other header content. */}
+              {/* This space can be used for breadcrumbs or other header content. */}
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setIsChatOpen(true)} className="font-bold rainbow-button text-white">
@@ -130,7 +132,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Use a Suspense boundary to gracefully handle loading of URL search parameters.
+// We use React Suspense here to handle the initial loading of URL parameters gracefully.
+// This prevents the page from rendering with incorrect roles or data.
 export default function AppLayout({
   children,
 }: {

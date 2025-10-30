@@ -27,12 +27,14 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [usn, setUsn] = useState('');
 
+  // This function checks the strength of the entered password.
   const checkPasswordStrength = (pass: string) => {
     let score = 0;
     if (!pass) {
         setStrength({ score: 0, label: '', color: '' });
         return;
     }
+    // We award points for different character types and length.
     if (pass.length >= 8) score++;
     if (/[A-Z]/.test(pass)) score++;
     if (/[a-z]/.test(pass)) score++;
@@ -65,10 +67,12 @@ export default function SignupPage() {
     setStrength({ score, label, color });
   };
   
+  // This effect re-calculates the password strength every time the password changes.
   useEffect(() => {
     checkPasswordStrength(password);
   }, [password]);
 
+  // This function handles the form submission for creating a new user account.
   const handleSignup = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);

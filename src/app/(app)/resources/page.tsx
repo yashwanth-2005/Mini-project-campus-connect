@@ -14,6 +14,7 @@ import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
+// This defines the structure for a resource object.
 type Resource = {
     id: string;
     name: string;
@@ -21,16 +22,17 @@ type Resource = {
     type: string;
     uploader: string;
     date: string;
-    url: string; // This will now be a Base64 dataURL
+    url: string; // The URL will be a Base64 dataURL for persistent storage.
 };
 
+// This is our default list of resources, used if localStorage is empty.
 const initialResources: Resource[] = [
     { id: 'res_1', name: "Data Structures & Algorithms Notes", description: "Comprehensive notes on core DSA concepts.", type: "PDF", uploader: "Jane Smith", date: "2024-05-20", url: "" },
     { id: 'res_2', name: "Operating Systems PYQs", description: "Previous year questions for OS.", type: "PDF", uploader: "Admin", date: "2024-05-18", url: "" },
     { id: 'res_3', name: "Database Management Systems Slides", description: "Lecture slides for DBMS.", type: "PPTX", uploader: "Prof. Davis", date: "2024-05-15", url: "" },
 ];
 
-
+// This dialog component handles uploading new resources.
 const UploadResourceDialog = ({
     isOpen,
     onOpenChange,
@@ -55,7 +57,7 @@ const UploadResourceDialog = ({
             return;
         }
         onUpload(uploadTitle, uploadDescription, uploadFile);
-        // Reset state after upload
+        // Reset the form after a successful upload.
         setUploadTitle("");
         setUploadDescription("");
         setUploadFile(null);
@@ -104,6 +106,7 @@ const UploadResourceDialog = ({
     );
 };
 
+// This dialog handles editing existing resource details.
 const EditResourceDialog = ({
     resource,
     isOpen,
@@ -119,6 +122,7 @@ const EditResourceDialog = ({
     const [editDescription, setEditDescription] = useState('');
     const { toast } = useToast();
 
+    // When the selected resource changes, we pre-fill the form.
     React.useEffect(() => {
         if(resource) {
             setEditTitle(resource.name);
@@ -182,7 +186,7 @@ export default function ResourcesPage() {
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     
-    // Load resources from localStorage on initial render, or use initialResources
+    // When the page loads, we try to get resources from localStorage. If it's empty, we use our initial default list.
     useEffect(() => {
         try {
             const storedResources = localStorage.getItem('resources');
@@ -197,10 +201,9 @@ export default function ResourcesPage() {
         }
     }, []);
 
-    // Save resources to localStorage whenever they change
+    // This effect runs whenever the 'resources' state changes. It saves the updated list to localStorage.
     useEffect(() => {
         try {
-            // Do not save the initial empty state if it's the default
             if (resources.length > 0 && resources !== initialResources) {
               localStorage.setItem('resources', JSON.stringify(resources));
             }
@@ -209,6 +212,7 @@ export default function ResourcesPage() {
         }
     }, [resources]);
 
+    // This function opens the uploaded file in a new browser tab.
     const handleView = (url: string, fileName: string) => {
         if (!url) {
             toast({
@@ -222,6 +226,7 @@ export default function ResourcesPage() {
     };
 
 
+    // This function triggers a download of the selected file.
     const handleDownload = (url: string, fileName: string) => {
         if (!url) {
             toast({
@@ -239,6 +244,7 @@ export default function ResourcesPage() {
         document.body.removeChild(link);
     };
 
+    // This function handles the file upload process.
     const handleUpload = (title: string, description: string, file: File) => {
         const reader = new FileReader();
         reader.onloadend = () => {
@@ -247,9 +253,9 @@ export default function ResourcesPage() {
                 name: title,
                 description: description,
                 type: file.type || "File",
-                uploader: "Current User", // In a real app, this would be the logged-in user's name
+                uploader: "Current User",
                 date: new Date().toLocaleDateString('en-CA'),
-                url: reader.result as string, // This is the Base64 dataURL
+                url: reader.result as string, // We store the file content as a Base64 dataURL.
             };
     
             setResources(prevResources => [...prevResources, newResource]);
@@ -264,11 +270,13 @@ export default function ResourcesPage() {
         reader.readAsDataURL(file);
     }
 
+    // This function opens the edit dialog for a specific resource.
     const handleEditClick = (resource: Resource) => {
         setEditingResource(resource);
         setIsEditDialogOpen(true);
     };
 
+    // This function updates the resource details in our state.
     const handleUpdate = (resourceId: string, title: string, description: string) => {
         setResources(prevResources => 
             prevResources.map(res => 
@@ -283,11 +291,13 @@ export default function ResourcesPage() {
         setEditingResource(null);
     }
 
+    // This function opens the delete confirmation dialog.
     const handleDeleteClick = (resourceId: string) => {
         setDeletingResourceId(resourceId);
         setIsDeleteDialogOpen(true);
     };
 
+    // This function confirms and executes the deletion.
     const handleConfirmDelete = () => {
         if (!deletingResourceId) return;
 
@@ -305,6 +315,7 @@ export default function ResourcesPage() {
         setDeletingResourceId(null);
     };
 
+    // We filter the displayed resources based on the search query.
     const filteredResources = resources.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         resource.description.toLowerCase().includes(searchQuery.toLowerCase())
@@ -428,5 +439,3 @@ export default function ResourcesPage() {
         </div>
     )
 }
-
-    

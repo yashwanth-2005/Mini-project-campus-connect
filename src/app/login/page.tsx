@@ -27,6 +27,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // This function handles the login attempt for both students and faculty.
   const handleLogin = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -42,15 +43,17 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
+    // We use a timeout to simulate a network request.
     setTimeout(() => {
         let user;
         if (role === 'faculty') {
-            // For prototype purposes, allow any login for faculty
+            // For the prototype, we log in any faculty with a default user.
             user = getFacultyUser();
         } else {
             user = findUserByEmail(email);
         }
 
+        // For students, we check the password. For faculty, we allow login without a password check for this prototype.
         const isPasswordCorrect = (role === 'student') ? (user && user.password === password) : true;
 
         if (user && isPasswordCorrect) {
@@ -71,6 +74,7 @@ export default function LoginPage() {
     }, 100);
   };
 
+  // This function renders the login form fields. It's reused for both student and faculty tabs.
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
       {currentRole === 'student' && (
