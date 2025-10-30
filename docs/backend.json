@@ -47,6 +47,10 @@
           "type": "string",
           "description": "Role of the user (e.g., student, faculty, HOD).",
           "format": "string"
+        },
+        "branch": {
+          "type": "string",
+          "description": "The user's branch of study."
         }
       },
       "required": [
@@ -54,7 +58,8 @@
         "email",
         "firstName",
         "lastName",
-        "role"
+        "role",
+        "branch"
       ]
     },
     "Announcement": {

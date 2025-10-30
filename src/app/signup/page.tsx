@@ -34,6 +34,7 @@ const signupSchema = z.object({
   year: z.coerce.number().min(1, "Year is required").max(4, "Year cannot be more than 4"),
   semester: z.coerce.number().min(1, "Semester is required").max(8, "Semester cannot be more than 8"),
   course: z.string().min(1, "Please select your course"),
+  branch: z.string().min(1, "Branch is required"),
   linkedin: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   leetcode: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
   password: z.string().min(8, "Password must be at least 8 characters long"),
@@ -57,6 +58,7 @@ export default function SignupPage() {
         year: undefined,
         semester: undefined,
         course: "",
+        branch: "",
         linkedin: "",
         leetcode: "",
         password: "",
@@ -129,6 +131,7 @@ export default function SignupPage() {
             year: data.year,
             semester: data.semester,
             course: data.course,
+            branch: data.branch,
             linkedinUrl: data.linkedin,
             leetcodeUrl: data.leetcode,
             githubUrl: "",
@@ -230,32 +233,43 @@ export default function SignupPage() {
                         </FormItem>
                     )} />
 
-                    <FormField
-                        control={form.control}
-                        name="course"
-                        render={({ field }) => (
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={form.control}
+                            name="course"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Course</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select course" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="be">B.E</SelectItem>
+                                    <SelectItem value="bca">BCA</SelectItem>
+                                    <SelectItem value="bcom">B.Com</SelectItem>
+                                    <SelectItem value="mtech">M.Tech</SelectItem>
+                                    <SelectItem value="mca">MCA</SelectItem>
+                                    <SelectItem value="other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField control={form.control} name="branch" render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Course</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormLabel>Branch</FormLabel>
                                 <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select your course of study" />
-                                </SelectTrigger>
+                                    <Input placeholder="e.g., CSE" {...field} />
                                 </FormControl>
-                                <SelectContent>
-                                <SelectItem value="btech">B.Tech</SelectItem>
-                                <SelectItem value="bca">BCA</SelectItem>
-                                <SelectItem value="bcom">B.Com</SelectItem>
-                                <SelectItem value="mtech">M.Tech</SelectItem>
-                                <SelectItem value="mca">MCA</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
+                                <FormMessage />
                             </FormItem>
-                        )}
-                    />
-
+                        )} />
+                    </div>
+                    
                     <div className="grid grid-cols-2 gap-4">
                          <FormField control={form.control} name="year" render={({ field }) => (
                             <FormItem>
@@ -331,5 +345,3 @@ export default function SignupPage() {
     </div>
   );
 }
-
-    
