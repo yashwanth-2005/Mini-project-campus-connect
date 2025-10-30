@@ -10,13 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-const resources = [
-  { name: "Data Structures & Algorithms Notes", type: "PDF", uploader: "Jane Smith", date: "2024-05-20", url: "/mock-files/dsa-notes.pdf" },
-  { name: "Operating Systems PYQs", type: "PDF", uploader: "Admin", date: "2024-05-18", url: "/mock-files/os-pyqs.pdf" },
-  { name: "Database Management Systems Slides", type: "PPTX", uploader: "Prof. Davis", date: "2024-05-15", url: "/mock-files/dbms-slides.pptx" },
-  { name: "SDE Internship Resume Template", type: "DOCX", uploader: "Alumni Cell", date: "2024-05-12", url: "/mock-files/sde-resume.docx" },
-  { name: "Project-Based Learning Videos", type: "Video Link", uploader: "John Doe", date: "2024-05-10", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-];
+const resources: { name: string; type: string; uploader: string; date: string; url: string; }[] = [];
 
 export default function ResourcesPage() {
     const searchParams = useSearchParams();
@@ -97,42 +91,50 @@ export default function ResourcesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {resources.map((resource) => (
-                            <TableRow key={resource.name}>
-                                <TableCell className="font-medium">{resource.name}</TableCell>
-                                <TableCell>{resource.type}</TableCell>
-                                <TableCell>{resource.uploader}</TableCell>
-                                <TableCell>{resource.date}</TableCell>
-                                <TableCell className="text-right">
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" className="h-8 w-8 p-0">
-                                            <span className="sr-only">Open menu</span>
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                            <DropdownMenuItem onClick={() => handleDownload(resource.url, resource.name)}>
-                                                <Download className="mr-2 h-4 w-4"/>
-                                                Download
-                                            </DropdownMenuItem>
-                                            {(role === 'faculty' || resource.uploader === 'Current User') && (
-                                                <>
-                                                    <DropdownMenuItem>
-                                                        <Edit className="mr-2 h-4 w-4"/>
-                                                        Edit
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem className="text-destructive">
-                                                        <Trash className="mr-2 h-4 w-4"/>
-                                                        Delete
-                                                    </DropdownMenuItem>
-                                                </>
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
+                        {resources.length === 0 ? (
+                            <TableRow>
+                                <TableCell colSpan={5} className="h-24 text-center">
+                                    No resources available yet. Be the first to upload!
                                 </TableCell>
                             </TableRow>
-                        ))}
+                        ) : (
+                            resources.map((resource) => (
+                                <TableRow key={resource.name}>
+                                    <TableCell className="font-medium">{resource.name}</TableCell>
+                                    <TableCell>{resource.type}</TableCell>
+                                    <TableCell>{resource.uploader}</TableCell>
+                                    <TableCell>{resource.date}</TableCell>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                                <span className="sr-only">Open menu</span>
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end">
+                                                <DropdownMenuItem onClick={() => handleDownload(resource.url, resource.name)}>
+                                                    <Download className="mr-2 h-4 w-4"/>
+                                                    Download
+                                                </DropdownMenuItem>
+                                                {(role === 'faculty' || resource.uploader === 'Current User') && (
+                                                    <>
+                                                        <DropdownMenuItem>
+                                                            <Edit className="mr-2 h-4 w-4"/>
+                                                            Edit
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuItem className="text-destructive">
+                                                            <Trash className="mr-2 h-4 w-4"/>
+                                                            Delete
+                                                        </DropdownMenuItem>
+                                                    </>
+                                                )}
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </TableCell>
+                                </TableRow>
+                            ))
+                        )}
                     </TableBody>
                 </Table>
             </div>
