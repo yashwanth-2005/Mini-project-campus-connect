@@ -3,6 +3,13 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { Inter } from 'next/font/google';
+
+// Configures the Inter font for optimized loading with Next.js.
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
 
 // This is the root layout for the entire application.
 // It wraps every page with essential providers like themes and notifications.
@@ -13,13 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* Adds the Inter font from Google Fonts for a modern design. */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      </head>
-      <body className="font-body antialiased">
+      <body className={`${inter.variable} font-body antialiased`}>
         {/* The ThemeProvider handles light and dark mode switching. */}
         <ThemeProvider
           attribute="class"
