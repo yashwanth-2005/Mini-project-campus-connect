@@ -10,36 +10,54 @@
           "type": "string",
           "description": "Unique identifier for the user profile."
         },
+        "googleId": {
+          "type": "string",
+          "description": "Google identifier for the user. Used for Google Sign-In."
+        },
         "email": {
           "type": "string",
-          "description": "User's email address.",
+          "description": "Email address of the user.",
           "format": "email"
         },
-        "fullName": {
+        "firstName": {
           "type": "string",
-          "description": "User's full name."
+          "description": "First name of the user."
         },
-        "socialLinks": {
-          "type": "array",
-          "description": "An array of social media links associated with the user (LinkedIn, LeetCode, GitHub, etc.)",
-          "items": {
-            "type": "string"
-          }
+        "lastName": {
+          "type": "string",
+          "description": "Last name of the user."
+        },
+        "profilePictureUrl": {
+          "type": "string",
+          "description": "URL of the user's profile picture.",
+          "format": "uri"
+        },
+        "linkedinUrl": {
+          "type": "string",
+          "description": "URL of the user's LinkedIn profile.",
+          "format": "uri"
+        },
+        "leetcodeUrl": {
+          "type": "string",
+          "description": "URL of the user's LeetCode profile.",
+          "format": "uri"
+        },
+        "githubUrl": {
+          "type": "string",
+          "description": "URL of the user's GitHub profile.",
+          "format": "uri"
         },
         "role": {
           "type": "string",
-          "description": "User's role within the campus community (e.g., student, faculty, HOD)."
-        },
-        "profileImageUrl": {
-          "type": "string",
-          "description": "URL of the user's profile image.",
-          "format": "uri"
+          "description": "Role of the user (e.g., student, faculty, HOD).",
+          "format": "string"
         }
       },
       "required": [
         "id",
         "email",
-        "fullName",
+        "firstName",
+        "lastName",
         "role"
       ]
     },
@@ -47,7 +65,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Announcement",
       "type": "object",
-      "description": "Represents an announcement posted on the announcement dashboard.",
+      "description": "Represents an announcement posted by faculty or HODs.",
       "properties": {
         "id": {
           "type": "string",
@@ -55,7 +73,7 @@
         },
         "authorId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Announcement)"
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Announcement).  The user who created the announcement."
         },
         "title": {
           "type": "string",
@@ -65,16 +83,21 @@
           "type": "string",
           "description": "Content of the announcement."
         },
-        "attachments": {
+        "attachmentUrls": {
           "type": "array",
-          "description": "An array of URLs pointing to attached documents, images, or videos.",
+          "description": "URLs of attached documents, images, or videos.",
           "items": {
             "type": "string"
           }
         },
         "scheduledAt": {
           "type": "string",
-          "description": "The date and time the announcement is scheduled to be posted.",
+          "description": "Date and time the announcement is scheduled to be posted.",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Date and time the announcement was created.",
           "format": "date-time"
         }
       },
@@ -83,14 +106,15 @@
         "authorId",
         "title",
         "content",
-        "scheduledAt"
+        "scheduledAt",
+        "createdAt"
       ]
     },
     "Event": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Event",
       "type": "object",
-      "description": "Represents an event (workshop, tech talk, hackathon) in the integrated events section.",
+      "description": "Represents a workshop, tech talk, or hackathon event.",
       "properties": {
         "id": {
           "type": "string",
@@ -106,21 +130,26 @@
         },
         "startTime": {
           "type": "string",
-          "description": "Date and time the event starts.",
+          "description": "Start time of the event.",
           "format": "date-time"
         },
         "endTime": {
           "type": "string",
-          "description": "Date and time the event ends.",
+          "description": "End time of the event.",
           "format": "date-time"
         },
         "location": {
           "type": "string",
           "description": "Location of the event."
         },
+        "registrationUrl": {
+          "type": "string",
+          "description": "URL for event registration.",
+          "format": "uri"
+        },
         "registeredUserIds": {
           "type": "array",
-          "description": "References to UserProfiles. (Relationship: Event N:N UserProfile)",
+          "description": "References to UserProfiles. (Relationship: UserProfile N:N Event).  IDs of users registered for the event.",
           "items": {
             "type": "string"
           }
@@ -147,7 +176,7 @@
         },
         "authorId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ForumPost)"
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ForumPost). The user who created the post."
         },
         "title": {
           "type": "string",
@@ -161,6 +190,20 @@
           "type": "string",
           "description": "Date and time the post was created.",
           "format": "date-time"
+        },
+        "upvoteUserIds": {
+          "type": "array",
+          "description": "References to UserProfiles. (Relationship: UserProfile N:N ForumPost).  IDs of users who upvoted the post.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "downvoteUserIds": {
+          "type": "array",
+          "description": "References to UserProfiles. (Relationship: UserProfile N:N ForumPost).  IDs of users who downvoted the post.",
+          "items": {
+            "type": "string"
+          }
         }
       },
       "required": [
@@ -175,7 +218,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Resource",
       "type": "object",
-      "description": "Represents a resource (notes, papers, materials) in the resource hub.",
+      "description": "Represents a resource file (notes, papers, etc.) uploaded to the resource hub.",
       "properties": {
         "id": {
           "type": "string",
@@ -183,39 +226,76 @@
         },
         "uploaderId": {
           "type": "string",
-          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Resource)"
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N Resource). The user who uploaded the resource."
         },
-        "title": {
+        "fileName": {
           "type": "string",
-          "description": "Title of the resource."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the resource."
+          "description": "Name of the file."
         },
         "fileUrl": {
           "type": "string",
-          "description": "URL of the resource file.",
+          "description": "URL of the file in Firebase Cloud Storage.",
           "format": "uri"
         },
         "uploadDate": {
           "type": "string",
-          "description": "Date the resource was uploaded.",
+          "description": "Date and time the file was uploaded.",
           "format": "date-time"
+        },
+        "fileType": {
+          "type": "string",
+          "description": "MIME type of the file (e.g., application/pdf, image/jpeg)."
         }
       },
       "required": [
         "id",
         "uploaderId",
-        "title",
+        "fileName",
         "fileUrl",
         "uploadDate"
+      ]
+    },
+    "ChatMessage": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatMessage",
+      "type": "object",
+      "description": "Represents a message within the AI Chatbot.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the chat message."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to UserProfile. (Relationship: UserProfile 1:N ChatMessage). The user who sent the message."
+        },
+        "messageText": {
+          "type": "string",
+          "description": "Content of the chat message."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Date and time the message was sent.",
+          "format": "date-time"
+        },
+        "isUserGenerated": {
+          "type": "boolean",
+          "description": "Indicates if the message was sent by the user or the chatbot."
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "messageText",
+        "timestamp",
+        "isUserGenerated"
       ]
     }
   },
   "auth": {
     "providers": [
-      "password"
+      "password",
+      "anonymous"
     ]
   },
   "firestore": {
@@ -227,7 +307,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores user profile data. Path-based ownership ensures only the user can access their own profile. Includes all fields from the UserProfile schema.",
+          "description": "Stores user profile information. Path-based ownership ensures only the user can access their own profile. Data stored here includes profile details and social links.",
           "params": [
             {
               "name": "userId",
@@ -243,7 +323,7 @@
           "schema": {
             "$ref": "#/backend/entities/Announcement"
           },
-          "description": "Stores announcement data. Includes all fields from the Announcement schema, including `authorId` for identifying the author.",
+          "description": "Stores announcements posted by faculty and HODs. The `authorId` field indicates the creator. If role-based authorization is needed, use `/roles_faculty/{userId}`.",
           "params": [
             {
               "name": "announcementId",
@@ -259,7 +339,7 @@
           "schema": {
             "$ref": "#/backend/entities/Event"
           },
-          "description": "Stores event data. Includes all fields from the Event schema.",
+          "description": "Stores event information, including title, description, time, location, and registered users.",
           "params": [
             {
               "name": "eventId",
@@ -269,33 +349,13 @@
         }
       },
       {
-        "path": "/events/{eventId}/registrations/{userId}",
-        "definition": {
-          "entityName": "UserProfile",
-          "schema": {
-            "$ref": "#/backend/entities/UserProfile"
-          },
-          "description": "Stores event registration information, indicating which users have registered for which events. Uses path based ownership.",
-          "params": [
-            {
-              "name": "eventId",
-              "description": "The unique identifier for the event."
-            },
-            {
-              "name": "userId",
-              "description": "The unique identifier for the user."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/forumPosts/{forumPostId}",
+        "path": "/forum_posts/{forumPostId}",
         "definition": {
           "entityName": "ForumPost",
           "schema": {
             "$ref": "#/backend/entities/ForumPost"
           },
-          "description": "Stores forum post data. Includes all fields from the ForumPost schema, including `authorId` for identifying the author.",
+          "description": "Stores forum posts, including author, title, content, and upvote/downvote information.",
           "params": [
             {
               "name": "forumPostId",
@@ -311,7 +371,7 @@
           "schema": {
             "$ref": "#/backend/entities/Resource"
           },
-          "description": "Stores resource data. Includes all fields from the Resource schema, including `uploaderId` for identifying the uploader.",
+          "description": "Stores resources, including file name, URL, uploader, and upload date.",
           "params": [
             {
               "name": "resourceId",
@@ -321,22 +381,22 @@
         }
       },
       {
-        "path": "/roles_admin/{userId}",
+        "path": "/chat_messages/{chatMessageId}",
         "definition": {
-          "entityName": "UserProfile",
+          "entityName": "ChatMessage",
           "schema": {
-            "$ref": "#/backend/entities/UserProfile"
+            "$ref": "#/backend/entities/ChatMessage"
           },
-          "description": "Indicates that a user is an administrator. The presence of a document with the user's ID in this collection grants admin privileges.",
+          "description": "Stores chat messages for the AI chatbot.",
           "params": [
             {
-              "name": "userId",
-              "description": "The unique identifier for the user."
+              "name": "chatMessageId",
+              "description": "The unique identifier for the chat message."
             }
           ]
         }
       }
     ],
-    "reasoning": "The Firestore structure is designed to ensure security, scalability, and ease of debugging, following the principles of Authorization Independence, Clarity of Intent, and DBAC. User profiles are stored in `/users/{userId}` using Path-Based ownership, guaranteeing that only the user (or admins) can access their own profile data. Announcements, ForumPosts and Resources are stored in collections `/announcements`, `/forumPosts`, and `/resources` respectively with denormalized `authorId` or `uploaderId` fields to enable efficient querying and listing of posts by a specific user. Events are stored in the `/events` collection. To manage event registrations, a subcollection `/events/{eventId}/registrations/{userId}` is used, which simplifies checking if a user is registered for an event. This structure avoids `get()` calls in security rules, enabling atomic operations and clear rule definitions. Global roles are managed via document existence in dedicated collections (e.g., `/roles_admin/{uid}`), simplifying role-based access control. The structure facilitates secure `list` operations by segregating data based on access requirements and using denormalized authorization fields."
+    "reasoning": "The Firestore structure is designed to support the CampusConnect application, emphasizing security, scalability, and ease of debugging. It adheres to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are Not Filters). Authorization Independence is achieved through denormalization. For example, access to resources is based on the uploaderId, and any group-based authorization (if implemented later) would require denormalizing group membership into the Resource document. Segregation is applied by using distinct collections for different data types (e.g., user profiles, announcements, events). Access modeling follows consistent patterns: private user data under `/users/{userId}`, and other entities under top-level collections. The design prioritizes clarity with explicit state modeling (if needed later), predictable schemas, and consistent naming conventions.\n\nThe structure supports the core features of the application:\n\n*   **User Profiles:** Stored under `/users/{userId}` for path-based ownership. This ensures that only the user can access their profile data unless explicitly granted otherwise.\n*   **Announcements:** Stored in a top-level `/announcements` collection. The `authorId` field is used to identify the creator. If specific roles (faculty, HOD) are required to create announcements, a separate `/roles_{role}/{userId}` collection could be used in security rules.\n*   **Events:** Stored in a top-level `/events` collection. The `registeredUserIds` array allows for tracking registered users. If more complex registration management is required, a subcollection `/events/{eventId}/registrations/{userId}` could be used.\n*   **Forum Posts:** Stored in a top-level `/forum_posts` collection. The `authorId` field identifies the creator. Upvotes and downvotes are tracked using arrays of user IDs.\n*   **Resource Hub:** Stored in a top-level `/resources` collection.  The `uploaderId` field identifies the user who uploaded the resource. This structure allows all authorized users to upload, edit, and delete files.\n*   **AI Chatbot Messages:** Stored in a top-level `/chat_messages` collection. The `userId` field identifies the user who sent the message.\n\nThis design ensures efficient and secure data management for CampusConnect."
   }
 }
