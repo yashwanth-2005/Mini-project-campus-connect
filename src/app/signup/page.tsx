@@ -26,10 +26,19 @@ import { useAuth, useFirestore } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-const signupSchema = z.object({
+const baseSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
+  linkedin: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  leetcode: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
+  password: z.string().min(8, "Password must be at least 8 characters long"),
+  confirmPassword: z.string().min(8, "Please confirm your password"),
+});
+
+const studentSchema = baseSchema.extend({
+  role: z.literal('student'),
   usn: z.string().min(1, "USN is required"),
   year: z.coerce.number()
     .min(1, "Year is required")
@@ -37,13 +46,19 @@ const signupSchema = z.object({
     .refine(val => val <= 4, { message: "Year cannot be more than 4" }),
   semester: z.coerce.number().min(1, "Semester is required").max(8, "Semester cannot be more than 8"),
   course: z.string().min(1, "Please select your course"),
-  linkedin: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  leetcode: z.string().url("Please enter a valid URL").optional().or(z.literal('')),
-  password: z.string().min(8, "Password must be at least 8 characters long"),
-  confirmPassword: z.string().min(8, "Please confirm your password"),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"], // Point error to confirmPassword field
+});
+
+const facultySchema = baseSchema.extend({
+    role: z.literal('faculty'),
+    department: z.string().min(1, "Department is required"),
+    facultyId: z.string().min(1, "Faculty ID is required"),
+    uniqueCode: z.string().min(1, "Unique code is required"),
+});
+
+const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema])
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
 });
 
 
@@ -56,15 +71,17 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<'student' | 'faculty'>('student');
   
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
+        role: 'student',
         fullName: "",
         email: searchParams.get('email') || "",
         usn: "",
-        year: '' as unknown as number,
-        semester: '' as unknown as number,
+        year: '' as any,
+        semester: '' as any,
         course: "",
         linkedin: "",
         leetcode: "",
@@ -130,22 +147,37 @@ export default function SignupPage() {
             displayName: data.fullName
         });
 
-        const userProfileData = {
+        const [firstName, ...lastName] = data.fullName.split(' ');
+
+        let userProfileData: any = {
             id: user.uid,
             email: data.email,
-            firstName: data.fullName.split(' ')[0],
-            lastName: data.fullName.split(' ').slice(1).join(' '),
-            usn: data.usn.toUpperCase(),
-            year: data.year,
-            semester: data.semester,
-            course: data.course,
-            branch: data.course, // Using course as branch
+            firstName: firstName,
+            lastName: lastName.join(' '),
             linkedinUrl: data.linkedin,
             leetcodeUrl: data.leetcode,
             githubUrl: "",
             profilePictureUrl: "",
-            role: 'student'
+            role: data.role,
         };
+
+        if (data.role === 'student') {
+            userProfileData = {
+                ...userProfileData,
+                usn: data.usn.toUpperCase(),
+                year: data.year,
+                semester: data.semester,
+                course: data.course,
+                branch: data.course,
+            }
+        } else {
+             userProfileData = {
+                ...userProfileData,
+                department: data.department,
+                facultyId: data.facultyId,
+                branch: data.department
+             }
+        }
 
         await setDoc(doc(firestore, "users", user.uid), userProfileData);
 
@@ -169,6 +201,23 @@ export default function SignupPage() {
     } finally {
         setIsLoading(false);
     }
+  }
+
+  const handleRoleChange = (role: 'student' | 'faculty') => {
+    setSelectedRole(role);
+    form.setValue('role', role);
+    // Reset form values when role changes to avoid validation errors
+    form.reset({
+        ...form.getValues(),
+        role: role,
+        usn: role === 'student' ? form.getValues('usn') : undefined,
+        year: role === 'student' ? form.getValues('year') : undefined,
+        semester: role === 'student' ? form.getValues('semester') : undefined,
+        course: role === 'student' ? form.getValues('course') : undefined,
+        department: role === 'faculty' ? form.getValues('department') : undefined,
+        facultyId: role === 'faculty' ? form.getValues('facultyId') : undefined,
+        uniqueCode: role === 'faculty' ? form.getValues('uniqueCode') : undefined,
+    });
   }
 
   return (
@@ -195,6 +244,13 @@ export default function SignupPage() {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <CardContent className="grid gap-4">
+                    <Tabs defaultValue="student" className="w-full" onValueChange={(value) => handleRoleChange(value as 'student' | 'faculty')}>
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="student">Student</TabsTrigger>
+                            <TabsTrigger value="faculty">Faculty</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                    
                     <div className="grid grid-cols-2 gap-2">
                         <Button variant="outline" type="button" className="transition-transform hover:scale-105">
                             <GithubIcon className="h-4 w-4" />
@@ -231,65 +287,121 @@ export default function SignupPage() {
                             <FormMessage />
                         </FormItem>
                     )} />
-                     <FormField control={form.control} name="usn" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>USN</FormLabel>
-                            <FormControl>
-                                <Input placeholder="1CR21CS001" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())}/>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
 
-                    <FormField
-                        control={form.control}
-                        name="course"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Course</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select your course" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                <SelectItem value="be-cse">B.E. - Computer Science & Engineering</SelectItem>
-                                <SelectItem value="be-ise">B.E. - Information Science & Engineering</SelectItem>
-                                <SelectItem value="be-ece">B.E. - Electronics & Communication</SelectItem>
-                                <SelectItem value="be-eee">B.E. - Electrical & Electronics</SelectItem>
-                                <SelectItem value="be-mech">B.E. - Mechanical Engineering</SelectItem>
-                                <SelectItem value="be-civil">B.E. - Civil Engineering</SelectItem>
-                                <SelectItem value="mca">MCA - Master of Computer Applications</SelectItem>
-                                <SelectItem value="mtech-cse">M.Tech - Computer Science & Engineering</SelectItem>
-                                <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                         <FormField control={form.control} name="year" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Year</FormLabel>
-                                <FormControl>
-                                    <Input type="number" placeholder="3" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                         <FormField control={form.control} name="semester" render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Semester</FormLabel>
-                                <FormControl>
-                                    <Input type="number" placeholder="6" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )} />
-                    </div>
+                    {selectedRole === 'student' && (
+                        <>
+                            <FormField control={form.control} name="usn" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>USN</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="1CR21CS001" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())}/>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+
+                            <FormField
+                                control={form.control}
+                                name="course"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Course</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select your course" />
+                                        </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                        <SelectItem value="be-cse">B.E. - Computer Science & Engineering</SelectItem>
+                                        <SelectItem value="be-ise">B.E. - Information Science & Engineering</SelectItem>
+                                        <SelectItem value="be-ece">B.E. - Electronics & Communication</SelectItem>
+                                        <SelectItem value="be-eee">B.E. - Electrical & Electronics</SelectItem>
+                                        <SelectItem value="be-mech">B.E. - Mechanical Engineering</SelectItem>
+                                        <SelectItem value="be-civil">B.E. - Civil Engineering</SelectItem>
+                                        <SelectItem value="mca">MCA - Master of Computer Applications</SelectItem>
+                                        <SelectItem value="mtech-cse">M.Tech - Computer Science & Engineering</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField control={form.control} name="year" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Year</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" placeholder="3" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                                <FormField control={form.control} name="semester" render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Semester</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" placeholder="6" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )} />
+                            </div>
+                        </>
+                    )}
+
+                    {selectedRole === 'faculty' && (
+                        <>
+                            <FormField
+                                control={form.control}
+                                name="department"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Department</FormLabel>
+                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                        <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Select your department" />
+                                        </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                        <SelectItem value="cse">Computer Science & Engineering</SelectItem>
+                                        <SelectItem value="ise">Information Science & Engineering</SelectItem>
+                                        <SelectItem value="ece">Electronics & Communication</SelectItem>
+                                        <SelectItem value="eee">Electrical & Electronics</SelectItem>
+                                        <SelectItem value="mech">Mechanical Engineering</SelectItem>
+                                        <SelectItem value="civil">Civil Engineering</SelectItem>
+                                        <SelectItem value="humanities">Basic Sciences & Humanities</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField control={form.control} name="facultyId" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Faculty ID</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Your Faculty ID" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                             <FormField control={form.control} name="uniqueCode" render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Unique Code</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="Provided by administration" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )} />
+                        </>
+                    )}
+
+
                     <FormField control={form.control} name="linkedin" render={({ field }) => (
                         <FormItem>
                             <FormLabel>LinkedIn Profile (Optional)</FormLabel>
@@ -376,5 +488,6 @@ export default function SignupPage() {
     </div>
   );
 }
+
 
     
