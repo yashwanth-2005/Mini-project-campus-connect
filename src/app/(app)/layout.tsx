@@ -55,17 +55,19 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   // We filter the navigation items based on the user's role, which we get from the URL.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
-  // This function shows a loading screen to make page transitions feel smoother.
-  const handleLinkClick = (href: string) => {
-    // Only show loader if navigating to a different page.
-    if (pathname !== href) {
-      setIsLoading(true);
-    }
-  };
-
-  // When a new page finishes loading, we hide the loading screen.
   useEffect(() => {
-    setIsLoading(false);
+    // This effect is used to show a loading indicator during page transitions.
+    // We'll use a simple approach based on path changes.
+    const handleStart = (url: string) => {
+      if (url !== window.location.pathname) {
+        setIsLoading(true);
+      }
+    };
+    const handleComplete = () => setIsLoading(false);
+
+    // We can't use the Next.js router events directly in the app router easily,
+    // so we'll simulate the loading for any pathname change.
+    setIsLoading(false); // Hide loader on initial load or after navigation.
   }, [pathname, searchParams]);
 
   return (
@@ -89,7 +91,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             {navItems.map((item) => (
-              <SidebarMenuItem key={item.href} onClick={() => handleLinkClick(item.href)}>
+              <SidebarMenuItem key={item.href}>
                 <Link href={`${item.href}?role=${role}`} passHref prefetch>
                   <SidebarMenuButton tooltip={item.label} isActive={pathname === item.href}>
                     {item.icon}
