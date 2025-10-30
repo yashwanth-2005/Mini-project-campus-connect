@@ -18,25 +18,21 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
-import { findUserByEmail, setCurrentUser, getFacultyUser, User } from "@/lib/mock-db";
 import { Eye, EyeOff } from "lucide-react";
-
-// Basic email format validation
-const isValidEmail = (email: string) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-}
+import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { findUserByEmail, getFacultyUser } from "@/lib/mock-db";
 
 export default function LoginPage() {
   const router = useRouter();
+  const auth = useAuth();
   const { toast } = useToast();
   const [role, setRole] = useState("student");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // This function handles the login attempt for both students and faculty.
-  // It allows any valid email format to log in for demonstration purposes.
-  const handleLogin = (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleLogin = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
 
@@ -51,57 +47,36 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    // Simulate a network request.
-    setTimeout(() => {
-        let user: User | null = null;
-        
-        if (!isValidEmail(email) || !password) {
-             toast({
-                title: "Login Failed",
-                description: "Please enter a valid email and password.",
-                variant: "destructive",
-            });
-            setIsLoading(false);
-            return;
-        }
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
 
+        // For this prototype, we'll determine the role from the tab selection.
+        // In a real app, you would fetch the user's role from your database.
+        let userProfile = findUserByEmail(email);
         if (role === 'faculty') {
-            // For faculty, use a default mock user for simplicity.
-            user = getFacultyUser();
-        } else {
-            // For students, check if a user exists. If not, create one on-the-fly.
-            user = findUserByEmail(email);
-            if (!user) {
-                user = {
-                    id: `user-${Date.now()}`,
-                    fullName: email.split('@')[0].replace('.', ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                    email: email,
-                    usn: "1CR21CSXXX",
-                    year: 3,
-                    semester: 6,
-                    linkedin: "",
-                    leetcode: "",
-                    github: ""
-                };
-            }
+            userProfile = getFacultyUser();
         }
 
-        if (user) {
-            setCurrentUser(user.id, user); // Save the (potentially new) user to mock DB
+        if (userProfile) {
             toast({
                 title: "Login Successful",
-                description: `Welcome back, ${user.fullName}!`,
+                description: `Welcome back, ${userProfile.fullName}!`,
             });
             router.push(`/dashboard?role=${role}`);
         } else {
-             toast({
-                title: "Login Failed",
-                description: "An unexpected error occurred. Please try again.",
-                variant: "destructive",
-            });
-            setIsLoading(false);
+             throw new Error("User profile not found in mock database.");
         }
-    }, 500);
+
+    } catch (error: any) {
+        toast({
+            title: "Login Failed",
+            description: "Invalid credentials or user does not exist. Please try again.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   };
 
   // This function renders the login form fields, reused for both tabs.

@@ -4,7 +4,7 @@ export type User = {
     id: string;
     fullName: string;
     email: string;
-    password?: string;
+    password?: string; // Password is now optional as it's managed by Firebase Auth
     usn: string;
     year: number;
     semester: number;
@@ -26,12 +26,13 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
+// This is our mock database, stored in the browser's localStorage.
 const defaultUsers: Record<string, User> = {
     'user-faculty-1': {
         id: 'user-faculty-1',
         fullName: 'Suraj Rao',
         email: 'surajrao081005@gmail.com',
-        password: 'q1w2e3r4t5',
+        // No password stored here for security. It's handled by Firebase.
         usn: 'FAC001',
         year: 0,
         semester: 0,
@@ -45,7 +46,6 @@ const defaultUsers: Record<string, User> = {
         id: 'user-student-1',
         fullName: 'Alex Doe',
         email: 'alex.doe@example.com',
-        password: 'password123',
         usn: '1CR21CS001',
         year: 3,
         semester: 6,
@@ -57,7 +57,7 @@ const defaultUsers: Record<string, User> = {
     }
 }
 
-// Safely gets users from localStorage.
+// Safely gets user profiles from localStorage.
 const getUsers = (): Record<string, User> => {
     if (typeof window === 'undefined') return defaultUsers;
     let usersJson = localStorage.getItem('users');
@@ -68,7 +68,7 @@ const getUsers = (): Record<string, User> => {
     return JSON.parse(usersJson);
 };
 
-// Safely saves users to localStorage.
+// Safely saves user profiles to localStorage.
 const saveUsers = (users: Record<string, User>) => {
     if (typeof window === 'undefined') return;
     localStorage.setItem('users', JSON.stringify(users));
@@ -87,63 +87,44 @@ const saveRequests = (requests: UsnChangeRequest[]) => {
     localStorage.setItem('usnChangeRequests', JSON.stringify(requests));
 };
 
-// Retrieves the currently logged-in user's data.
-export const getCurrentUser = (): User | null => {
-    if (typeof window === 'undefined') return null;
-    const currentUserId = localStorage.getItem('currentUser');
-    if (!currentUserId) return null;
-    const users = getUsers();
-    return users[currentUserId] || null;
-}
-
-// Sets the currently logged-in user.
-export const setCurrentUser = (userId: string | null, user?: User) => {
-    if (typeof window === 'undefined') return;
-    if (userId) {
-        localStorage.setItem('currentUser', userId);
-        if (user) {
-            const users = getUsers();
-            users[userId] = user;
-            saveUsers(users);
-        }
-    } else {
-        localStorage.removeItem('currentUser');
-    }
-}
-
-// Finds a user by their email address.
+// Finds a user profile by their email address.
 export const findUserByEmail = (email: string): User | null => {
     const users = getUsers();
     return Object.values(users).find(user => user.email === email) || null;
 };
 
-// A helper function to get the default faculty user for prototype login.
+// Finds a user profile by their ID.
+export const findUserById = (userId: string): User | null => {
+    const users = getUsers();
+    return users[userId] || null;
+}
+
+// A helper to get the default faculty user for prototype login.
 export const getFacultyUser = (): User | null => {
     const users = getUsers();
     return users['user-faculty-1'] || null;
 }
 
 
-// Creates a new user.
-export const createUser = (userData: Omit<User, 'id'>): User => {
+// Creates a new user profile in our mock database.
+export const createUser = (userData: Omit<User, 'password'>): User => {
     const users = getUsers();
     const email = userData.email.toLowerCase();
     if (findUserByEmail(email)) {
+        // This check is a fallback, Firebase Auth will be the primary guard.
         throw new Error("User with this email already exists.");
     }
-    const id = Date.now().toString();
     const newUser: User = { 
-        id, 
         ...userData,
         linkedin: userData.linkedin || "",
         leetcode: userData.leetcode || ""
     };
-    users[id] = newUser;
+    users[newUser.id] = newUser;
     saveUsers(users);
     return newUser;
 };
 
-// Updates an existing user's data.
+// Updates an existing user's profile data.
 export const updateUser = (userId: string, updatedData: Partial<User>): User | null => {
     const users = getUsers();
     if (!users[userId]) return null;
@@ -154,12 +135,6 @@ export const updateUser = (userId: string, updatedData: Partial<User>): User | n
     };
 
     saveUsers(users);
-    const currentUser = getCurrentUser();
-    // Re-set the current user in localStorage to ensure data consistency
-    if (currentUser && currentUser.id === userId) {
-        setCurrentUser(userId, users[userId]); 
-    }
-    
     return users[userId];
 };
 

@@ -14,13 +14,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, updateUser, User, getUsnRequestForUser, createUsnChangeRequest } from "@/lib/mock-db";
+import { findUserById, updateUser, User, getUsnRequestForUser, createUsnChangeRequest } from "@/lib/mock-db";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { useUser } from "@/firebase";
 
-// Here, we define the structure of our profile form using Zod.
-// This schema specifies the data types and validation rules for each field.
+// Defines the shape and validation rules for the profile form.
 const profileSchema = z.object({
     fullName: z.string().min(1, "Full name is required"),
     usn: z.string().min(1, "USN is required"),
@@ -32,7 +32,7 @@ const profileSchema = z.object({
     profilePicture: z.string().optional(),
 });
 
-// This is a separate schema for the USN change request dialog.
+// Defines the validation for the USN change request dialog.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -41,66 +41,54 @@ const usnChangeSchema = z.object({
 export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { user: firebaseUser, isUserLoading } = useUser();
+    const [userProfile, setUserProfile] = useState<User | null>(null);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUsnDialogOpen, setIsUsnDialogOpen] = useState(false);
     const [pendingUsnRequest, setPendingUsnRequest] = useState(false);
 
-    // We initialize the main profile form with React Hook Form and our Zod schema.
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
-        defaultValues: {
-            fullName: "",
-            bio: "",
-            usn: "",
-            year: undefined,
-            linkedin: "",
-            github: "",
-            leetcode: "",
-            profilePicture: "",
-        },
+        defaultValues: { /* Populated by the useEffect hook below */ },
     });
 
-    // We do the same for the USN change form.
     const usnForm = useForm<z.infer<typeof usnChangeSchema>>({
         resolver: zodResolver(usnChangeSchema),
-        defaultValues: {
-            newUsn: "",
-            reason: ""
-        }
+        defaultValues: { newUsn: "", reason: "" }
     });
 
-    // When the component first loads, we fetch the current user's data.
+    // When the Firebase user is loaded, fetch their profile from our mock database.
     useEffect(() => {
-        const currentUser = getCurrentUser();
-        if (currentUser) {
-            setUser(currentUser);
-            setPreviewImage(currentUser.profilePicture || null);
-            // We use the 'reset' function to fill the form with the user's existing data.
-            form.reset({
-                fullName: currentUser.fullName,
-                usn: currentUser.usn,
-                year: currentUser.year,
-                bio: currentUser.bio || "",
-                linkedin: currentUser.linkedin || "",
-                github: currentUser.github || "",
-                leetcode: currentUser.leetcode || "",
-                profilePicture: currentUser.profilePicture || "",
-            });
-            // We also check if there's a pending request to change the USN.
-            const pendingRequest = getUsnRequestForUser(currentUser.id);
-            if (pendingRequest) {
-                setPendingUsnRequest(true);
+        if (firebaseUser) {
+            const profile = findUserById(firebaseUser.uid);
+            setUserProfile(profile);
+            
+            if (profile) {
+                setPreviewImage(profile.profilePicture || null);
+                // Pre-fill the form with the fetched profile data.
+                form.reset({
+                    fullName: profile.fullName,
+                    usn: profile.usn,
+                    year: profile.year,
+                    bio: profile.bio || "",
+                    linkedin: profile.linkedin || "",
+                    github: profile.github || "",
+                    leetcode: profile.leetcode || "",
+                    profilePicture: profile.profilePicture || "",
+                });
+
+                // Check if this user has a pending USN change request.
+                const pendingRequest = getUsnRequestForUser(profile.id);
+                setPendingUsnRequest(!!pendingRequest);
             }
-        } else {
+        } else if (!isUserLoading) {
+            // If Firebase is done loading and there's no user, redirect to login.
             router.push('/login');
         }
-        setIsLoading(false);
-    }, [form, router]);
+    }, [firebaseUser, isUserLoading, form, router]);
 
-    // This function creates a local preview of the image a user selects.
+    // Create a local preview when a new profile picture is selected.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -114,17 +102,17 @@ export default function ProfilePage() {
         }
     };
 
-    // This function is called when the main profile form is submitted.
+    // Handles saving the main profile form.
     function onSubmit(data: z.infer<typeof profileSchema>) {
-        if (!user) return;
+        if (!userProfile) return;
 
         try {
-            updateUser(user.id, data);
+            updateUser(userProfile.id, data);
             toast({
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            // We reload the page to make sure the user avatar in the main navigation updates.
+            // Force a reload to update the user avatar in the main navigation.
             window.location.reload();
         } catch(e) {
             toast({
@@ -135,14 +123,14 @@ export default function ProfilePage() {
         }
     }
 
-    // This function handles the submission of a USN change request.
+    // Handles the submission of the USN change request.
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
-        if (!user) return;
+        if (!userProfile) return;
         try {
             createUsnChangeRequest({
-                userId: user.id,
-                studentName: user.fullName,
-                currentUsn: user.usn,
+                userId: userProfile.id,
+                studentName: userProfile.fullName,
+                currentUsn: userProfile.usn,
                 newUsn: data.newUsn.toUpperCase(),
                 reason: data.reason
             });
@@ -162,8 +150,8 @@ export default function ProfilePage() {
         }
     }
 
-    // While data is being fetched, we show a skeleton loading screen.
-    if (isLoading || !user) {
+    // Displays a loading skeleton while fetching user data.
+    if (isUserLoading || !userProfile) {
         return (
             <div className="space-y-8">
                 <div>
@@ -209,8 +197,8 @@ export default function ProfilePage() {
                     <CardContent className="space-y-6">
                         <div className="flex items-center gap-6">
                             <Avatar className="h-24 w-24 border">
-                                <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${user.usn}`} />
-                                <AvatarFallback>{user.fullName.charAt(0)}</AvatarFallback>
+                                <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${userProfile.usn}`} />
+                                <AvatarFallback>{userProfile.fullName.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-2">
                                 <Label htmlFor="picture">Profile Picture</Label>
@@ -235,7 +223,7 @@ export default function ProfilePage() {
                             <div className="space-y-2">
                                 <Label htmlFor="usn">USN (University Seat Number)</Label>
                                 <div className="flex items-center gap-2">
-                                    <Input id="usn" type="text" value={user.usn} readOnly className="bg-muted/50" />
+                                    <Input id="usn" type="text" value={userProfile.usn} readOnly className="bg-muted/50" />
                                      <Dialog open={isUsnDialogOpen} onOpenChange={setIsUsnDialogOpen}>
                                         <DialogTrigger asChild>
                                             <Button type="button" variant="outline" disabled={pendingUsnRequest}>
@@ -310,7 +298,7 @@ export default function ProfilePage() {
                             />
                              <div className="space-y-2">
                                 <Label htmlFor="email">Email</Label>
-                                <Input id="email" type="email" defaultValue={user.email} disabled />
+                                <Input id="email" type="email" defaultValue={userProfile.email} disabled />
                                 <FormDescription>You cannot change your registration email.</FormDescription>
                             </div>
                         </div>

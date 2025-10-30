@@ -17,9 +17,12 @@ import { useState, useEffect } from "react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { createUser } from "@/lib/mock-db";
+import { createUser as createMockUser } from "@/lib/mock-db";
+import { useAuth } from "@/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 export default function SignupPage() {
+  const auth = useAuth();
   const { toast } = useToast();
   const router = useRouter();
   const [password, setPassword] = useState('');
@@ -34,7 +37,7 @@ export default function SignupPage() {
         setStrength({ score: 0, label: '', color: '' });
         return;
     }
-    // We award points for different character types and length.
+    // Award points for different character types and length.
     if (pass.length >= 8) score++;
     if (/[A-Z]/.test(pass)) score++;
     if (/[a-z]/.test(pass)) score++;
@@ -59,21 +62,17 @@ export default function SignupPage() {
         label = 'Strong';
         color = 'text-green-500';
         break;
-      default:
-        label = '';
-        color = '';
     }
-    
     setStrength({ score, label, color });
   };
   
-  // This effect re-calculates the password strength every time the password changes.
+  // Re-calculate password strength whenever the password input changes.
   useEffect(() => {
     checkPasswordStrength(password);
   }, [password]);
 
-  // This function handles the form submission for creating a new user account.
-  const handleSignup = (event: React.FormEvent<HTMLFormElement>) => {
+  // This function handles the form submission to create a new user account.
+  const handleSignup = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
 
@@ -83,7 +82,7 @@ export default function SignupPage() {
     if (strength.score < 3) {
       toast({
         title: "Weak Password",
-        description: "Please choose a stronger password.",
+        description: "Please choose a stronger password (at least 8 characters, with letters and numbers).",
         variant: "destructive",
       });
       setIsLoading(false);
@@ -91,25 +90,40 @@ export default function SignupPage() {
     }
     
     try {
-        createUser({
+        // Create the user in Firebase Authentication.
+        const userCredential = await createUserWithEmailAndPassword(auth, data.email as string, data.password as string);
+        const user = userCredential.user;
+
+        // Set the user's display name in their Firebase profile.
+        await updateProfile(user, {
+            displayName: data.fullName as string,
+        });
+
+        // Also create a corresponding user profile in our mock database.
+        createMockUser({
+            id: user.uid,
             fullName: data.fullName as string,
             email: data.email as string,
-            password: data.password as string,
             usn: data.usn as string,
             year: Number(data.year),
             semester: Number(data.semester),
             linkedin: data.linkedin as string,
             leetcode: data.leetcode as string,
         });
+
         toast({
             title: "Account Created!",
             description: "You can now log in with your new account.",
         });
         router.push('/login');
     } catch (error: any) {
+        let description = "An unexpected error occurred. Please try again.";
+        if (error.code === 'auth/email-already-in-use') {
+            description = "This email is already registered. Please try logging in.";
+        }
         toast({
             title: "Signup Failed",
-            description: error.message || "An unexpected error occurred.",
+            description: description,
             variant: "destructive",
         });
     } finally {

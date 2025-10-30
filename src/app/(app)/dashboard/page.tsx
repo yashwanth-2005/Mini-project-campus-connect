@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Briefcase, Calendar, MessageSquare, Shield } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { getCurrentUser, User } from "@/lib/mock-db";
+import { findUserById, User } from "@/lib/mock-db";
 import React, { useEffect, useState } from "react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { useUser } from "@/firebase";
 
 const allQuickLinks = [
     {
@@ -42,19 +42,24 @@ const allQuickLinks = [
 
 export default function DashboardPage() {
     const searchParams = useSearchParams();
+    const { user: firebaseUser } = useUser();
     const role = searchParams.get('role') || 'student';
-    const [user, setUser] = useState<User | null>(null);
+    const [userProfile, setUserProfile] = useState<User | null>(null);
     
     useEffect(() => {
-        const currentUser = getCurrentUser();
-        setUser(currentUser);
-    }, [])
+        if (firebaseUser) {
+            // After the user logs in via Firebase, we find their profile
+            // in our mock database to get additional details like their name.
+            const profile = findUserById(firebaseUser.uid);
+            setUserProfile(profile);
+        }
+    }, [firebaseUser])
 
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     
     const welcomeMessage = () => {
         if (role === 'faculty') return "Welcome back, Faculty!";
-        if (user) return `Welcome back, ${user.fullName.split(' ')[0]}!`;
+        if (userProfile) return `Welcome back, ${userProfile.fullName.split(' ')[0]}!`;
         return "Welcome back!";
     }
 

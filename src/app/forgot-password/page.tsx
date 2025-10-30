@@ -14,38 +14,37 @@ import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/icons";
 import Link from "next/link";
 import { useState } from "react";
-import { findUserByEmail } from "@/lib/mock-db";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MailCheck } from "lucide-react";
+import { useAuth } from "@/firebase";
+import { sendPasswordResetEmail } from "firebase/auth";
 
 export default function ForgotPasswordPage() {
+    const auth = useAuth();
     const { toast } = useToast();
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
-    // This function is called when the user submits the form.
-    const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    // This function handles the password reset request.
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
 
-        // We use a timeout to simulate a network request.
-        setTimeout(() => {
-            const user = findUserByEmail(email);
-
-            if (user) {
-                // In a real application, this is where you would call a service to send a password reset email.
-                setEmailSent(true);
-            } else {
-                toast({
-                    title: "Email not registered",
-                    description: "No account was found with that email address. Please try again.",
-                    variant: "destructive",
-                });
-            }
+        try {
+            // Use Firebase's built-in function to send a password reset email.
+            await sendPasswordResetEmail(auth, email);
+            setEmailSent(true);
+        } catch (error: any) {
+            toast({
+                title: "Error",
+                description: "Failed to send password reset email. Please check the email address and try again.",
+                variant: "destructive",
+            });
+        } finally {
             setIsLoading(false);
-        }, 1000);
+        }
     }
 
     return (
@@ -67,7 +66,7 @@ export default function ForgotPasswordPage() {
                     <CardTitle className="text-2xl font-headline">Forgot Password</CardTitle>
                     <CardDescription>
                         {emailSent 
-                            ? "A password reset link has been sent."
+                            ? "Check your inbox for a password reset link."
                             : "Enter your registered email to reset your password."}
                     </CardDescription>
                 </CardHeader>
@@ -75,9 +74,9 @@ export default function ForgotPasswordPage() {
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
-                            <AlertTitle>Simulation Successful!</AlertTitle>
+                            <AlertTitle>Email Sent!</AlertTitle>
                             <AlertDescription>
-                                In a real application, a password reset link would be sent to <strong>{email}</strong>.
+                                A password reset link has been sent to <strong>{email}</strong>.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">
@@ -100,7 +99,7 @@ export default function ForgotPasswordPage() {
                                 />
                             </div>
                             <Button type="submit" className="w-full" disabled={isLoading}>
-                                {isLoading ? "Checking..." : "Send Reset Link"}
+                                {isLoading ? "Sending..." : "Send Reset Link"}
                             </Button>
                         </CardContent>
                     </form>
