@@ -118,9 +118,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                 <span>Ask me anything?</span>
               </Button>
               <ThemeToggle />
-              <div className="hidden md:block">
-                <UserNav />
-              </div>
             </div>
           </div>
         </header>
