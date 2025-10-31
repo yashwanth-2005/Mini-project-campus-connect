@@ -18,12 +18,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
-import { useUser, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
-import { doc, updateDoc } from 'firebase/firestore';
+import { useUser } from "@/firebase";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useProfile } from "@/hooks/use-profile";
 import { createUsnChangeRequest } from "@/lib/mock-db";
 
 // Defines the validation schema for the profile form.
+// This ensures data consistency before submission.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -34,7 +35,6 @@ const profileSchema = z.object({
     // Faculty specific fields
     department: z.string().optional(),
     facultyId: z.string().optional(),
-    uniqueCode: z.string().optional(),
 });
 
 // Defines validation for the USN change request form.
@@ -48,12 +48,9 @@ export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user, isUserLoading } = useUser();
-    const firestore = useFirestore();
 
-    // Creates a memoized reference to the user's document in Firestore to prevent unnecessary re-renders.
-    const userDocRef = useMemoFirebase(() => user ? doc(firestore, "users", user.uid) : null, [firestore, user]);
-    // Fetches the user's profile data in real-time.
-    const { data: userProfile, isLoading: isProfileLoading } = useDoc(userDocRef);
+    // The useProfile hook abstracts away the data source logic (local vs. cloud).
+    const { userProfile, isLoading: isProfileLoading, updateUserProfile } = useProfile();
 
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -74,7 +71,6 @@ export default function ProfilePage() {
             profilePictureUrl: '',
             department: '',
             facultyId: '',
-            uniqueCode: '',
         },
     });
 
@@ -93,7 +89,7 @@ export default function ProfilePage() {
       }
     }, [isUserLoading, user, router]);
 
-    // When the user's profile data loads from Firestore, this effect fills the form.
+    // When the user's profile data loads, this effect fills the form.
     useEffect(() => {
         if (userProfile) {
             form.reset({
@@ -105,7 +101,6 @@ export default function ProfilePage() {
                 profilePictureUrl: userProfile.profilePictureUrl || "",
                 department: userProfile.department || "",
                 facultyId: userProfile.facultyId || "",
-                uniqueCode: userProfile.uniqueCode || "",
             });
             setPreviewImage(userProfile.profilePictureUrl || null);
         }
@@ -125,24 +120,22 @@ export default function ProfilePage() {
         }
     };
 
-    // Saves the updated profile data back to Firestore.
+    // Saves the updated profile data.
     async function onSubmit(data: z.infer<typeof profileSchema>) {
-        if (!userDocRef) return;
+        if (!user) return;
         setIsSaving(true);
         
         try {
-            // Updates the user's document in Firestore with the new data.
-            await updateDoc(userDocRef, data);
+            await updateUserProfile(data);
             toast({
                 title: "Profile Updated!",
                 description: "Your profile has been successfully updated.",
             });
-            // Refreshes server components to show new user data without a full page reload.
             router.refresh(); 
-        } catch(e) {
+        } catch(e: any) {
             toast({
                 title: "Update Failed",
-                description: "Could not update your profile. Please try again.",
+                description: e.message || "Could not update your profile. Please try again.",
                 variant: 'destructive'
             });
         } finally {
@@ -150,11 +143,10 @@ export default function ProfilePage() {
         }
     }
 
-    // Handles the submission of the USN change request.
+    // Handles the submission of the USN change request (uses mock-db for simplicity).
     function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
         if (!user || !userProfile) return;
         setIsRequestingUsn(true);
-        // This uses a mock function for the prototype. In a real app, this would be a Firestore operation.
         try {
             createUsnChangeRequest({
                 userId: user.uid,
@@ -181,7 +173,7 @@ export default function ProfilePage() {
         }
     }
 
-    // Shows a loading skeleton while the user's data is being fetched.
+    // Shows a loading skeleton while data is being fetched.
     if (isUserLoading || isProfileLoading || !userProfile) {
         return (
             <div className="space-y-8">
@@ -449,3 +441,5 @@ export default function ProfilePage() {
         </Form>
     );
 }
+
+    

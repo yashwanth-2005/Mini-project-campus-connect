@@ -1,104 +1,32 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquare, ThumbsUp, PenSquare } from "lucide-react";
+import { MessageSquare, ThumbsUp, PenSquare, Loader2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-
-// Defines the data structure for a single discussion post.
-type Discussion = {
-    id: number;
-    title: string;
-    content?: string;
-    author: string;
-    avatar: string;
-    time: string;
-    replies: number;
-    upvotes: number;
-    tags: string[];
-};
-
-// Initial mock data for the forum.
-const initialDiscussions: Discussion[] = [
-    {
-        id: 1,
-        title: "How to prepare for FAANG interviews in 6 months?",
-        author: "Alex Johnson",
-        avatar: "https://picsum.photos/seed/user1/40/40",
-        time: "3 hours ago",
-        replies: 12,
-        upvotes: 45,
-        tags: ["placements", "interviews", "career"]
-    },
-    {
-        id: 2,
-        title: "Best resources for learning System Design?",
-        author: "Samantha Lee",
-        avatar: "https://picsum.photos/seed/user2/40/40",
-        time: "1 day ago",
-        replies: 8,
-        upvotes: 62,
-        tags: ["sde", "system-design", "resources"]
-    },
-    {
-        id: 3,
-        title: "Review of the new Web Development elective",
-        author: "Michael Chen",
-        avatar: "https://picsum.photos/seed/user3/40/40",
-        time: "2 days ago",
-        replies: 5,
-        upvotes: 21,
-        tags: ["academics", "courses", "review"]
-    }
-];
+import { useUser } from '@/firebase';
+import { useForum, type ForumPost } from '@/hooks/use-forum';
 
 // This is the main page for the discussion forum.
 export default function ForumPage() {
-    const [discussions, setDiscussions] = useState<Discussion[]>([]);
+    const { user } = useUser();
+    const { posts, isLoading, addPost } = useForum();
+
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [newDiscussionTitle, setNewDiscussionTitle] = useState('');
     const [newDiscussionContent, setNewDiscussionContent] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
 
-    // Loads discussions from localStorage on the first render (client-side only).
-    // If none exist, it uses the initial mock data.
-    useEffect(() => {
-        try {
-            const storedDiscussions = localStorage.getItem('discussions');
-            if (storedDiscussions) {
-                setDiscussions(JSON.parse(storedDiscussions));
-            } else {
-                setDiscussions(initialDiscussions);
-            }
-        } catch (error) {
-            console.error("Failed to load discussions from localStorage", error);
-            setDiscussions(initialDiscussions);
-        }
-    }, []);
-
-    // Saves discussions to localStorage whenever the `discussions` state changes.
-    // This makes new posts persist across page reloads.
-    useEffect(() => {
-        try {
-            // We only save to localStorage if the discussions have been initialized and changed from the initial state
-            if (discussions.length > 0 && discussions !== initialDiscussions) {
-                 localStorage.setItem('discussions', JSON.stringify(discussions));
-            }
-        } catch (error) {
-            console.error("Failed to save discussions to localStorage", error);
-        }
-    }, [discussions]);
-
-
     // Handles the creation of a new discussion post.
-    const handleStartDiscussion = () => {
+    const handleStartDiscussion = async () => {
         if (!newDiscussionTitle.trim() || !newDiscussionContent.trim()) {
             toast({
                 title: "Incomplete Discussion",
@@ -108,30 +36,37 @@ export default function ForumPage() {
             return;
         }
 
-        const newDiscussion: Discussion = {
-            id: Date.now(),
-            title: newDiscussionTitle,
-            content: newDiscussionContent,
-            author: "Demo User", // In a real app, this would come from the logged-in user.
-            avatar: "https://picsum.photos/seed/user-avatar/40/40",
-            time: "Just now",
-            replies: 0,
-            upvotes: 0,
-            tags: ["new"],
-        };
+        if (!user) {
+             toast({
+                title: "Not Logged In",
+                description: "You must be logged in to start a discussion.",
+                variant: "destructive",
+            });
+            return;
+        }
 
-        // Adds the new discussion to the top of the list for immediate visibility.
-        setDiscussions(prevDiscussions => [newDiscussion, ...prevDiscussions]);
-        
-        // Resets the form fields and closes the dialog.
-        setNewDiscussionTitle('');
-        setNewDiscussionContent('');
-        setIsDialogOpen(false);
+        setIsSubmitting(true);
+        try {
+            await addPost(newDiscussionTitle, newDiscussionContent);
+            
+            // Resets the form fields and closes the dialog.
+            setNewDiscussionTitle('');
+            setNewDiscussionContent('');
+            setIsDialogOpen(false);
 
-        toast({
-            title: "Discussion Started!",
-            description: "Your post has been added to the forum.",
-        });
+            toast({
+                title: "Discussion Started!",
+                description: "Your post has been added to the forum.",
+            });
+        } catch (error: any) {
+            toast({
+                title: "Submission Failed",
+                description: error.message || "Could not add your post. Please try again.",
+                variant: "destructive",
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -178,7 +113,10 @@ export default function ForumPage() {
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button onClick={handleStartDiscussion}>Post Discussion</Button>
+                            <Button onClick={handleStartDiscussion} disabled={isSubmitting}>
+                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSubmitting ? "Posting..." : "Post Discussion"}
+                            </Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -187,52 +125,59 @@ export default function ForumPage() {
             {/* A quick-post input field for convenience. */}
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10 border">
-                    <AvatarImage src="https://picsum.photos/seed/user-avatar/40/40" />
-                    <AvatarFallback>U</AvatarFallback>
+                    <AvatarImage src={user?.photoURL || `https://api.dicebear.com/8.x/bottts/svg?seed=${user?.uid}`} />
+                    <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
-                <Input placeholder="What's on your mind?" className="h-12" />
+                <Input placeholder="What's on your mind?" className="h-12" onClick={() => setIsDialogOpen(true)} readOnly/>
             </div>
 
             {/* Renders the list of discussion cards. */}
-            <div className="space-y-4">
-                {discussions.map(d => (
-                    <Card key={d.id} className="hover:border-primary cursor-pointer transition-colors">
-                        <CardContent className="p-6 flex items-start gap-6">
-                            <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                                <Button variant="ghost" size="sm" className="flex flex-col h-auto p-1">
-                                    <ThumbsUp className="h-5 w-5"/>
-                                    <span className="text-xs font-bold">{d.upvotes}</span>
-                                </Button>
-                            </div>
-                            <div className="flex-1">
-                                <CardTitle className="text-lg mb-2">{d.title}</CardTitle>
-                                <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
-                                    <div className="flex items-center gap-2">
-                                        <Avatar className="h-6 w-6">
-                                            <AvatarImage src={d.avatar} />
-                                            <AvatarFallback>{d.author.charAt(0)}</AvatarFallback>
-                                        </Avatar>
-                                        <span>{d.author}</span>
+            {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {posts?.map(d => (
+                        <Card key={d.id} className="hover:border-primary cursor-pointer transition-colors">
+                            <CardContent className="p-6 flex items-start gap-6">
+                                <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                                    <Button variant="ghost" size="sm" className="flex flex-col h-auto p-1">
+                                        <ThumbsUp className="h-5 w-5"/>
+                                        <span className="text-xs font-bold">{d.upvoteUserIds?.length || 0}</span>
+                                    </Button>
+                                </div>
+                                <div className="flex-1">
+                                    <CardTitle className="text-lg mb-2">{d.title}</CardTitle>
+                                    <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
+                                        <div className="flex items-center gap-2">
+                                            <Avatar className="h-6 w-6">
+                                                <AvatarImage src={`https://api.dicebear.com/8.x/bottts/svg?seed=${d.authorId}`} />
+                                                <AvatarFallback>{d.authorName?.charAt(0) || 'A'}</AvatarFallback>
+                                            </Avatar>
+                                            <span>{d.authorName}</span>
+                                        </div>
+                                        <span>&bull;</span>
+                                        <span>{d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span>
+                                        <span>&bull;</span>
+                                        <div className="flex items-center gap-1">
+                                            <MessageSquare className="h-4 w-4" />
+                                            {/* Reply count can be added later as a feature */}
+                                            <span>0 replies</span>
+                                        </div>
                                     </div>
-                                    <span>&bull;</span>
-                                    <span>{d.time}</span>
-                                    <span>&bull;</span>
-                                    <div className="flex items-center gap-1">
-                                        <MessageSquare className="h-4 w-4" />
-                                        <span>{d.replies} replies</span>
+                                    <p className="text-sm text-foreground mt-3">{d.content}</p>
+                                    <div className="mt-4 flex gap-2">
+                                        {/* Tagging can be added later as a feature */}
                                     </div>
                                 </div>
-                                {d.content && <p className="text-sm text-foreground mt-3">{d.content}</p>}
-                                <div className="mt-4 flex gap-2">
-                                    {d.tags.map(tag => (
-                                        <span key={tag} className="px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full text-xs font-medium">{tag}</span>
-                                    ))}
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-                ))}
-            </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </div>
     )
 }
+
+    

@@ -1,19 +1,27 @@
 
 // This file contains mock data and functions for prototyping purposes.
 // In a real application, this would be replaced by a proper database like Firestore.
-export type User = {
+export type UserProfile = {
     id: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
     email: string;
-    usn: string;
-    year: number;
-    semester: number;
-    course: string;
-    linkedin: string;
-    leetcode: string;
-    bio?: string;
-    github?: string;
-    profilePicture?: string;
+    role: 'student' | 'faculty';
+    // Student specific
+    usn?: string;
+    year?: number;
+    semester?: number;
+    course?: string;
+    branch?: string;
+    // Faculty specific
+    department?: string;
+    facultyId?: string;
+    uniqueCode?: string;
+    // Optional social links
+    linkedinUrl?: string;
+    leetcodeUrl?: string;
+    githubUrl?: string;
+    profilePictureUrl?: string;
 };
 
 // Represents a request to change a University Seat Number (USN).
@@ -28,109 +36,32 @@ export type UsnChangeRequest = {
     requestedAt: string;
 }
 
-// Our mock database, stored in the browser's localStorage for data persistence across refreshes.
-const defaultUsers: Record<string, User> = {
-    'user-faculty-1': {
-        id: 'user-faculty-1',
-        fullName: 'Suraj Rao',
-        email: 'surajrao081005@gmail.com',
-        usn: 'FAC001',
-        year: 0,
-        semester: 0,
-        course: 'Faculty',
-        linkedin: '',
-        leetcode: '',
-        bio: 'Faculty member in the Computer Science department.',
-        github: '',
-        profilePicture: 'https://picsum.photos/seed/faculty1/200/200'
-    },
-    'user-student-1': {
-        id: 'user-student-1',
-        fullName: 'Alex Doe',
-        email: 'alex.doe@example.com',
-        usn: '1CR21CS001',
-        year: 3,
-        semester: 6,
-        course: 'btech',
-        linkedin: 'https://www.linkedin.com/in/alex-doe',
-        leetcode: 'https://leetcode.com/alexdoe',
-        bio: 'Aspiring Software Engineer, passionate about open-source and web development.',
-        github: 'https://github.com/alexdoe',
-        profilePicture: 'https://picsum.photos/seed/student1/200/200'
+// Safely gets data from localStorage, handling server-side rendering.
+const getFromStorage = <T>(key: string, defaultValue: T): T => {
+    if (typeof window === 'undefined') return defaultValue;
+    const item = localStorage.getItem(key);
+    if (!item) {
+        localStorage.setItem(key, JSON.stringify(defaultValue));
+        return defaultValue;
+    }
+    try {
+        return JSON.parse(item) as T;
+    } catch (e) {
+        console.error(`Failed to parse ${key} from localStorage`, e);
+        return defaultValue;
     }
 }
 
-// Safely gets user profiles from localStorage, handling server-side rendering.
-const getUsers = (): Record<string, User> => {
-    if (typeof window === 'undefined') return defaultUsers;
-    let usersJson = localStorage.getItem('users');
-    if (!usersJson) {
-        saveUsers(defaultUsers);
-        usersJson = JSON.stringify(defaultUsers);
-    }
-    return JSON.parse(usersJson);
-};
-
-// Safely saves user profiles to localStorage.
-const saveUsers = (users: Record<string, User>) => {
+// Safely saves data to localStorage.
+const saveToStorage = <T>(key: string, value: T) => {
     if (typeof window === 'undefined') return;
-    localStorage.setItem('users', JSON.stringify(users));
-};
+    localStorage.setItem(key, JSON.stringify(value));
+}
 
-// Safely gets USN change requests from localStorage.
-const getRequests = (): UsnChangeRequest[] => {
-    if (typeof window === 'undefined') return [];
-    const requests = localStorage.getItem('usnChangeRequests');
-    return requests ? JSON.parse(requests) : [];
-};
+// --- USN Change Requests ---
 
-// Safely saves USN change requests to localStorage.
-const saveRequests = (requests: UsnChangeRequest[]) => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('usnChangeRequests', JSON.stringify(requests));
-};
-
-// Finds a user profile by their email address.
-export const findUserByEmail = (email: string): User | null => {
-    const users = getUsers();
-    return Object.values(users).find(user => user.email === email) || null;
-};
-
-// Creates a new user in the mock database.
-export const createUser = (userData: Omit<User, 'id'>): User => {
-    const users = getUsers();
-    const email = userData.email.toLowerCase();
-    if (findUserByEmail(email)) {
-        throw new Error("User with this email already exists.");
-    }
-    const id = `user_${Date.now()}`;
-    const newUser: User = { 
-        id, 
-        ...userData,
-        linkedin: userData.linkedin || "",
-        leetcode: userData.leetcode || ""
-    };
-    users[id] = newUser;
-    saveUsers(users);
-    return newUser;
-};
-
-// Updates an existing user's data.
-export const updateUser = (userId: string, updatedData: Partial<User>): User | null => {
-    const users = getUsers();
-    if (!users[userId]) return null;
-
-    users[userId] = {
-        ...users[userId],
-        ...updatedData,
-    };
-    saveUsers(users);
-    return users[userId];
-};
-
-// Creates a new request for a USN change.
 export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' | 'status' | 'requestedAt'>) => {
-    let requests = getRequests();
+    let requests = getFromStorage<UsnChangeRequest[]>('usnChangeRequests', []);
     const existingRequest = requests.find(r => r.userId === requestData.userId && r.status === 'pending');
     if (existingRequest) {
         throw new Error("You already have a pending USN change request.");
@@ -143,44 +74,39 @@ export const createUsnChangeRequest = (requestData: Omit<UsnChangeRequest, 'id' 
         requestedAt: new Date().toISOString(),
     };
     requests.push(newRequest);
-    saveRequests(requests);
+    saveToStorage('usnChangeRequests', requests);
     return newRequest;
 };
 
-// Retrieves all pending USN change requests.
 export const getPendingUsnRequests = (): UsnChangeRequest[] => {
-    const requests = getRequests();
+    const requests = getFromStorage<UsnChangeRequest[]>('usnChangeRequests', []);
     return requests.filter(req => req.status === 'pending').sort((a, b) => new Date(a.requestedAt).getTime() - new Date(b.requestedAt).getTime());
 };
 
-// Gets the pending USN request for a specific user.
-export const getUsnRequestForUser = (userId: string): UsnChangeRequest | undefined => {
-    const requests = getRequests();
-    return requests.find(r => r.userId === userId && r.status === 'pending');
-}
-
-// Approves a USN change request and updates the user's profile.
 export const approveUsnChange = (requestId: string) => {
-    let requests = getRequests();
+    let requests = getFromStorage<UsnChangeRequest[]>('usnChangeRequests', []);
     const requestIndex = requests.findIndex(r => r.id === requestId);
     if (requestIndex === -1) throw new Error("Request not found.");
 
     const request = requests[requestIndex];
     if (request.status !== 'pending') throw new Error("This request has already been processed.");
     
-    const users = getUsers();
-    if (!users[request.userId]) throw new Error("User associated with this request not found.");
-
-    users[request.userId].usn = request.newUsn;
-    saveUsers(users);
+    // In a mock environment, we directly update the user's USN.
+    // In a real app, this logic might be in a cloud function.
+    let users = getFromStorage<Record<string, UserProfile>>('userProfiles', {});
+    if (users[request.userId]) {
+        users[request.userId].usn = request.newUsn;
+        saveToStorage('userProfiles', users);
+    } else {
+        throw new Error("User associated with this request not found.");
+    }
 
     requests[requestIndex].status = 'approved';
-    saveRequests(requests);
+    saveToStorage('usnChangeRequests', requests);
 };
 
-// Denies a USN change request.
 export const denyUsnChange = (requestId: string) => {
-    let requests = getRequests();
+    let requests = getFromStorage<UsnChangeRequest[]>('usnChangeRequests', []);
     const requestIndex = requests.findIndex(r => r.id === requestId);
     if (requestIndex === -1) throw new Error("Request not found.");
 
@@ -188,5 +114,7 @@ export const denyUsnChange = (requestId: string) => {
     if (request.status !== 'pending') throw new Error("This request has already been processed.");
 
     requests[requestIndex].status = 'denied';
-    saveRequests(requests);
+    saveToStorage('usnChangeRequests', requests);
 };
+
+    
