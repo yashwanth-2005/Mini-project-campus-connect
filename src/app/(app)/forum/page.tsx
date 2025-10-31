@@ -67,7 +67,7 @@ export default function ForumPage() {
     const [newDiscussionContent, setNewDiscussionContent] = useState('');
     const { toast } = useToast();
 
-    // Loads discussions from localStorage on the first render.
+    // Loads discussions from localStorage on the first render (client-side only).
     // If none exist, it uses the initial mock data.
     useEffect(() => {
         try {
@@ -87,6 +87,7 @@ export default function ForumPage() {
     // This makes new posts persist across page reloads.
     useEffect(() => {
         try {
+            // We only save to localStorage if the discussions have been initialized and changed from the initial state
             if (discussions.length > 0 && discussions !== initialDiscussions) {
                  localStorage.setItem('discussions', JSON.stringify(discussions));
             }
