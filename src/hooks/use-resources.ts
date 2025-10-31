@@ -2,10 +2,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useUser, useFirestore, useStorage } from '@/firebase';
-import { collection, query, addDoc, updateDoc, deleteDoc, serverTimestamp, doc } from 'firebase/firestore';
+import { useUser, useFirestore, useStorage, useMemoFirebase } from '@/firebase';
+import { collection, query, addDoc, updateDoc, deleteDoc, serverTimestamp, doc, orderBy } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
-import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
 const USE_MOCK_DB = process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true';
 
@@ -30,8 +30,11 @@ export function useResources() {
     const storage = useStorage();
 
     // --- Firestore Logic ---
-    const resourcesCollectionRef = (firestore && !USE_MOCK_DB) ? collection(firestore, 'resources') : null;
-    const { data: firestoreResources, isLoading: isLoadingFirestore, error } = useCollection<Resource>(resourcesCollectionRef);
+    const resourcesQuery = useMemoFirebase(() => 
+        (firestore && !USE_MOCK_DB) ? query(collection(firestore, 'resources'), orderBy('uploadDate', 'desc')) : null,
+        [firestore]
+    );
+    const { data: firestoreResources, isLoading: isLoadingFirestore, error } = useCollection<Resource>(resourcesQuery);
 
     // --- Mock DB Logic ---
     const [mockResources, setMockResources] = useState<Resource[]>([]);
@@ -42,7 +45,9 @@ export function useResources() {
         if (USE_MOCK_DB) {
             setIsLoadingMock(true);
             const stored = localStorage.getItem('resources');
-            setMockResources(stored ? JSON.parse(stored) : []);
+            const resources = stored ? JSON.parse(stored) : [];
+            resources.sort((a: Resource, b: Resource) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
+            setMockResources(resources);
             setIsLoadingMock(false);
         }
     }, []);
@@ -70,7 +75,7 @@ export function useResources() {
                 fileUrl: URL.createObjectURL(file), // Create a temporary local URL
                 storagePath: `mock/resources/${file.name}`,
             };
-            const updatedResources = [...mockResources, newResource];
+            const updatedResources = [newResource, ...mockResources];
             localStorage.setItem('resources', JSON.stringify(updatedResources));
             setMockResources(updatedResources);
         } else {
@@ -95,6 +100,8 @@ export function useResources() {
     }, [user, firestore, storage, mockResources]);
 
     const updateResource = useCallback(async (resourceId: string, title: string, description: string) => {
+        if (!user) throw new Error("User not authenticated.");
+
         if (USE_MOCK_DB) {
             const updatedResources = mockResources.map(r => 
                 r.id === resourceId ? { ...r, name: title, description } : r
@@ -106,9 +113,11 @@ export function useResources() {
             const resourceDocRef = doc(firestore, 'resources', resourceId);
             await updateDoc(resourceDocRef, { name: title, description: description });
         }
-    }, [firestore, mockResources]);
+    }, [firestore, mockResources, user]);
 
     const deleteResource = useCallback(async (resourceId: string, storagePath: string) => {
+        if (!user) throw new Error("User not authenticated.");
+        
         if (USE_MOCK_DB) {
             const updatedResources = mockResources.filter(r => r.id !== resourceId);
             localStorage.setItem('resources', JSON.stringify(updatedResources));
@@ -120,7 +129,7 @@ export function useResources() {
             await deleteObject(fileRef); // Delete from Storage
             await deleteDoc(resourceDocRef); // Delete from Firestore
         }
-    }, [firestore, storage, mockResources]);
+    }, [firestore, storage, mockResources, user]);
 
     return {
         resources: USE_MOCK_DB ? mockResources : firestoreResources,
@@ -131,5 +140,3 @@ export function useResources() {
         deleteResource,
     };
 }
-
-    

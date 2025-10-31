@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { UserProfile } from '@/lib/mock-db';
 
 const USE_MOCK_DB = process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true';
@@ -27,6 +27,7 @@ export function useProfile() {
     useEffect(() => {
         if (USE_MOCK_DB && user) {
             setIsMockLoading(true);
+            // This code now runs only on the client, preventing server errors
             const profiles = JSON.parse(localStorage.getItem('userProfiles') || '{}');
             const profile = profiles[user.uid];
             setMockProfile(profile || null);
@@ -35,7 +36,7 @@ export function useProfile() {
     }, [user]);
 
     // This function abstracts the update operation.
-    const updateUserProfile = useCallback(async (data: Partial<UserProfile>) => {
+    const updateUserProfile = useCallback(async (data: Partial<Omit<UserProfile, 'id' | 'email' | 'role'>>) => {
         if (!user) throw new Error("User not authenticated.");
 
         if (USE_MOCK_DB) {
@@ -59,5 +60,3 @@ export function useProfile() {
         updateUserProfile,
     };
 }
-
-    

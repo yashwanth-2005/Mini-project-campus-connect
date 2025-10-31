@@ -151,7 +151,7 @@ export default function ProfilePage() {
             createUsnChangeRequest({
                 userId: user.uid,
                 studentName: user.displayName || 'N/A',
-                currentUsn: userProfile.usn,
+                currentUsn: userProfile.usn || '',
                 newUsn: data.newUsn.toUpperCase(),
                 reason: data.reason
             });
@@ -220,7 +220,7 @@ export default function ProfilePage() {
                         <div className="flex items-center gap-6">
                             <Avatar className="h-24 w-24 border">
                                 <AvatarImage src={previewImage || `https://api.dicebear.com/8.x/bottts/svg?seed=${user?.uid}`} />
-                                <AvatarFallback>{userProfile.firstName.charAt(0)}</AvatarFallback>
+                                <AvatarFallback>{userProfile.firstName?.charAt(0) || 'U'}</AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-2">
                                 <Label htmlFor="picture">Profile Picture</Label>
@@ -262,7 +262,7 @@ export default function ProfilePage() {
                                 <div className="space-y-2">
                                     <Label>USN (University Seat Number)</Label>
                                      <div className="flex items-center gap-2">
-                                        <Input value={userProfile.usn} readOnly className="bg-muted/50" />
+                                        <Input value={userProfile.usn || ''} readOnly className="bg-muted/50" />
                                         <Dialog open={isUsnDialogOpen} onOpenChange={setIsUsnDialogOpen}>
                                             <DialogTrigger asChild>
                                                 <Button type="button" variant="outline" disabled={pendingUsnRequest}>
@@ -441,5 +441,3 @@ export default function ProfilePage() {
         </Form>
     );
 }
-
-    
