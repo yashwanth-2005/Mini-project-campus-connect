@@ -93,31 +93,25 @@ const staggerContainer = {
   },
 };
 
-// Defines an item variant for staggered animations.
-const staggerItem = {
-  initial: { opacity: 0, y: 20, scale: 0.95 },
-  animate: { opacity: 1, y: 0, scale: 1 },
-};
+const MotionCard = motion(Card);
 
 // A reusable component for displaying a feature card with a hover effect.
 const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
     return (
-        <motion.div
-            variants={staggerItem}
+        <MotionCard
+            variants={fadeIn}
             whileHover={{ scale: 1.03, y: -5 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="feature-card h-full"
         >
-            <Card className="h-full">
-                <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
-                  {feature.icon}
-                  <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 pt-4">
-                  <p className="text-muted-foreground text-sm">{feature.description}</p>
-                </CardContent>
-            </Card>
-        </motion.div>
+            <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
+              {feature.icon}
+              <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 pt-4">
+              <p className="text-muted-foreground text-sm">{feature.description}</p>
+            </CardContent>
+        </MotionCard>
     );
 };
 
@@ -174,7 +168,6 @@ export default function Home() {
             initial="initial"
             animate="animate"
             variants={staggerContainer}
-            transition={{ staggerChildren: 0.2 }}
           >
           <div className="container text-center">
             <motion.div variants={fadeIn} className="max-w-4xl mx-auto">
@@ -184,19 +177,19 @@ export default function Home() {
               <p className="max-w-2xl mx-auto mt-4 text-lg text-muted-foreground">
                 Connect, collaborate, and conquer your college journey. From placements to discussions, we've got you covered.
               </p>
-              <div className="flex flex-wrap justify-center gap-4 mt-8">
-                <Button 
-                    size="lg" 
-                    className="shine-button"
-                    onClick={() => handleLinkClick('/signup', 'get-started')}
-                    disabled={!!loading}
-                >
-                    Get Started
-                </Button>
-                <Button asChild variant="outline" size="lg" className="shine-button">
-                    <Link href="#features">Explore Features</Link>
-                </Button>
-              </div>
+            </motion.div>
+            <motion.div variants={fadeIn} className="flex flex-wrap justify-center gap-4 mt-8">
+              <Button 
+                  size="lg" 
+                  className="shine-button"
+                  onClick={() => handleLinkClick('/signup', 'get-started')}
+                  disabled={!!loading}
+              >
+                  Get Started
+              </Button>
+              <Button asChild variant="outline" size="lg" className="shine-button">
+                  <Link href="#features">Explore Features</Link>
+              </Button>
             </motion.div>
           </div>
         </motion.section>
@@ -280,8 +273,7 @@ export default function Home() {
                   variants={staggerContainer}
                   >
                     {testimonials.map((testimonial) => (
-                         <motion.div key={testimonial.name} variants={staggerItem}>
-                          <Card className="bg-card p-6 flex flex-col justify-center items-center text-center h-full">
+                         <MotionCard key={testimonial.name} variants={fadeIn} className="bg-card p-6 flex flex-col justify-center items-center text-center h-full">
                               <CardHeader className="p-0 items-center">
                                   <Avatar className="w-20 h-20 mb-4 border-2 border-primary">
                                       <AvatarImage src={testimonial.avatar} />
@@ -296,8 +288,7 @@ export default function Home() {
                                   </div>
                                   <p className="text-muted-foreground text-sm italic">&quot;{testimonial.testimonial}&quot;</p>
                               </CardContent>
-                          </Card>
-                         </motion.div>
+                          </MotionCard>
                     ))}
                 </motion.div>
             </div>
