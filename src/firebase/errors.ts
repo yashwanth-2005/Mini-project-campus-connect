@@ -2,14 +2,14 @@
 'use client';
 import { getAuth, type User } from 'firebase/auth';
 
-// This defines the context of a Firestore security rule failure.
+// This defines the information we need about a Firestore security rule that failed.
 type SecurityRuleContext = {
   path: string;
   operation: 'get' | 'list' | 'create' | 'update' | 'delete' | 'write';
   requestResourceData?: any;
 };
 
-// This is a simplified version of the Firebase Auth token available in security rules.
+// This is a simplified version of the Firebase Auth token that security rules see.
 interface FirebaseAuthToken {
   name: string | null;
   email: string | null;
@@ -29,7 +29,7 @@ interface FirebaseAuthObject {
   token: FirebaseAuthToken;
 }
 
-// This represents the simulated request object that failed the security rules.
+// This represents the entire simulated request that failed the security rules.
 interface SecurityRuleRequest {
   auth: FirebaseAuthObject | null;
   method: string;
@@ -39,7 +39,7 @@ interface SecurityRuleRequest {
   };
 }
 
-// This function builds an auth object from a Firebase User, mimicking what security rules see.
+// This function builds an `auth` object from a Firebase User, mimicking what security rules would see.
 function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
   if (!currentUser) {
     return null;
@@ -69,18 +69,18 @@ function buildAuthObject(currentUser: User | null): FirebaseAuthObject | null {
   };
 }
 
-// This function builds the complete, simulated request object for the error message.
+// This function builds the complete, simulated request object that will be shown in the error message.
 function buildRequestObject(context: SecurityRuleContext): SecurityRuleRequest {
   let authObject: FirebaseAuthObject | null = null;
   try {
-    // Safely attempts to get the current user, failing gracefully if Firebase isn't ready.
+    // We safely try to get the current user, failing gracefully if Firebase isn't ready.
     const firebaseAuth = getAuth();
     const currentUser = firebaseAuth.currentUser;
     if (currentUser) {
       authObject = buildAuthObject(currentUser);
     }
   } catch {
-    // Fails silently.
+    // If Firebase isn't initialized, we just proceed without authentication info.
   }
 
   return {
@@ -98,9 +98,9 @@ ${JSON.stringify(requestObject, null, 2)}`;
 }
 
 /**
- * A custom error class that gives rich, contextual information about
- * a Firestore permission error. It helps developers debug security rules by
- * showing exactly what the failed request looked like.
+ * This is a custom error class designed to give rich, helpful information about
+ * a Firestore permission error. It helps us debug our security rules by
+ * showing exactly what the failed database request looked like from the server's perspective.
  */
 export class FirestorePermissionError extends Error {
   public readonly request: SecurityRuleRequest;

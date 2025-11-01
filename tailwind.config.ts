@@ -17,7 +17,8 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // Use the CSS variable defined in the layout file.
+        // We use a CSS variable for our main font, which is set in the layout file.
+        // This makes it easy to change the font across the entire app.
         sans: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
       },

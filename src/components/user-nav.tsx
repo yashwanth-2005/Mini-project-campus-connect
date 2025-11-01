@@ -19,29 +19,30 @@ import { Skeleton } from "./ui/skeleton"
 import { useUser, useAuth } from "@/firebase"
 import { signOut } from "firebase/auth"
 
-// This component displays the user's avatar and a dropdown menu with profile-related links.
+// This component displays the user's avatar in the top corner
+// and a dropdown menu with profile-related links.
 export function UserNav() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
 
-  // Handles the user logout process using Firebase's `signOut` function.
+  // This function signs the user out using Firebase's `signOut` function.
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      // Redirects the user to the homepage after a successful logout.
+      // After a successful logout, we redirect the user to the homepage.
       router.push('/');
     } catch (error) {
       console.error("Error signing out: ", error);
     }
   }
 
-  // Shows a loading skeleton while the user's authentication state is being checked.
+  // We show a loading skeleton while we're checking if the user is logged in.
   if (isUserLoading) {
     return <Skeleton className="h-9 w-9 rounded-full" />
   }
   
-  // If no user is logged in, this component doesn't render anything.
+  // If no user is logged in, this component doesn't show anything.
   if (!user) {
      return null;
   }

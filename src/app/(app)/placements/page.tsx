@@ -34,7 +34,7 @@ export default function PlacementsPage() {
                 <p className="text-muted-foreground">All-in-one hub for your placement preparation.</p>
             </div>
 
-            {/* Tabs are used to organize the different sections of the placement corner. */}
+            {/* We use tabs to organize the different sections of the placement corner. */}
             <Tabs defaultValue="roadmaps">
                 <TabsList className="grid w-full grid-cols-4">
                     <TabsTrigger value="roadmaps">Roadmaps</TabsTrigger>

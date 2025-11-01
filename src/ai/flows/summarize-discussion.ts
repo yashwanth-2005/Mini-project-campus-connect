@@ -8,7 +8,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-// Defines the expected input for the summarization flow.
+// This is the input for our summarizer. It just expects a single piece of text.
 const SummarizeDiscussionInputSchema = z.object({
   discussionText: z
     .string()
@@ -16,18 +16,18 @@ const SummarizeDiscussionInputSchema = z.object({
 });
 export type SummarizeDiscussionInput = z.infer<typeof SummarizeDiscussionInputSchema>;
 
-// Defines the expected output for the summarization flow.
+// This is the output we expect from the AI: a single string containing the summary.
 const SummarizeDiscussionOutputSchema = z.object({
   summary: z.string().describe('A concise summary of the discussion thread.'),
 });
 export type SummarizeDiscussionOutput = z.infer<typeof SummarizeDiscussionOutputSchema>;
 
-// The main function that clients will call to trigger the flow.
+// This is the main function that our app will call to start the summarization.
 export async function summarizeDiscussion(input: SummarizeDiscussionInput): Promise<SummarizeDiscussionOutput> {
   return summarizeDiscussionFlow(input);
 }
 
-// Defines the prompt and instructions for the AI model.
+// Here we define the instructions for the AI model.
 const prompt = ai.definePrompt({
   name: 'summarizeDiscussionPrompt',
   input: {schema: SummarizeDiscussionInputSchema},
@@ -39,7 +39,7 @@ const prompt = ai.definePrompt({
   {{{discussionText}}}`,
 });
 
-// Defines the Genkit flow that orchestrates the summarization process.
+// This "flow" ties everything together. It takes the input, sends it to the prompt, and returns the AI's output.
 const summarizeDiscussionFlow = ai.defineFlow(
   {
     name: 'summarizeDiscussionFlow',

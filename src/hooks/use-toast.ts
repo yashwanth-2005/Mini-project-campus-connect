@@ -1,8 +1,8 @@
 
 "use client"
 
-// This custom hook is inspired by the react-hot-toast library.
-// It provides a simple, centralized way to create and manage toast notifications.
+// This custom hook is inspired by the popular 'react-hot-toast' library.
+// It provides a simple, clean way to create and manage "toast" notifications from anywhere in the app.
 import * as React from "react"
 
 import type {
@@ -10,8 +10,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 3000;
+const TOAST_LIMIT = 1; // We only want to show one toast at a time.
+const TOAST_REMOVE_DELAY = 3000; // Toasts will automatically disappear after 3 seconds.
 
 type ToasterToast = ToastProps & {
   id: string
@@ -30,7 +30,7 @@ const actionTypes = {
 
 let count = 0
 
-// Generates a unique, sequential ID for each new toast.
+// This function generates a unique, sequential ID for each new toast.
 function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER
   return count.toString()
@@ -62,7 +62,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-// Schedules a toast to be removed from the DOM after a set delay.
+// This function schedules a toast to be completely removed from the DOM after a delay.
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
@@ -79,7 +79,9 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
-// The reducer function is a pure function that manages the state of all toasts.
+// The "reducer" is a standard React pattern. It's a pure function that takes the
+// current state and an action, and returns the new state. It's the central place
+// where all state changes for toasts are handled.
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -137,7 +139,7 @@ const listeners: Array<(state: State) => void> = []
 
 let memoryState: State = { toasts: [] }
 
-// Dispatches an action to the reducer and notifies all subscribed components.
+// This function dispatches an action to the reducer and then notifies all subscribed components of the state change.
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
@@ -147,7 +149,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-// The main function that components call to create a new toast.
+// This is the main function that components will call to create a new toast notification.
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -177,7 +179,7 @@ function toast({ ...props }: Toast) {
   }
 }
 
-// The hook that components use to get the current toast state and dispatcher.
+// This is the hook that components use to get the current toast state and the `toast` function.
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 

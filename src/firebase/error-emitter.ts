@@ -2,25 +2,26 @@
 'use client';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// This interface defines all possible events and their corresponding data types.
-// It centralizes event definitions for type safety across the application.
+// This interface defines all the possible "events" that can happen in our app
+// and the type of data that comes with them. This helps us avoid typos.
 export interface AppEvents {
   'permission-error': FirestorePermissionError;
 }
 
-// This is a generic type for a callback function.
+// This is a generic type for a function that will be called when an event happens.
 type Callback<T> = (data: T) => void;
 
 /**
- * A strongly-typed event system (also known as a "pub/sub" model).
- * It allows different parts of the application to communicate without being directly linked.
+ * This function creates a simple, strongly-typed event system (also known as a "pub/sub" or "publisher-subscriber" model).
+ * It lets different parts of the app communicate with each other without being directly connected.
+ * For example, our database code can "emit" an error, and our UI code can "listen" for it.
  */
 function createEventEmitter<T extends Record<string, any>>() {
-  // Stores arrays of callbacks, organized by the event name.
+  // This object will store our listeners. The keys are event names, and the values are arrays of functions to call.
   const events: { [K in keyof T]?: Array<Callback<T[K]>> } = {};
 
   return {
-    // Subscribes a function to an event.
+    // This function lets a part of our code "subscribe" to an event.
     on<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
       if (!events[eventName]) {
         events[eventName] = [];
@@ -28,7 +29,7 @@ function createEventEmitter<T extends Record<string, any>>() {
       events[eventName]?.push(callback);
     },
 
-    // Unsubscribes a function from an event.
+    // This function lets a part of our code "unsubscribe" from an event.
     off<K extends keyof T>(eventName: K, callback: Callback<T[K]>) {
       if (!events[eventName]) {
         return;
@@ -36,7 +37,7 @@ function createEventEmitter<T extends Record<string, any>>() {
       events[eventName] = events[eventName]?.filter(cb => cb !== callback);
     },
 
-    // Publishes an event, calling all subscribed functions.
+    // This function "emits" or "publishes" an event, which calls all the subscribed functions.
     emit<K extends keyof T>(eventName: K, data: T[K]) {
       if (!events[eventName]) {
         return;
@@ -46,5 +47,5 @@ function createEventEmitter<T extends Record<string, any>>() {
   };
 }
 
-// Creates and exports a single, global instance of the event emitter for the app.
+// We create and export a single, global instance of the event emitter for our app to use.
 export const errorEmitter = createEventEmitter<AppEvents>();

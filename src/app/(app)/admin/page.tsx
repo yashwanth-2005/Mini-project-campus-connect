@@ -13,7 +13,7 @@ import { useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, type WithId } from '@/firebase/firestore/use-collection';
 
-// Defines the structure for a USN change request document from Firestore.
+// This is the data structure for a USN change request from our database.
 export type UsnChangeRequest = {
     id: string;
     userId: string;
@@ -25,26 +25,28 @@ export type UsnChangeRequest = {
     requestedAt: any;
 };
 
-// This is the admin page, only accessible to faculty members.
+// This is the admin page, which should only be accessible to faculty members.
 export default function AdminPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
+  // We get the user's role from the URL to decide if they can see this page.
   const role = searchParams.get('role');
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // Memoize the Firestore query for pending USN change requests.
+  // This creates a database query to get all USN change requests that are "pending".
   const requestsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'usn_change_requests'), where('status', '==', 'pending'));
   }, [firestore]);
 
-  // Use the useCollection hook to get real-time updates.
+  // This hook fetches the data from our query and updates it in real-time.
   const { data: requests, isLoading: isLoadingRequests } = useCollection<UsnChangeRequest>(requestsQuery);
 
-  // When the page loads, it checks if the user's role is 'faculty'.
+  // This effect runs when the page loads to check if the user is a faculty member.
+  // If not, it redirects them back to the main dashboard.
   useEffect(() => {
     if (role !== 'faculty') {
       router.push('/dashboard');
@@ -52,17 +54,20 @@ export default function AdminPage() {
     }
   }, [role, router]);
 
-  // Approves a student's USN change request.
+  // This function approves a student's USN change request.
   const handleApprove = async (request: WithId<UsnChangeRequest>) => {
     if (!firestore) return;
     setActionLoading(request.id);
     try {
-        // Use a batch write to update both the request and the user's profile atomically.
+        // A "batch write" lets us update two different documents at the same time.
+        // If one update fails, the other one is rolled back, ensuring data consistency.
         const batch = writeBatch(firestore);
 
+        // First, we update the status of the request to "approved".
         const requestRef = doc(firestore, 'usn_change_requests', request.id);
         batch.update(requestRef, { status: 'approved' });
 
+        // Second, we update the student's actual USN in their user profile.
         const userRef = doc(firestore, 'users', request.userId);
         batch.update(userRef, { usn: request.newUsn });
 
@@ -83,7 +88,7 @@ export default function AdminPage() {
     }
   };
 
-  // Denies a student's USN change request.
+  // This function denies a student's USN change request.
   const handleDeny = async (requestId: string) => {
     if (!firestore) return;
     setActionLoading(requestId);
@@ -139,14 +144,14 @@ export default function AdminPage() {
                         </TableCell>
                     </TableRow>
                 ) : !requests || requests.length === 0 ? (
-                  // Shows a message if there are no pending requests.
+                  // This message shows if there are no pending requests to review.
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
                       No pending requests.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  // Renders a table row for each pending request.
+                  // We map over the requests and create a table row for each one.
                   requests.map((req) => (
                     <TableRow key={req.id}>
                       <TableCell className="font-medium">{req.studentName}</TableCell>

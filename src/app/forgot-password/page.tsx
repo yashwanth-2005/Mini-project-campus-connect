@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
-    // This function sends a password reset email using Firebase Auth.
+    // This function uses Firebase to send a password reset email to the user.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
             setEmailSent(true);
         } catch (error: any) {
             let description = "An unexpected error occurred. Please try again.";
-            // Provide a more user-friendly error message for common cases.
+            // We give a more helpful message if the email address doesn't exist.
             if (error.code === 'auth/user-not-found') {
                 description = "No account is associated with this email address.";
             }
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-             {/* This loading overlay is shown while the request is being processed. */}
+             {/* This loading overlay is shown while the email is being sent. */}
              {isLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
                     <div className="flex flex-col items-center gap-4">
@@ -92,7 +92,7 @@ export default function ForgotPasswordPage() {
                         </Button>
                     </CardContent>
                 ) : (
-                    // This is the initial form for entering an email.
+                    // This is the initial form where the user enters their email.
                     <form onSubmit={handleSubmit}>
                         <CardContent className="grid gap-4">
                             <div className="grid gap-2">

@@ -9,8 +9,8 @@ import { useSearchParams } from "next/navigation";
 import { useUser } from "@/firebase";
 import React from "react";
 
-// This array defines the quick links available on the dashboard.
-// The `role` property controls which users see each link.
+// This array defines the quick-access links shown on the dashboard.
+// The `role` property controls who can see each link (e.g., students or faculty).
 const allQuickLinks = [
     {
         title: "Placement Corner",
@@ -42,17 +42,17 @@ const allQuickLinks = [
     }
 ];
 
-// This is the main dashboard page, the first thing users see after logging in.
+// This is the main dashboard page, which is the first thing a user sees after logging in.
 export default function DashboardPage() {
     const searchParams = useSearchParams();
     const { user } = useUser();
-    // The user's role is read from the URL parameter for simplicity in this prototype.
+    // For this demo, we read the user's role from the URL to customize the dashboard.
     const role = searchParams.get('role') || 'student';
     
-    // Filters the quick links based on the user's role.
+    // This filters the quick links to only show the ones relevant to the current user's role.
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     
-    // Generates a personalized welcome message for the user.
+    // This function creates a personalized welcome message for the logged-in user.
     const welcomeMessage = () => {
         if (role === 'faculty') return "Welcome back, Faculty!";
         if (user) return `Welcome back, ${user.displayName?.split(' ')[0] || 'Student'}!`;
@@ -66,7 +66,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground">Here&apos;s a quick overview of what&apos;s happening on campus.</p>
             </div>
 
-            {/* A grid of cards that act as navigation links to other pages. */}
+            {/* This grid displays the navigation cards for quick access to other pages. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {quickLinks.map(link => (
                     <Card key={link.title} className="hover:shadow-lg transition-shadow">
@@ -86,7 +86,7 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            {/* A card that shows a summary of the most recent campus announcements. */}
+            {/* This card shows a summary of the most recent campus announcements. */}
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Announcements</CardTitle>

@@ -6,35 +6,35 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
 /**
- * An invisible component that listens for globally emitted 'permission-error' events.
- * When an error is caught, it throws the error so that it can be caught by a
- * Next.js error boundary (like a global-error.tsx file), which then displays a
- * helpful overlay in development mode.
+ * This is an invisible component that listens for Firestore permission errors.
+ * When it catches an error, it throws it again. This allows Next.js's development
+ * overlay to catch it and display a helpful, detailed error message on the screen,
+ * which makes debugging our database security rules much easier.
  */
 export function FirebaseErrorListener() {
-  // This state holds the error that will be thrown to trigger the error boundary.
+  // This state holds the error that we're going to throw.
   const [error, setError] = useState<FirestorePermissionError | null>(null);
 
   useEffect(() => {
-    // This function will be called when a 'permission-error' is emitted.
+    // This function will be called whenever a 'permission-error' is emitted from anywhere in the app.
     const handleError = (error: FirestorePermissionError) => {
       setError(error);
     };
 
-    // Subscribes to the 'permission-error' event.
+    // We subscribe to the 'permission-error' event.
     errorEmitter.on('permission-error', handleError);
 
-    // Unsubscribes when the component unmounts to prevent memory leaks.
+    // When the component is removed, we unsubscribe to prevent memory leaks.
     return () => {
       errorEmitter.off('permission-error', handleError);
     };
   }, []);
 
-  // If an error has been caught and set in our state, throw it.
+  // If an error has been caught and set in our state, we throw it so Next.js can display it.
   if (error) {
     throw error;
   }
 
-  // This component does not render anything to the DOM itself.
+  // This component doesn't render any visible HTML.
   return null;
 }

@@ -7,7 +7,7 @@ import { collection, query, addDoc, updateDoc, deleteDoc, serverTimestamp, doc, 
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
-// Defines the structure of a resource object stored in Firestore.
+// This defines the data structure for a single resource object in our Firestore database.
 export type Resource = {
     id: string;
     name: string;
@@ -20,49 +20,51 @@ export type Resource = {
     storagePath: string;
 };
 
-// This custom hook abstracts all logic for managing resources with Firebase.
+// This custom hook handles all the logic for managing resources with Firebase.
 export function useResources() {
     const { user } = useUser();
     const firestore = useFirestore();
     const storage = useStorage();
 
-    // The query is memoized to prevent re-renders. It fetches all documents from the 'resources' collection.
+    // We "memoize" this query to prevent re-fetching data unnecessarily.
+    // It gets all documents from the 'resources' collection, ordered by most recent.
     const resourcesQuery = useMemoFirebase(() => 
         (firestore) ? query(collection(firestore, 'resources'), orderBy('uploadDate', 'desc')) : null,
         [firestore]
     );
 
-    // useCollection provides a real-time stream of the resources data.
+    // The `useCollection` hook gives us a real-time stream of the resources data.
     const { data: resources, isLoading, error } = useCollection<Resource>(resourcesQuery);
 
-    // Handles the entire file upload process to Firebase Storage and Firestore.
+    // This function handles the entire file upload process to Firebase Storage and Firestore.
     const uploadResource = useCallback(async (title: string, description: string, file: File) => {
         if (!user) throw new Error("You must be logged in to upload a resource.");
         if (!firestore || !storage) throw new Error("Firebase is not initialized.");
         
-        // Create a unique path in Firebase Storage for the file.
+        // We create a unique path in Firebase Storage to store the file.
         const storagePath = `resources/${user.uid}/${Date.now()}_${file.name}`;
         const storageRef = ref(storage, storagePath);
         
-        // Upload the file bytes.
+        // We upload the file's raw data (bytes).
         const snapshot = await uploadBytes(storageRef, file);
-        // Get the public download URL for the uploaded file.
+        // After uploading, we get the public URL to download the file.
         const downloadURL = await getDownloadURL(snapshot.ref);
 
-        // Create a new document in the 'resources' collection in Firestore with the file's metadata.
+        // We then create a new document in our Firestore 'resources' collection
+        // to store the file's metadata, like its name and download URL.
         await addDoc(collection(firestore, 'resources'), {
             name: title,
             description,
             fileType: file.type || "File",
             uploaderId: user.uid,
             uploaderName: user.displayName || 'Anonymous',
-            uploadDate: serverTimestamp(), // Use the server's timestamp for consistency.
+            uploadDate: serverTimestamp(), // We use the server's timestamp for accuracy.
             fileUrl: downloadURL,
             storagePath: storagePath,
         });
     }, [user, firestore, storage]);
 
-    // Updates the metadata (name and description) of an existing resource document in Firestore.
+    // This function updates the metadata (just the name and description) of an existing resource.
     const updateResource = useCallback(async (resourceId: string, title: string, description: string) => {
         if (!user) throw new Error("User not authenticated.");
         if (!firestore) throw new Error("Firestore is not initialized.");
@@ -71,18 +73,18 @@ export function useResources() {
         await updateDoc(resourceDocRef, { name: title, description: description });
     }, [firestore, user]);
 
-    // Deletes a resource from both Firestore and Firebase Storage.
+    // This function deletes a resource from both Firestore and Firebase Storage.
     const deleteResource = useCallback(async (resourceId: string, storagePath: string) => {
         if (!user) throw new Error("User not authenticated.");
         if (!firestore || !storage) throw new Error("Firebase is not initialized.");
 
-        // Create references to the Firestore document and the Storage file.
+        // We create references to both the file in Storage and its metadata document in Firestore.
         const resourceDocRef = doc(firestore, 'resources', resourceId);
         const fileRef = ref(storage, storagePath);
 
-        // Delete the file from Storage first.
+        // It's important to delete the file from Storage first.
         await deleteObject(fileRef);
-        // Then, delete the metadata document from Firestore.
+        // Then, we delete the metadata document from Firestore.
         await deleteDoc(resourceDocRef);
     }, [firestore, storage, user]);
 

@@ -11,7 +11,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Paperclip } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 
-// A mock data array for announcements. In a real app, this would come from a database.
+// For this demo, we're using a simple array of data. In a real app,
+// this would come from our cloud database.
 const announcements = [
     {
         author: "Faculty Admin",
@@ -51,7 +52,7 @@ export default function AnnouncementsPage() {
                     <h1 className="text-3xl font-bold font-headline">Announcements</h1>
                     <p className="text-muted-foreground">Latest updates from faculty and departments.</p>
                 </div>
-                {/* The "New Announcement" button is only shown to faculty members. */}
+                {/* The "New Announcement" button is only shown to users with the 'faculty' role. */}
                 {role === 'faculty' && (
                     <Dialog>
                         <DialogTrigger asChild>
@@ -92,7 +93,7 @@ export default function AnnouncementsPage() {
                 )}
             </div>
             
-            {/* Renders a list of announcement cards from the mock data. */}
+            {/* We loop through our array of announcements and display each one as a card. */}
             <div className="space-y-6">
                 {announcements.map((ann, index) => (
                     <Card key={index}>
@@ -113,7 +114,7 @@ export default function AnnouncementsPage() {
                         <CardContent>
                             <p className="text-sm text-foreground">{ann.content}</p>
                         </CardContent>
-                        {/* Shows the attachments section only if there are files attached. */}
+                        {/* We only show the attachments section if there are files attached. */}
                         {ann.attachments.length > 0 && (
                             <CardFooter className="flex-col items-start gap-2">
                                 <h4 className="text-sm font-semibold">Attachments:</h4>

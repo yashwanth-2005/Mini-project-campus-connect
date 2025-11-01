@@ -18,11 +18,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { GithubIcon, LinkedinIcon, Logo, TwitterIcon } from "@/components/icons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 
-// An array of feature objects to display on the landing page.
+// This array holds the data for the feature cards displayed on the landing page.
 const features = [
   {
     icon: <Briefcase className="h-6 w-6 text-primary-foreground" />,
@@ -56,7 +56,7 @@ const features = [
   },
 ];
 
-// An array of testimonial objects from past students.
+// This array holds the data for the testimonials from past students.
 const testimonials = [
     {
         name: "Priya Sharma",
@@ -78,13 +78,12 @@ const testimonials = [
     }
 ]
 
-// Defines animation variants for Framer Motion to create a fade-in effect.
+// These are animation definitions for the 'framer-motion' library.
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
 };
 
-// Defines a container variant for staggering animations of child elements.
 const staggerContainer = {
   animate: {
     transition: {
@@ -95,7 +94,7 @@ const staggerContainer = {
 
 const MotionCard = motion(Card);
 
-// A reusable component for displaying a feature card with a hover effect.
+// This is a reusable component for displaying a feature card with a cool hover effect.
 const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
     return (
         <MotionCard
@@ -120,10 +119,10 @@ export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
-  // Navigates to a new page and shows a loading screen.
+  // This function navigates to a new page and shows a loading screen in the process.
   const handleLinkClick = (path: string, id: string) => {
     setLoading(id);
-    // A small timeout allows the loading animation to be seen.
+    // A small timeout allows the loading animation to be seen by the user.
     setTimeout(() => {
       router.push(path);
     }, 100);
@@ -131,7 +130,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      {/* This loading overlay is shown during page transitions. */}
+      {/* This loading overlay is shown during page transitions to give feedback to the user. */}
       {loading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
           <div className="flex flex-col items-center gap-4">
@@ -162,7 +161,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 overflow-x-hidden">
-         {/* The main title and call-to-action buttons. */}
+         {/* This is the main title and call-to-action section. */}
          <motion.section 
             className="py-20 md:py-32"
             initial="initial"
@@ -194,7 +193,7 @@ export default function Home() {
           </div>
         </motion.section>
         
-        {/* A special feature highlight for placement preparation. */}
+        {/* This is a special feature highlight for the placement preparation tool. */}
         <motion.section 
           id="quick-prep" 
           className="bg-secondary/50 py-20 my-12"
@@ -225,7 +224,7 @@ export default function Home() {
             </div>
         </motion.section>
 
-        {/* This section displays the main features of the application. */}
+        {/* This section displays the main features of the application as a grid of cards. */}
         <motion.section 
           id="features" 
           className="container my-20"
@@ -252,7 +251,7 @@ export default function Home() {
           </motion.div>
         </motion.section>
         
-        {/* This section shows quotes from satisfied students. */}
+        {/* This section shows quotes from satisfied students as social proof. */}
         <motion.section 
           id="testimonials" 
           className="my-20 py-24 bg-secondary/50"

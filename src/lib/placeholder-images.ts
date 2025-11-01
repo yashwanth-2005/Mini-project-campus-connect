@@ -1,7 +1,7 @@
 
 import data from './placeholder-images.json';
 
-// Defines the structure for a single placeholder image object.
+// This defines the data structure for a single placeholder image object.
 export type ImagePlaceholder = {
   id: string;
   description: string;
@@ -9,6 +9,7 @@ export type ImagePlaceholder = {
   imageHint: string;
 };
 
-// Exports the array of placeholder images from the JSON file.
-// This allows image data to be managed in one central place.
+// This exports the array of placeholder images from our JSON file.
+// Storing this data in one central place makes it much easier to manage
+// and use consistently throughout the application.
 export const PlaceHolderImages: ImagePlaceholder[] = data.placeholderImages;

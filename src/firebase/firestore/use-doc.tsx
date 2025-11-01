@@ -12,10 +12,10 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 
-// A utility type that adds a mandatory 'id' field to another type.
+// This is a helper type that adds a mandatory 'id' field to any data object.
 type WithId<T> = T & { id: string };
 
-// The shape of the object returned by the useDoc hook.
+// This defines the shape of the object returned by our `useDoc` hook.
 export interface UseDocResult<T> {
   data: WithId<T> | null; 
   isLoading: boolean;       
@@ -23,13 +23,13 @@ export interface UseDocResult<T> {
 }
 
 /**
- * A React hook to subscribe to a single Firestore document in real-time.
+ * A custom React hook to listen for real-time updates from a single Firestore document.
  * 
- * IMPORTANT: The document reference passed to this hook MUST be memoized
- * with `useMemo` or `useMemoFirebase` to prevent infinite re-renders.
+ * IMPORTANT: The document reference you pass to this hook MUST be "memoized" with `useMemoFirebase`.
+ * This prevents the app from getting stuck in an infinite loop of re-fetching data.
  *
  * @param memoizedDocRef The Firestore document reference to listen to.
- * @returns An object with the data, loading state, and any error that occurred.
+ * @returns An object containing the document's data, loading state, and any potential error.
  */
 export function useDoc<T = any>(
   memoizedDocRef: DocumentReference<DocumentData> | null | undefined,
@@ -41,7 +41,7 @@ export function useDoc<T = any>(
   const [error, setError] = useState<FirestoreError | Error | null>(null);
 
   useEffect(() => {
-    // If the reference isn't ready yet, do nothing.
+    // If the document reference isn't ready yet, we just wait.
     if (!memoizedDocRef) {
       setData(null);
       setIsLoading(false);
@@ -52,22 +52,22 @@ export function useDoc<T = any>(
     setIsLoading(true);
     setError(null);
 
-    // Sets up the real-time listener on the provided document reference.
+    // This function sets up the real-time listener on our database document.
     const unsubscribe = onSnapshot(
       memoizedDocRef,
       (snapshot: DocumentSnapshot<DocumentData>) => {
         if (snapshot.exists()) {
-          // If the document exists, set its data in state, including the ID.
+          // If the document exists, we set its data in our state, making sure to include the ID.
           setData({ ...(snapshot.data() as T), id: snapshot.id });
         } else {
-          // If the document does not exist, set the data to null.
+          // If the document doesn't exist, we set the data to null.
           setData(null);
         }
         setError(null); 
         setIsLoading(false);
       },
       (error: FirestoreError) => {
-        // If an error occurs (like a permissions issue), create a more detailed error.
+        // If the listener fails (usually due to a security rule), we create a detailed, helpful error.
         const contextualError = new FirestorePermissionError({
           operation: 'get',
           path: memoizedDocRef.path,
@@ -77,12 +77,12 @@ export function useDoc<T = any>(
         setData(null)
         setIsLoading(false)
 
-        // Sends the detailed error to a global listener to be displayed.
+        // We then send this detailed error to a global listener, which will display it on the screen.
         errorEmitter.emit('permission-error', contextualError);
       }
     );
 
-    // Cleans up the listener when the component unmounts or the reference changes.
+    // This function cleans up the listener when the component is removed, preventing memory leaks.
     return () => unsubscribe();
   }, [memoizedDocRef]);
 

@@ -23,7 +23,7 @@ import { useUser, useFirestore } from "@/firebase";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/use-profile";
 
-// Defines the validation schema for the profile form.
+// This schema defines the structure and validation rules for our profile form.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -31,12 +31,12 @@ const profileSchema = z.object({
     githubUrl: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
     leetcodeUrl: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
     profilePictureUrl: z.string().optional(),
-    // Faculty specific fields
+    // These fields are specific to faculty members.
     department: z.string().optional(),
     facultyId: z.string().optional(),
 });
 
-// Defines validation for the USN change request form.
+// This schema defines validation for the USN (University Seat Number) change request form.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -49,6 +49,7 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
+    // Our custom hook `useProfile` handles fetching and updating profile data from the database.
     const { userProfile, isLoading: isProfileLoading, updateUserProfile } = useProfile();
 
     const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -57,7 +58,7 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isRequestingUsn, setIsRequestingUsn] = useState(false);
 
-    // Initializes the main profile form with validation and default values.
+    // This initializes the main profile form with validation rules and default values.
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -80,14 +81,14 @@ export default function ProfilePage() {
         }
     });
     
-    // Redirects to the login page if the user is not authenticated.
+    // This effect redirects the user to the login page if they are not authenticated.
     useEffect(() => {
       if (!isUserLoading && !user) {
         router.push('/login');
       }
     }, [isUserLoading, user, router]);
 
-    // When the user's profile data loads, this effect fills the form.
+    // When the user's profile data has loaded from the database, this effect fills the form fields.
     useEffect(() => {
         if (userProfile) {
             form.reset({
@@ -104,7 +105,7 @@ export default function ProfilePage() {
         }
     }, [userProfile, form]);
 
-    // Creates a local preview URL for a newly selected profile picture.
+    // This function creates a local preview of a newly selected profile picture.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -118,7 +119,7 @@ export default function ProfilePage() {
         }
     };
 
-    // Saves the updated profile data.
+    // This function saves the updated profile data to the database.
     async function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!user) return;
         setIsSaving(true);
@@ -141,7 +142,7 @@ export default function ProfilePage() {
         }
     }
 
-    // Handles the submission of the USN change request to Firestore.
+    // This function handles submitting a USN change request to the database.
     async function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
         if (!user || !userProfile || !firestore) return;
         setIsRequestingUsn(true);
@@ -173,7 +174,7 @@ export default function ProfilePage() {
         }
     }
 
-    // Shows a loading skeleton while data is being fetched.
+    // This shows a loading skeleton UI while data is being fetched.
     if (isUserLoading || isProfileLoading || !userProfile) {
         return (
             <div className="space-y-8">

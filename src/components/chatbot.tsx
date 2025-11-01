@@ -29,17 +29,17 @@ type ChatbotProps = {
   onOpenChange: (isOpen: boolean) => void;
 }
 
-// This component provides an AI-powered chatbot in a side sheet.
+// This component provides an AI-powered chatbot that slides in from the side of the screen.
 export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // This function sends a message and gets a response from the AI.
+  // This function sends the user's message to the AI and gets a response.
   const handleSend = async () => {
     if (input.trim() === "") return;
 
-    // Adds the user's message to the chat history right away for a responsive feel.
+    // We add the user's message to the chat history right away for a responsive feel.
     const userMessage: Message = { sender: "user", text: input };
     setMessages((prev) => [...prev, userMessage]);
     
@@ -48,12 +48,12 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
     setIsLoading(true);
 
     try {
-      // Calls our Genkit AI flow to get the bot's response.
+      // We call our Genkit AI flow to get the bot's response.
       const response = await chatWithBot({ query: currentInput });
       const botMessage: Message = { sender: "bot", text: response.answer };
       setMessages((prev) => [...prev, botMessage]);
     } catch (error) {
-      // If the AI call fails, it shows a user-friendly error message in the chat.
+      // If the AI call fails, we show a user-friendly error message in the chat.
       const errorMessage: Message = {
         sender: "bot",
         text: "Sorry, I'm having trouble connecting. Please try again later.",
@@ -82,7 +82,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
                   message.sender === "user" ? "justify-end" : ""
                 }`}
               >
-                {/* The bot's avatar. */}
+                {/* The bot's avatar icon. */}
                 {message.sender === "bot" && (
                   <Avatar className="h-8 w-8">
                     <AvatarFallback><Bot size={20}/></AvatarFallback>
@@ -98,7 +98,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
                 >
                   {message.text}
                 </div>
-                 {/* The user's avatar. */}
+                 {/* The user's avatar icon. */}
                  {message.sender === "user" && (
                   <Avatar className="h-8 w-8">
                     <AvatarFallback><User size={20}/></AvatarFallback>
@@ -106,7 +106,7 @@ export default function Chatbot({ isOpen, onOpenChange }: ChatbotProps) {
                 )}
               </div>
             ))}
-            {/* The loading indicator for when the bot is "typing". */}
+            {/* The loading indicator that shows when the bot is "typing". */}
             {isLoading && (
               <div className="flex items-start gap-3">
                 <Avatar className="h-8 w-8">

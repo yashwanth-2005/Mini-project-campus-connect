@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 // This is the main page for the discussion forum.
 export default function ForumPage() {
     const { user } = useUser();
+    // Our custom hook `useForum` handles all the logic for fetching and updating posts.
     const { posts, isLoading, addPost, toggleUpvote } = useForum();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -26,7 +27,7 @@ export default function ForumPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
 
-    // Handles the creation of a new discussion post.
+    // This function handles creating a new discussion post.
     const handleStartDiscussion = async () => {
         if (!newDiscussionTitle.trim() || !newDiscussionContent.trim()) {
             toast({
@@ -48,9 +49,10 @@ export default function ForumPage() {
 
         setIsSubmitting(true);
         try {
+            // We call the `addPost` function from our custom hook.
             await addPost(newDiscussionTitle, newDiscussionContent);
             
-            // Resets the form fields and closes the dialog.
+            // Clear the form and close the dialog on success.
             setNewDiscussionTitle('');
             setNewDiscussionContent('');
             setIsDialogOpen(false);
@@ -70,22 +72,23 @@ export default function ForumPage() {
         }
     };
     
+    // This handles the upvoting logic for a post.
     const handleUpvote = (postId: string) => {
         if (!user) {
             toast({ title: "Please log in to upvote", variant: "destructive" });
             return;
         }
+        // We call the `toggleUpvote` function from our custom hook.
         toggleUpvote(postId);
     }
     
-    // Formats a Firestore timestamp or date string into a readable date.
+    // This helper function formats a database timestamp into a readable date.
     const formatDate = (timestamp: any) => {
         if (!timestamp) return "Just now";
-        // Firestore timestamps have a toDate() method.
+        // Firestore timestamps have a `toDate()` method that we can use.
         if (timestamp.toDate) {
             return timestamp.toDate().toLocaleDateString();
         }
-        // Handle ISO string dates from mock DB.
         return new Date(timestamp).toLocaleDateString();
     }
 
@@ -97,7 +100,7 @@ export default function ForumPage() {
                     <h1 className="text-3xl font-bold font-headline">Discussion Forum</h1>
                     <p className="text-muted-foreground">Connect with peers, seniors, and faculty.</p>
                 </div>
-                {/* This dialog allows users to create a new discussion post. */}
+                {/* This dialog box lets users create a new discussion post. */}
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -143,7 +146,7 @@ export default function ForumPage() {
                 </Dialog>
             </div>
             
-            {/* A quick-post input field for convenience. */}
+            {/* This is a convenience input field that opens the "New Discussion" dialog when clicked. */}
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10 border">
                     <AvatarImage src={user?.photoURL || `https://api.dicebear.com/8.x/bottts/svg?seed=${user?.uid}`} />
@@ -152,7 +155,7 @@ export default function ForumPage() {
                 <Input placeholder="What's on your mind?" className="h-12" onClick={() => setIsDialogOpen(true)} readOnly/>
             </div>
 
-            {/* Renders the list of discussion cards. */}
+            {/* This section renders the list of discussion posts. */}
             {isLoading ? (
                 <div className="flex justify-center items-center h-64">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -160,6 +163,7 @@ export default function ForumPage() {
             ) : (
                 <div className="space-y-4">
                     {posts?.map(d => {
+                        // Check if the current user has already upvoted this post.
                         const isUpvoted = user && d.upvoteUserIds?.includes(user.uid);
                         return (
                             <Card key={d.id} className="hover:border-primary transition-colors">
@@ -190,7 +194,7 @@ export default function ForumPage() {
                                             <span>&bull;</span>
                                             <div className="flex items-center gap-1">
                                                 <MessageSquare className="h-4 w-4" />
-                                                {/* Reply count can be added later as a feature */}
+                                                {/* Reply count can be added as a feature later. */}
                                                 <span>0 replies</span>
                                             </div>
                                         </div>
