@@ -52,8 +52,8 @@ export default function EventsPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {events.map((event, index) => (
                     <Card key={index} className="overflow-hidden flex flex-col">
-                        <CardHeader className="p-0">
-                            <Image src={event.image} alt={event.title} width={600} height={400} data-ai-hint={event.imageHint} />
+                        <CardHeader className="p-0 relative h-60 w-full">
+                            <Image src={event.image} alt={event.title} fill style={{objectFit: 'cover'}} data-ai-hint={event.imageHint} />
                         </CardHeader>
                         <CardContent className="p-6 flex-1">
                             <p className="text-sm font-semibold text-primary mb-1">{event.category.toUpperCase()}</p>
