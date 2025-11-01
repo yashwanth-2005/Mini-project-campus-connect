@@ -3,11 +3,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useUser, useFirestore, useStorage, useMemoFirebase } from '@/firebase';
-import { collection, query, addDoc, updateDoc, deleteDoc, serverTimestamp, doc, orderBy } from 'firebase/firestore';
+import { collection, query, addDoc, updateDoc, deleteDoc, serverTimestamp, doc, orderBy, where } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
-const USE_MOCK_DB = process.env.NEXT_PUBLIC_USE_MOCK_DB === 'true';
+// This file will now *always* use the live Firebase backend for resources.
+const USE_MOCK_DB = false; // Hardcoded to false for this hook.
 
 // Defines the structure of a resource object.
 export type Resource = {
@@ -17,123 +18,85 @@ export type Resource = {
     fileType: string;
     uploaderId: string;
     uploaderName: string;
-    uploadDate: any; 
+    uploadDate: any; // Can be a server timestamp, a Date, or an ISO string.
     fileUrl: string;
     storagePath: string;
 };
 
 // This custom hook abstracts the logic for managing resources.
-// It switches between Firebase and a local mock DB based on an environment variable.
+// It is now hardcoded to use the live Firebase backend.
 export function useResources() {
     const { user } = useUser();
     const firestore = useFirestore();
     const storage = useStorage();
 
     // --- Firestore Logic ---
+    // The query is memoized to prevent re-renders. It fetches all documents from the 'resources' collection.
     const resourcesQuery = useMemoFirebase(() => 
-        (firestore && !USE_MOCK_DB) ? query(collection(firestore, 'resources'), orderBy('uploadDate', 'desc')) : null,
+        (firestore) ? query(collection(firestore, 'resources'), orderBy('uploadDate', 'desc')) : null,
         [firestore]
     );
+    // useCollection provides a real-time stream of the resources data.
     const { data: firestoreResources, isLoading: isLoadingFirestore, error } = useCollection<Resource>(resourcesQuery);
 
-    // --- Mock DB Logic ---
-    const [mockResources, setMockResources] = useState<Resource[]>([]);
-    const [isLoadingMock, setIsLoadingMock] = useState(USE_MOCK_DB);
 
-    // Function to load mock data from localStorage.
-    const loadMockResources = useCallback(() => {
-        if (USE_MOCK_DB) {
-            setIsLoadingMock(true);
-            const stored = localStorage.getItem('resources');
-            const resources = stored ? JSON.parse(stored) : [];
-            resources.sort((a: Resource, b: Resource) => new Date(b.uploadDate).getTime() - new Date(a.uploadDate).getTime());
-            setMockResources(resources);
-            setIsLoadingMock(false);
-        }
-    }, []);
+    // --- Abstracted Functions for Firebase ---
 
-    // Load mock data on initial render if using mock DB.
-    useEffect(() => {
-        loadMockResources();
-    }, [loadMockResources]);
-
-    // --- Abstracted Functions ---
-
+    // Handles the entire file upload process to Firebase Storage and Firestore.
     const uploadResource = useCallback(async (title: string, description: string, file: File) => {
         if (!user) throw new Error("You must be logged in to upload a resource.");
+        if (!firestore || !storage) throw new Error("Firebase is not initialized.");
+        
+        // Create a unique path in Firebase Storage for the file.
+        const storagePath = `resources/${user.uid}/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, storagePath);
+        
+        // Upload the file bytes.
+        const snapshot = await uploadBytes(storageRef, file);
+        // Get the public download URL for the uploaded file.
+        const downloadURL = await getDownloadURL(snapshot.ref);
 
-        if (USE_MOCK_DB) {
-            // Simulate upload for mock DB
-            const newResource: Resource = {
-                id: `res_${Date.now()}`,
-                name: title,
-                description,
-                fileType: file.type,
-                uploaderId: user.uid,
-                uploaderName: user.displayName || "Anonymous",
-                uploadDate: new Date().toISOString(),
-                fileUrl: URL.createObjectURL(file), // Create a temporary local URL
-                storagePath: `mock/resources/${file.name}`,
-            };
-            const updatedResources = [newResource, ...mockResources];
-            localStorage.setItem('resources', JSON.stringify(updatedResources));
-            setMockResources(updatedResources);
-        } else {
-            // Real upload for Firebase
-            if (!firestore || !storage) throw new Error("Firebase is not initialized.");
-            const storagePath = `resources/${user.uid}/${Date.now()}_${file.name}`;
-            const storageRef = ref(storage, storagePath);
-            const snapshot = await uploadBytes(storageRef, file);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+        // Create a new document in the 'resources' collection in Firestore with the file's metadata.
+        await addDoc(collection(firestore, 'resources'), {
+            name: title,
+            description,
+            fileType: file.type || "File",
+            uploaderId: user.uid,
+            uploaderName: user.displayName || 'Anonymous',
+            uploadDate: serverTimestamp(), // Use the server's timestamp for consistency.
+            fileUrl: downloadURL,
+            storagePath: storagePath,
+        });
+    }, [user, firestore, storage]);
 
-            await addDoc(collection(firestore, 'resources'), {
-                name: title,
-                description,
-                fileType: file.type || "File",
-                uploaderId: user.uid,
-                uploaderName: user.displayName || 'Anonymous',
-                uploadDate: serverTimestamp(),
-                fileUrl: downloadURL,
-                storagePath: storagePath,
-            });
-        }
-    }, [user, firestore, storage, mockResources]);
-
+    // Updates the metadata (name and description) of an existing resource document in Firestore.
     const updateResource = useCallback(async (resourceId: string, title: string, description: string) => {
         if (!user) throw new Error("User not authenticated.");
+        if (!firestore) throw new Error("Firestore is not initialized.");
+        
+        const resourceDocRef = doc(firestore, 'resources', resourceId);
+        await updateDoc(resourceDocRef, { name: title, description: description });
+    }, [firestore, user]);
 
-        if (USE_MOCK_DB) {
-            const updatedResources = mockResources.map(r => 
-                r.id === resourceId ? { ...r, name: title, description } : r
-            );
-            localStorage.setItem('resources', JSON.stringify(updatedResources));
-            setMockResources(updatedResources);
-        } else {
-            if (!firestore) throw new Error("Firestore is not initialized.");
-            const resourceDocRef = doc(firestore, 'resources', resourceId);
-            await updateDoc(resourceDocRef, { name: title, description: description });
-        }
-    }, [firestore, mockResources, user]);
-
+    // Deletes a resource from both Firestore and Firebase Storage.
     const deleteResource = useCallback(async (resourceId: string, storagePath: string) => {
         if (!user) throw new Error("User not authenticated.");
-        
-        if (USE_MOCK_DB) {
-            const updatedResources = mockResources.filter(r => r.id !== resourceId);
-            localStorage.setItem('resources', JSON.stringify(updatedResources));
-            setMockResources(updatedResources);
-        } else {
-            if (!firestore || !storage) throw new Error("Firebase is not initialized.");
-            const resourceDocRef = doc(firestore, 'resources', resourceId);
-            const fileRef = ref(storage, storagePath);
-            await deleteObject(fileRef); // Delete from Storage
-            await deleteDoc(resourceDocRef); // Delete from Firestore
-        }
-    }, [firestore, storage, mockResources, user]);
+        if (!firestore || !storage) throw new Error("Firebase is not initialized.");
+
+        // Create references to the Firestore document and the Storage file.
+        const resourceDocRef = doc(firestore, 'resources', resourceId);
+        const fileRef = ref(storage, storagePath);
+
+        // Delete the file from Storage first.
+        await deleteObject(fileRef);
+        // Then, delete the metadata document from Firestore.
+        await deleteDoc(resourceDocRef);
+    }, [firestore, storage, user]);
 
     return {
-        resources: USE_MOCK_DB ? mockResources : firestoreResources,
-        isLoading: USE_MOCK_DB ? isLoadingMock : isLoadingFirestore,
+        // Always return the data, loading state, and error from the live Firestore backend.
+        resources: firestoreResources,
+        isLoading: isLoadingFirestore,
         error,
         uploadResource,
         updateResource,

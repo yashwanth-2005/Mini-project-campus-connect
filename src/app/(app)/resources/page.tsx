@@ -198,14 +198,32 @@ export default function ResourcesPage() {
 
     // Downloads a file from a given URL.
     const handleDownload = (url: string, fileName: string) => {
-        fetch(url).then(response => response.blob()).then(blob => {
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = fileName;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
+        // Use a proxy or server-side download if CORS is an issue.
+        // For simplicity, we use fetch which works for CORS-enabled URLs.
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok.');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            })
+            .catch(error => {
+                console.error("Download failed:", error);
+                toast({
+                    title: "Download Failed",
+                    description: "Could not download the file. It may be due to security (CORS) policies. Please try viewing it instead.",
+                    variant: "destructive",
+                });
+            });
     };
 
     // Handles the file upload process.
@@ -294,15 +312,17 @@ export default function ResourcesPage() {
     // Filters resources based on the search query.
     const filteredResources = resources?.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        resource.description.toLowerCase().includes(searchQuery.toLowerCase())
+        (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()))
     ) || [];
 
     // Formats a Firestore timestamp or date string into a readable date.
     const formatDate = (timestamp: any) => {
         if (!timestamp) return "Just now";
+        // Firestore timestamps have a toDate() method.
         if (timestamp.toDate) {
             return timestamp.toDate().toLocaleDateString();
         }
+        // Handle ISO string dates from mock DB.
         return new Date(timestamp).toLocaleDateString();
     }
 
@@ -336,9 +356,9 @@ export default function ResourcesPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>File Name</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Uploaded By</TableHead>
+                            <TableHead className="hidden md:table-cell">Description</TableHead>
+                            <TableHead className="hidden sm:table-cell">Type</TableHead>
+                            <TableHead className="hidden sm:table-cell">Uploaded By</TableHead>
                             <TableHead>Date</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
@@ -360,9 +380,9 @@ export default function ResourcesPage() {
                             filteredResources.map((resource) => (
                                 <TableRow key={resource.id}>
                                     <TableCell className="font-medium">{resource.name}</TableCell>
-                                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate">{resource.description}</TableCell>
-                                    <TableCell>{resource.fileType}</TableCell>
-                                    <TableCell>{resource.uploaderName}</TableCell>
+                                    <TableCell className="text-sm text-muted-foreground max-w-xs truncate hidden md:table-cell">{resource.description}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{resource.fileType}</TableCell>
+                                    <TableCell className="hidden sm:table-cell">{resource.uploaderName}</TableCell>
                                     <TableCell>{formatDate(resource.uploadDate)}</TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>
@@ -420,7 +440,7 @@ export default function ResourcesPage() {
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete the
-                        resource from the cloud or local storage.
+                        resource from the cloud.
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -434,5 +454,3 @@ export default function ResourcesPage() {
         </div>
     )
 }
-
-    

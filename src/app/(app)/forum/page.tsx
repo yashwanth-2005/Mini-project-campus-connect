@@ -13,11 +13,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { useForum, type ForumPost } from '@/hooks/use-forum';
+import { cn } from '@/lib/utils';
 
 // This is the main page for the discussion forum.
 export default function ForumPage() {
     const { user } = useUser();
-    const { posts, isLoading, addPost } = useForum();
+    const { posts, isLoading, addPost, toggleUpvote } = useForum();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [newDiscussionTitle, setNewDiscussionTitle] = useState('');
@@ -68,6 +69,26 @@ export default function ForumPage() {
             setIsSubmitting(false);
         }
     };
+    
+    const handleUpvote = (postId: string) => {
+        if (!user) {
+            toast({ title: "Please log in to upvote", variant: "destructive" });
+            return;
+        }
+        toggleUpvote(postId);
+    }
+    
+    // Formats a Firestore timestamp or date string into a readable date.
+    const formatDate = (timestamp: any) => {
+        if (!timestamp) return "Just now";
+        // Firestore timestamps have a toDate() method.
+        if (timestamp.toDate) {
+            return timestamp.toDate().toLocaleDateString();
+        }
+        // Handle ISO string dates from mock DB.
+        return new Date(timestamp).toLocaleDateString();
+    }
+
 
     return (
         <div className="space-y-8">
@@ -138,46 +159,49 @@ export default function ForumPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {posts?.map(d => (
-                        <Card key={d.id} className="hover:border-primary cursor-pointer transition-colors">
-                            <CardContent className="p-6 flex items-start gap-6">
-                                <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                                    <Button variant="ghost" size="sm" className="flex flex-col h-auto p-1">
-                                        <ThumbsUp className="h-5 w-5"/>
-                                        <span className="text-xs font-bold">{d.upvoteUserIds?.length || 0}</span>
-                                    </Button>
-                                </div>
-                                <div className="flex-1">
-                                    <CardTitle className="text-lg mb-2">{d.title}</CardTitle>
-                                    <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
-                                        <div className="flex items-center gap-2">
-                                            <Avatar className="h-6 w-6">
-                                                <AvatarImage src={`https://api.dicebear.com/8.x/bottts/svg?seed=${d.authorId}`} />
-                                                <AvatarFallback>{d.authorName?.charAt(0) || 'A'}</AvatarFallback>
-                                            </Avatar>
-                                            <span>{d.authorName}</span>
-                                        </div>
-                                        <span>&bull;</span>
-                                        <span>{d.createdAt ? new Date(d.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span>
-                                        <span>&bull;</span>
-                                        <div className="flex items-center gap-1">
-                                            <MessageSquare className="h-4 w-4" />
-                                            {/* Reply count can be added later as a feature */}
-                                            <span>0 replies</span>
-                                        </div>
+                    {posts?.map(d => {
+                        const isUpvoted = user && d.upvoteUserIds?.includes(user.uid);
+                        return (
+                            <Card key={d.id} className="hover:border-primary transition-colors">
+                                <CardContent className="p-6 flex items-start gap-6">
+                                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className={cn("flex flex-col h-auto p-1", isUpvoted && "text-primary")}
+                                            onClick={() => handleUpvote(d.id)}
+                                        >
+                                            <ThumbsUp className={cn("h-5 w-5", isUpvoted && "fill-current")}/>
+                                            <span className="text-xs font-bold">{d.upvoteUserIds?.length || 0}</span>
+                                        </Button>
                                     </div>
-                                    <p className="text-sm text-foreground mt-3">{d.content}</p>
-                                    <div className="mt-4 flex gap-2">
-                                        {/* Tagging can be added later as a feature */}
+                                    <div className="flex-1 cursor-pointer">
+                                        <CardTitle className="text-lg mb-2">{d.title}</CardTitle>
+                                        <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
+                                            <div className="flex items-center gap-2">
+                                                <Avatar className="h-6 w-6">
+                                                    <AvatarImage src={d.authorImage} />
+                                                    <AvatarFallback>{d.authorName?.charAt(0) || 'A'}</AvatarFallback>
+                                                </Avatar>
+                                                <span>{d.authorName}</span>
+                                            </div>
+                                            <span>&bull;</span>
+                                            <span>{formatDate(d.createdAt)}</span>
+                                            <span>&bull;</span>
+                                            <div className="flex items-center gap-1">
+                                                <MessageSquare className="h-4 w-4" />
+                                                {/* Reply count can be added later as a feature */}
+                                                <span>0 replies</span>
+                                            </div>
+                                        </div>
+                                        <p className="text-sm text-foreground mt-3 line-clamp-2">{d.content}</p>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
+                                </CardContent>
+                            </Card>
+                        )
+                    })}
                 </div>
             )}
         </div>
     )
 }
-
-    

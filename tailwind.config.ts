@@ -1,7 +1,7 @@
 
 import type {Config} from 'tailwindcss';
 
-export default {
+const config: Config = {
   darkMode: ['class'],
   content: [
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
@@ -17,8 +17,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        // Sets the default body and headline fonts to use the CSS variable.
-        body: ['var(--font-inter)', 'sans-serif'],
+        // Use the CSS variable defined in the layout file.
+        sans: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
       },
       colors: {
@@ -78,4 +78,5 @@ export default {
     },
   },
   plugins: [require('tailwindcss-animate')],
-} satisfies Config;
+}
+export default config;
