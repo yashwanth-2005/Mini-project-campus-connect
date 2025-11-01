@@ -2,7 +2,6 @@
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Inter } from 'next/font/google';
 
 // This function from Next.js downloads the 'Inter' font at build time and hosts it locally.
@@ -13,8 +12,8 @@ const inter = Inter({
 });
 
 // This is the root layout for the entire application.
-// It wraps every single page with essential components like the theme switcher,
-// notification system (Toaster), and the Firebase connection.
+// It wraps every single page with essential components like the theme switcher
+// and notification system (Toaster).
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -30,10 +29,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {/* This provider initializes Firebase on the client-side. */}
-          <FirebaseClientProvider>
-            {children}
-          </FirebaseClientProvider>
+          {children}
           {/* The Toaster component is where all popup notifications will be rendered. */}
           <Toaster />
         </ThemeProvider>
