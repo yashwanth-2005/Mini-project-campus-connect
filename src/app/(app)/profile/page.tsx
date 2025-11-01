@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import React, { useEffect, useState, useRef } from 'react';
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -18,13 +19,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/use-profile";
-import { createUsnChangeRequest } from "@/lib/mock-db";
 
 // Defines the validation schema for the profile form.
-// This ensures data consistency before submission.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -48,14 +47,13 @@ export default function ProfilePage() {
     const { toast } = useToast();
     const router = useRouter();
     const { user, isUserLoading } = useUser();
+    const firestore = useFirestore();
 
-    // The useProfile hook abstracts away the data source logic (local vs. cloud).
     const { userProfile, isLoading: isProfileLoading, updateUserProfile } = useProfile();
 
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isUsnDialogOpen, setIsUsnDialogOpen] = useState(false);
-    const [pendingUsnRequest, setPendingUsnRequest] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [isRequestingUsn, setIsRequestingUsn] = useState(false);
 
@@ -143,23 +141,25 @@ export default function ProfilePage() {
         }
     }
 
-    // Handles the submission of the USN change request (uses mock-db for simplicity).
-    function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
-        if (!user || !userProfile) return;
+    // Handles the submission of the USN change request to Firestore.
+    async function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
+        if (!user || !userProfile || !firestore) return;
         setIsRequestingUsn(true);
         try {
-            createUsnChangeRequest({
+            await addDoc(collection(firestore, "usn_change_requests"), {
                 userId: user.uid,
                 studentName: user.displayName || 'N/A',
                 currentUsn: userProfile.usn || '',
                 newUsn: data.newUsn.toUpperCase(),
-                reason: data.reason
+                reason: data.reason,
+                status: 'pending',
+                requestedAt: serverTimestamp(),
             });
+
             toast({
                 title: "Request Submitted",
                 description: "Your USN change request has been submitted for faculty approval."
             });
-            setPendingUsnRequest(true);
             setIsUsnDialogOpen(false);
             usnForm.reset();
         } catch (error: any) {
@@ -265,8 +265,8 @@ export default function ProfilePage() {
                                         <Input value={userProfile.usn || ''} readOnly className="bg-muted/50" />
                                         <Dialog open={isUsnDialogOpen} onOpenChange={setIsUsnDialogOpen}>
                                             <DialogTrigger asChild>
-                                                <Button type="button" variant="outline" disabled={pendingUsnRequest}>
-                                                    {pendingUsnRequest ? "Pending" : "Request Change"}
+                                                <Button type="button" variant="outline">
+                                                    Request Change
                                                 </Button>
                                             </DialogTrigger>
                                             <DialogContent>

@@ -7,77 +7,104 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { getPendingUsnRequests, approveUsnChange, denyUsnChange, UsnChangeRequest } from '@/lib/mock-db';
 import { Badge } from '@/components/ui/badge';
 import { Check, X, Loader2 } from 'lucide-react';
+import { useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
+import { useCollection, type WithId } from '@/firebase/firestore/use-collection';
+
+// Defines the structure for a USN change request document from Firestore.
+export type UsnChangeRequest = {
+    id: string;
+    userId: string;
+    studentName: string;
+    currentUsn: string;
+    newUsn: string;
+    reason: string;
+    status: 'pending' | 'approved' | 'denied';
+    requestedAt: any;
+};
 
 // This is the admin page, only accessible to faculty members.
 export default function AdminPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
   const role = searchParams.get('role');
 
-  const [requests, setRequests] = useState<UsnChangeRequest[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
+  // Memoize the Firestore query for pending USN change requests.
+  const requestsQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'usn_change_requests'), where('status', '==', 'pending'));
+  }, [firestore]);
+
+  // Use the useCollection hook to get real-time updates.
+  const { data: requests, isLoading: isLoadingRequests } = useCollection<UsnChangeRequest>(requestsQuery);
+
   // When the page loads, it checks if the user's role is 'faculty'.
-  // If not, it redirects them to the dashboard.
   useEffect(() => {
     if (role !== 'faculty') {
       router.push('/dashboard');
       return;
     }
-    // Otherwise, it loads the pending USN change requests from our mock database.
-    setRequests(getPendingUsnRequests());
-    setIsLoading(false);
   }, [role, router]);
 
-  // Approves a student's USN change request and shows a success message.
-  const handleApprove = (requestId: string) => {
-    setActionLoading(requestId);
-    // A small delay to simulate a real network request.
-    setTimeout(() => {
-      try {
-        approveUsnChange(requestId);
-        setRequests(getPendingUsnRequests()); 
+  // Approves a student's USN change request.
+  const handleApprove = async (request: WithId<UsnChangeRequest>) => {
+    if (!firestore) return;
+    setActionLoading(request.id);
+    try {
+        // Use a batch write to update both the request and the user's profile atomically.
+        const batch = writeBatch(firestore);
+
+        const requestRef = doc(firestore, 'usn_change_requests', request.id);
+        batch.update(requestRef, { status: 'approved' });
+
+        const userRef = doc(firestore, 'users', request.userId);
+        batch.update(userRef, { usn: request.newUsn });
+
+        await batch.commit();
+
         toast({
           title: 'Request Approved',
           description: "The student's USN has been successfully updated.",
         });
-      } catch (error: any) {
+    } catch (error: any) {
         toast({
           title: 'Approval Failed',
           description: error.message,
           variant: 'destructive',
         });
-      } finally {
+    } finally {
         setActionLoading(null);
-      }
-    }, 500); 
+    }
   };
 
-  // Denies a student's USN change request and shows a confirmation message.
-  const handleDeny = (requestId: string) => {
+  // Denies a student's USN change request.
+  const handleDeny = async (requestId: string) => {
+    if (!firestore) return;
     setActionLoading(requestId);
-    // A small delay to simulate a real network request.
-    setTimeout(() => {
-      denyUsnChange(requestId);
-      setRequests(getPendingUsnRequests()); 
-      toast({
-        title: 'Request Denied',
-        description: 'The USN change request has been denied.',
-        variant: 'destructive',
-      });
-      setActionLoading(null);
-    }, 500);
+    try {
+        const requestRef = doc(firestore, 'usn_change_requests', requestId);
+        await updateDoc(requestRef, { status: 'denied' });
+        toast({
+            title: 'Request Denied',
+            description: 'The USN change request has been denied.',
+            variant: 'destructive',
+        });
+    } catch(error: any) {
+         toast({
+            title: 'Action Failed',
+            description: error.message,
+            variant: 'destructive',
+        });
+    } finally {
+        setActionLoading(null);
+    }
   };
-
-  // Shows a loading state while fetching data.
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
 
   return (
     <div className="space-y-8">
@@ -105,7 +132,13 @@ export default function AdminPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {requests.length === 0 ? (
+                {isLoadingRequests ? (
+                     <TableRow>
+                        <TableCell colSpan={6} className="h-24 text-center">
+                            <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary" />
+                        </TableCell>
+                    </TableRow>
+                ) : !requests || requests.length === 0 ? (
                   // Shows a message if there are no pending requests.
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
@@ -126,7 +159,7 @@ export default function AdminPage() {
                       <TableCell className="text-right">
                         {req.status === 'pending' && (
                           <div className="space-x-2">
-                            <Button variant="outline" size="sm" onClick={() => handleApprove(req.id)} disabled={actionLoading === req.id}>
+                            <Button variant="outline" size="sm" onClick={() => handleApprove(req)} disabled={actionLoading === req.id}>
                               {actionLoading === req.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                                Approve
                             </Button>

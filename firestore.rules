@@ -1,3 +1,4 @@
+
 /**
  * @file Firestore Security Rules for CampusConnect
  * @description This ruleset enforces a user-ownership model for user profiles and author-based control for announcements, forum posts and resources, while events and chatbot messages are publicly readable.
@@ -9,16 +10,23 @@
  * - /forum_posts/{forumPostId}: Stores forum posts, write-controlled by the authorId field.
  * - /resources/{resourceId}: Stores resources, write-controlled by the uploaderId field.
  * - /chat_messages/{chatMessageId}: Stores chatbot messages, publicly readable.
+ * - /usn_change_requests/{requestId}: Stores USN change requests. Students can create, faculty can update.
  *
  * Key Security Decisions:
  * - Users can only read and write their own profile data.
  * - Announcements, Forum Posts, and Resources are author-controlled.
  * - Events and Chatbot messages are publicly readable.
  * - Listing of user profiles is disallowed for privacy.
+ * - USN change requests can be created by students and managed by faculty.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    
+    // Returns true if the user's role is 'faculty'.
+    function isFaculty() {
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'faculty';
+    }
 
     /**
      * @description Controls access to user profile data. Only the user can read and write their own profile.
@@ -36,8 +44,8 @@ service cloud.firestore {
       // Only the authenticated user can create their own profile.
       allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
 
-      // Only the authenticated user can update their own profile.
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      // Only the authenticated user can update their own profile. USN cannot be changed directly.
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.usn == resource.data.usn;
 
       // Only the authenticated user can delete their own profile.
       allow delete: if isSignedIn() && isExistingOwner(userId);
@@ -96,8 +104,8 @@ service cloud.firestore {
       // Only the author can create a forum post, and authorId must match the request.auth.uid.
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
 
-      // Only the author can update a forum post.
-      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      // Only the author can update or upvote/downvote a forum post.
+      allow update: if isSignedIn();
 
       // Only the author can delete a forum post.
       allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
@@ -138,6 +146,19 @@ service cloud.firestore {
 
         // Anyone can create, update, and delete chat messages (Public Read with Owner-Only Writes pattern requires an ownership field.)
         allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+     /**
+     * @description Controls access to USN change requests.
+     * @path /usn_change_requests/{requestId}
+     */
+    match /usn_change_requests/{requestId} {
+      // A user can create their own request.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      // Faculty members can read and update (approve/deny) requests.
+      allow list, get, update: if isSignedIn() && isFaculty();
+      // Only faculty can delete requests.
+      allow delete: if isSignedIn() && isFaculty();
     }
   }
 

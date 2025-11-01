@@ -1,16 +1,13 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback } from 'react';
 import { useUser, useFirestore, useStorage, useMemoFirebase } from '@/firebase';
-import { collection, query, addDoc, updateDoc, deleteDoc, serverTimestamp, doc, orderBy, where } from 'firebase/firestore';
+import { collection, query, addDoc, updateDoc, deleteDoc, serverTimestamp, doc, orderBy } from 'firebase/firestore';
 import { useCollection } from '@/firebase/firestore/use-collection';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 
-// This file will now *always* use the live Firebase backend for resources.
-const USE_MOCK_DB = false; // Hardcoded to false for this hook.
-
-// Defines the structure of a resource object.
+// Defines the structure of a resource object stored in Firestore.
 export type Resource = {
     id: string;
     name: string;
@@ -18,29 +15,25 @@ export type Resource = {
     fileType: string;
     uploaderId: string;
     uploaderName: string;
-    uploadDate: any; // Can be a server timestamp, a Date, or an ISO string.
+    uploadDate: any; 
     fileUrl: string;
     storagePath: string;
 };
 
-// This custom hook abstracts the logic for managing resources.
-// It is now hardcoded to use the live Firebase backend.
+// This custom hook abstracts all logic for managing resources with Firebase.
 export function useResources() {
     const { user } = useUser();
     const firestore = useFirestore();
     const storage = useStorage();
 
-    // --- Firestore Logic ---
     // The query is memoized to prevent re-renders. It fetches all documents from the 'resources' collection.
     const resourcesQuery = useMemoFirebase(() => 
         (firestore) ? query(collection(firestore, 'resources'), orderBy('uploadDate', 'desc')) : null,
         [firestore]
     );
+
     // useCollection provides a real-time stream of the resources data.
-    const { data: firestoreResources, isLoading: isLoadingFirestore, error } = useCollection<Resource>(resourcesQuery);
-
-
-    // --- Abstracted Functions for Firebase ---
+    const { data: resources, isLoading, error } = useCollection<Resource>(resourcesQuery);
 
     // Handles the entire file upload process to Firebase Storage and Firestore.
     const uploadResource = useCallback(async (title: string, description: string, file: File) => {
@@ -94,9 +87,8 @@ export function useResources() {
     }, [firestore, storage, user]);
 
     return {
-        // Always return the data, loading state, and error from the live Firestore backend.
-        resources: firestoreResources,
-        isLoading: isLoadingFirestore,
+        resources,
+        isLoading,
         error,
         uploadResource,
         updateResource,
