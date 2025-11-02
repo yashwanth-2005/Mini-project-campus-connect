@@ -65,7 +65,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 
   const handleLinkClick = (url: string) => {
       // Don't show the loader if the user clicks the link for the page they're already on.
-      if (url.startsWith(pathname) && url.includes(`role=${role}`)) return;
+      if (url.startsWith(pathname) && (!searchParams.get('role') || url.includes(`role=${role}`))) return;
       setIsLoading(true);
   };
 

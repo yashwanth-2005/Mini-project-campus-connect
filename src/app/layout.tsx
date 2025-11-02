@@ -3,6 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { Inter } from 'next/font/google';
+import { Analytics } from "@vercel/analytics/react"
 
 // This function from Next.js downloads the 'Inter' font at build time and hosts it locally.
 // This is faster than fetching it from Google Fonts every time the page loads.
@@ -33,6 +34,7 @@ export default function RootLayout({
           {/* The Toaster component is where all popup notifications will be rendered. */}
           <Toaster />
         </ThemeProvider>
+        <Analytics />
       </body>
     </html>
   );
