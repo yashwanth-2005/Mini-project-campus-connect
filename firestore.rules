@@ -1,179 +1,118 @@
 
-/**
- * @file Firestore Security Rules for CampusConnect
- * @description This ruleset enforces a user-ownership model for user profiles and author-based control for announcements, forum posts and resources, while events and chatbot messages are publicly readable.
- *
- * Data Structure:
- * - /users/{userId}: Stores private user profile data, accessible only to the user.
- * - /announcements/{announcementId}: Stores announcements, write-controlled by the authorId field.
- * - /events/{eventId}: Stores event information, publicly readable.
- * - /forum_posts/{forumPostId}: Stores forum posts, write-controlled by the authorId field.
- * - /resources/{resourceId}: Stores resources, write-controlled by the uploaderId field.
- * - /chat_messages/{chatMessageId}: Stores chatbot messages, publicly readable.
- * - /usn_change_requests/{requestId}: Stores USN change requests. Students can create, faculty can update.
- *
- * Key Security Decisions:
- * - Users can only read and write their own profile data.
- * - Announcements, Forum Posts, and Resources are author-controlled.
- * - Events and Chatbot messages are publicly readable.
- * - Listing of user profiles is disallowed for privacy.
- * - USN change requests can be created by students and managed by faculty.
- */
 rules_version = '2';
+
+/**
+ * Firestore Security Rules for the CampusConnect App
+ *
+ * This file defines who can read, write, and delete data in our database.
+ * Think of it as the bouncer for our database, checking permissions for every request.
+ */
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Returns true if the user's role is 'faculty'.
+
+    // A helper function to check if the current user has the 'faculty' role.
     function isFaculty() {
         return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'faculty';
     }
 
+    // A helper function to check if the user is signed in.
+    function isSignedIn() {
+        return request.auth != null;
+    }
+
+    // A helper function to check if the current user is the owner of a document.
+    function isOwner(userId) {
+        return request.auth.uid == userId;
+    }
+
     /**
-     * @description Controls access to user profile data. Only the user can read and write their own profile.
-     * @path /users/{userId}
-     * @allow (create, update, delete) if request.auth.uid == userId
-     * @deny (create, update, delete) if request.auth.uid != userId
-     * @principle Enforces document ownership for writes.
+     * User Profiles: Controls access to user data.
+     * Rule: You can only view and edit your own profile.
      */
     match /users/{userId} {
-      // Only the authenticated user can read their own profile.
+      // Allow a user to get their own data, but not anyone else's.
       allow get: if isSignedIn() && isOwner(userId);
-      // No one can list all user profiles.
+      // Disallow anyone from getting a list of all users for privacy.
       allow list: if false;
-
-      // Only the authenticated user can create their own profile.
-      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
-
-      // Only the authenticated user can update their own profile. USN cannot be changed directly.
-      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id && request.resource.data.usn == resource.data.usn;
-
-      // Only the authenticated user can delete their own profile.
-      allow delete: if isSignedIn() && isExistingOwner(userId);
+      // Allow a user to create their own profile.
+      allow create: if isSignedIn() && isOwner(userId);
+      // Allow a user to update their own profile, but they cannot change their own USN directly.
+      allow update: if isSignedIn() && isOwner(userId) && request.resource.data.usn == resource.data.usn;
+      // Allow a user to delete their own profile.
+      allow delete: if isSignedIn() && isOwner(userId);
     }
 
     /**
-     * @description Controls access to announcements. Anyone can read, but only the author can create, update, or delete.
-     * @path /announcements/{announcementId}
-     * @allow (get, list) if true
-     * @allow (create) if request.auth.uid == request.resource.data.authorId
-     * @allow (update, delete) if request.auth.uid == resource.data.authorId
-     * @deny (create, update, delete) if request.auth.uid != resource.data.authorId
-     * @principle Enforces document ownership for writes, allows public reads.
+     * Announcements: Controls access to campus announcements.
+     * Rule: Anyone can read, but only authors can write or delete.
      */
     match /announcements/{announcementId} {
-      // Allow anyone to read announcements.
+      // Anyone can read announcements.
       allow get, list: if true;
-
-      // Only the author can create an announcement, and authorId must match the request.auth.uid.
+      // An announcement can only be created by its author.
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-
-      // Only the author can update an announcement.
-      allow update: if isSignedIn() && isExistingOwner(resource.data.authorId);
-
-      // Only the author can delete an announcement.
-      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      // Only the original author can update or delete their announcement.
+      allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     /**
-     * @description Controls access to events. All users can read the event data.
-     * @path /events/{eventId}
-     * @allow get, list: if true
-     * @principle Allows public reads.
+     * Events: Controls access to events.
+     * Rule: Anyone can read event information.
      */
     match /events/{eventId} {
-      // Allow anyone to read events.
+      // Anyone can read events.
       allow get, list: if true;
-
-      // Anyone can create, update, and delete events (Public Read with Owner-Only Writes pattern requires an ownership field.)
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      // For now, creating events is restricted. This could be a future feature for admins.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Controls access to forum posts. Anyone can read, but only the author can create, update, or delete.
-     * @path /forum_posts/{forumPostId}
-     * @allow (get, list) if true
-     * @allow (create) if request.auth.uid == request.resource.data.authorId
-     * @allow (update, delete) if request.auth.uid == resource.data.authorId
-     * @deny (create, update, delete) if request.auth.uid != resource.data.authorId
-     * @principle Enforces document ownership for writes, allows public reads.
+     * Forum Posts: Controls access to the discussion forum.
+     * Rule: Anyone can read, anyone logged in can upvote, but only the author can write/delete.
      */
     match /forum_posts/{forumPostId} {
-      // Allow anyone to read forum posts.
+      // Anyone can read forum posts.
       allow get, list: if true;
-
-      // Only the author can create a forum post, and authorId must match the request.auth.uid.
+      // A post must be created by a logged-in user, who is marked as the author.
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-
-      // Only the author can update or upvote/downvote a forum post.
+      // Any logged-in user can update a post (e.g., to upvote it).
       allow update: if isSignedIn();
-
-      // Only the author can delete a forum post.
-      allow delete: if isSignedIn() && isExistingOwner(resource.data.authorId);
+      // Only the original author can delete their post.
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
 
     /**
-     * @description Controls access to resources. Anyone can read, but only the uploader can create, update, or delete.
-     * @path /resources/{resourceId}
-     * @allow (get, list) if true
-     * @allow (create) if request.auth.uid == request.resource.data.uploaderId
-     * @allow (update, delete) if request.auth.uid == resource.data.uploaderId
-     * @deny (create, update, delete) if request.auth.uid != resource.data.uploaderId
-     * @principle Enforces document ownership for writes, allows public reads.
+     * Resources: Controls access to files in the Resource Hub.
+     * Rule: Anyone can read, but only the uploader can write or delete.
      */
     match /resources/{resourceId} {
-      // Allow anyone to read resources.
+      // Anyone can read the resource metadata.
       allow get, list: if true;
-
-      // Only the uploader can create a resource, and uploaderId must match the request.auth.uid.
+      // A resource must be uploaded by a logged-in user, who is marked as the uploader.
       allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
-
-      // Only the uploader can update a resource.
-      allow update: if isSignedIn() && isExistingOwner(resource.data.uploaderId);
-
-      // Only the uploader can delete a resource.
-      allow delete: if isSignedIn() && isExistingOwner(resource.data.uploaderId);
+      // Only the original uploader can update or delete their resource.
+      allow update, delete: if isSignedIn() && resource.data.uploaderId == request.auth.uid;
     }
 
     /**
-     * @description Controls access to chat messages. All users can read the chat messages.
-     * @path /chat_messages/{chatMessageId}
-     * @allow get, list: if true
-     * @principle Allows public reads.
+     * Chat Messages: Controls access to chatbot messages.
+     * Rule: For now, this is restricted as history is stored locally in the user's browser.
      */
     match /chat_messages/{chatMessageId} {
-      // Allow anyone to read chat messages.
-      allow get, list: if true;
-
-        // Anyone can create, update, and delete chat messages (Public Read with Owner-Only Writes pattern requires an ownership field.)
-        allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow read, write: if false;
     }
 
-     /**
-     * @description Controls access to USN change requests.
-     * @path /usn_change_requests/{requestId}
+    /**
+     * USN Change Requests: Manages student requests to change their USN.
+     * Rule: Students can create requests, but only faculty can view and manage them.
      */
     match /usn_change_requests/{requestId} {
-      // A user can create their own request.
+      // A student can create a request for themselves.
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      // Faculty members can read and update (approve/deny) requests.
+      // Only faculty members can list, view, or update (approve/deny) requests.
       allow list, get, update: if isSignedIn() && isFaculty();
       // Only faculty can delete requests.
       allow delete: if isSignedIn() && isFaculty();
     }
-  }
-
-  // Helper function to determine if the user is signed in.
-  function isSignedIn() {
-    return request.auth != null;
-  }
-
-  // Helper function to determine if the user is the owner of the resource.
-  function isOwner(userId) {
-    return request.auth.uid == userId;
-  }
-
-    // Helper function to determine if the user is the existing owner of the resource.
-  function isExistingOwner(userId) {
-    return isOwner(userId) && resource != null;
   }
 }
