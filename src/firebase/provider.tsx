@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { Auth, User, onAuthStateChanged } from 'firebase/auth';
 import { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener'
 
-// This defines the "props" or properties that our main Firebase provider component accepts.
+// Defines the properties for the main Firebase provider component.
 interface FirebaseProviderProps {
   children: ReactNode;
   firebaseApp: FirebaseApp;
@@ -17,14 +16,14 @@ interface FirebaseProviderProps {
   storage: FirebaseStorage;
 }
 
-// This holds the internal state for user authentication (are they logged in? is it loading?).
+// Holds the internal state for user authentication.
 interface UserAuthState {
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
 }
 
-// This defines the combined state that will be available to all child components.
+// Defines the combined state available to all child components.
 export interface FirebaseContextState {
   areServicesAvailable: boolean; 
   firebaseApp: FirebaseApp | null;
@@ -36,7 +35,7 @@ export interface FirebaseContextState {
   userError: Error | null; 
 }
 
-// This defines the return type for our custom `useFirebase()` hook.
+// Defines the return type for the `useFirebase()` hook.
 export interface FirebaseServicesAndUser {
   firebaseApp: FirebaseApp;
   firestore: Firestore;
@@ -47,18 +46,17 @@ export interface FirebaseServicesAndUser {
   userError: Error | null;
 }
 
-// This defines the return type for our custom `useUser()` hook.
+// Defines the return type for the `useUser()` hook.
 export interface UserHookResult { 
   user: User | null;
   isUserLoading: boolean;
   userError: Error | null;
 }
 
-// This is the React Context that will hold and provide our Firebase state to the entire app.
+// The React Context that will provide Firebase state to the app.
 export const FirebaseContext = createContext<FirebaseContextState | undefined>(undefined);
 
-// This provider component is the heart of our Firebase integration. It wraps our entire app
-// and manages the Firebase services and the user's authentication state.
+// This provider component wraps the app, managing Firebase services and user auth state.
 export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   children,
   firebaseApp,
@@ -72,8 +70,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     userError: null,
   });
 
-  // This effect runs once and subscribes to Firebase's authentication state changes.
-  // It automatically updates the user's state whenever they log in or out.
+  // Subscribes to Firebase auth state changes to automatically update user state.
   useEffect(() => {
     if (!auth) { 
       setUserAuthState({ user: null, isUserLoading: false, userError: new Error("Auth service not provided.") });
@@ -92,12 +89,11 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
-    // This cleans up the subscription when the component is removed, preventing memory leaks.
+    // Cleans up the subscription on unmount.
     return () => unsubscribe(); 
   }, [auth]); 
 
-  // We "memoize" the context value to prevent unnecessary re-renders of child components
-  // if the state hasn't actually changed.
+  // Memoizes the context value to prevent unnecessary re-renders.
   const contextValue = useMemo((): FirebaseContextState => {
     const servicesAvailable = !!(firebaseApp && firestore && auth && storage);
     return {
@@ -114,14 +110,13 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
   return (
     <FirebaseContext.Provider value={contextValue}>
-      {/* This invisible component listens for and displays helpful database errors during development. */}
       <FirebaseErrorListener />
       {children}
     </FirebaseContext.Provider>
   );
 };
 
-// A custom hook to easily access core Firebase services and user auth state from any component.
+// Hook to access core Firebase services and user state.
 export const useFirebase = (): FirebaseServicesAndUser => {
   const context = useContext(FirebaseContext);
 
@@ -144,46 +139,46 @@ export const useFirebase = (): FirebaseServicesAndUser => {
   };
 };
 
-// A simple hook to access just the Firebase Auth instance.
+// Simple hook to access only the Auth instance.
 export const useAuth = (): Auth => {
   const { auth } = useFirebase();
   return auth;
 };
 
-// A simple hook to access just the Firestore database instance.
+// Simple hook to access only the Firestore instance.
 export const useFirestore = (): Firestore => {
   const { firestore } = useFirebase();
   return firestore;
 };
 
-// A simple hook to access just the Firebase Storage instance.
+// Simple hook to access only the Storage instance.
 export const useStorage = (): FirebaseStorage => {
     const { storage } = useFirebase();
     return storage;
 }
 
-// A simple hook to access just the Firebase App instance.
+// Simple hook to access only the Firebase App instance.
 export const useFirebaseApp = (): FirebaseApp => {
   const { firebaseApp } = useFirebase();
   return firebaseApp;
 };
 
-// This is a helper type for marking objects as "memoized" for our internal checks.
+// Helper type for marking objects as "memoized".
 type MemoFirebase <T> = T & {__memo?: boolean};
 
-// This is a custom hook that wraps React's `useMemo` and adds a special flag.
-// This helps us enforce a best practice to prevent accidental infinite loops in our data-fetching hooks.
+// Custom hook that wraps React's `useMemo` and adds a flag.
+// This helps enforce best practices to prevent infinite loops in data-fetching.
 export function useMemoFirebase<T>(factory: () => T, deps: DependencyList): T | (MemoFirebase<T>) {
   const memoized = useMemo(factory, deps);
   
   if(typeof memoized !== 'object' || memoized === null) return memoized;
-  // We add a property to the object to mark it as memoized.
+  // Add a property to mark the object as memoized.
   (memoized as MemoFirebase<T>).__memo = true;
   
   return memoized;
 }
 
-// A hook specifically for accessing the authenticated user's state (user object, loading status, etc.).
+// Hook specifically for accessing the authenticated user's state.
 export const useUser = (): UserHookResult => {
   const { user, isUserLoading, userError } = useFirebase();
   return { user, isUserLoading, userError };

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useMemo, type ReactNode } from 'react';
@@ -9,12 +8,10 @@ interface FirebaseClientProviderProps {
   children: ReactNode;
 }
 
-// This component's main job is to make sure that Firebase is initialized
-// only on the client-side (in the browser), not on the server.
+// This component ensures Firebase is initialized only on the client-side (in the browser).
 export function FirebaseClientProvider({ children }: FirebaseClientProviderProps) {
-  // `useMemo` with an empty dependency array `[]` is a React trick.
-  // It ensures that the `initializeFirebase` function is called only once,
-  // right when the component first mounts on the client.
+  // `useMemo` with an empty dependency array `[]` ensures that
+  // `initializeFirebase` is called only once when the component first mounts.
   const firebaseServices = useMemo(() => {
     return initializeFirebase();
   }, []); 

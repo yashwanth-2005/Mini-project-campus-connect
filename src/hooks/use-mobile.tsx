@@ -2,6 +2,7 @@ import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
 
+// A simple hook to check if the user is on a mobile-sized screen.
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 
@@ -12,6 +13,8 @@ export function useIsMobile() {
     }
     mql.addEventListener("change", onChange)
     setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    
+    // Clean up the listener on component unmount.
     return () => mql.removeEventListener("change", onChange)
   }, [])
 

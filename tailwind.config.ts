@@ -3,7 +3,7 @@ import type {Config} from 'tailwindcss';
 const config: Config = {
   darkMode: ['class'],
   content: [
-    './src/WEBSITE/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
@@ -16,7 +16,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // Use a CSS variable for our main font, set in the layout file.
+        // Use a CSS variable for the main font.
         sans: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
       },

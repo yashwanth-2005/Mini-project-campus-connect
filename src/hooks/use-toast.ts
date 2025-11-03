@@ -1,8 +1,7 @@
-
 "use client"
 
-// This custom hook is inspired by the popular 'react-hot-toast' library.
-// It provides a simple, clean way to create and manage "toast" notifications from anywhere in the app.
+// Inspired by the 'react-hot-toast' library, this provides a simple
+// way to create and manage toast notifications from anywhere in the app.
 import * as React from "react"
 
 import type {
@@ -10,8 +9,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1; // We only want to show one toast at a time.
-const TOAST_REMOVE_DELAY = 3000; // Toasts will automatically disappear after 3 seconds.
+const TOAST_LIMIT = 1 // Only show one toast at a time.
+const TOAST_REMOVE_DELAY = 3000 // Automatically dismiss after 3 seconds.
 
 type ToasterToast = ToastProps & {
   id: string
@@ -20,7 +19,6 @@ type ToasterToast = ToastProps & {
   action?: ToastActionElement
 }
 
-// These are the different types of actions our toast system can handle.
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
@@ -30,7 +28,7 @@ const actionTypes = {
 
 let count = 0
 
-// This function generates a unique, sequential ID for each new toast.
+// Generates a unique ID for each toast.
 function genId() {
   count = (count + 1) % Number.MAX_SAFE_INTEGER
   return count.toString()
@@ -62,7 +60,7 @@ interface State {
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
-// This function schedules a toast to be completely removed from the DOM after a delay.
+// Schedules a toast to be removed from the DOM after a delay.
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
     return
@@ -79,9 +77,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
-// The "reducer" is a standard React pattern. It's a pure function that takes the
-// current state and an action, and returns the new state. It's the central place
-// where all state changes for toasts are handled.
+// The reducer is a pure function that handles all state changes for toasts.
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
@@ -139,7 +135,7 @@ const listeners: Array<(state: State) => void> = []
 
 let memoryState: State = { toasts: [] }
 
-// This function dispatches an action to the reducer and then notifies all subscribed components of the state change.
+// Dispatches an action and notifies all subscribed components.
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
@@ -149,7 +145,7 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">
 
-// This is the main function that components will call to create a new toast notification.
+// The main function components call to create a new toast.
 function toast({ ...props }: Toast) {
   const id = genId()
 
@@ -179,7 +175,7 @@ function toast({ ...props }: Toast) {
   }
 }
 
-// This is the hook that components use to get the current toast state and the `toast` function.
+// The hook components use to get the current toast state and functions.
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState)
 

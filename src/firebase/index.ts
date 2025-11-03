@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -7,19 +6,16 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// This function initializes all our Firebase services (like Auth, Firestore, etc.).
-// It's designed to make sure that Firebase is only initialized once, even if the
-// function is called multiple times.
+// Initializes and returns all Firebase services.
+// This function ensures Firebase is only initialized once.
 export function initializeFirebase() {
   if (!getApps().length) {
-    // When the app is deployed on Firebase's own hosting service, it can sometimes
-    // configure itself automatically from the environment. We try that first.
+    // If deployed on Firebase Hosting, it can configure itself.
+    // Otherwise, it uses the local config file.
     let firebaseApp;
     try {
       firebaseApp = initializeApp();
     } catch (e) {
-      // If automatic setup fails (which is normal in local development),
-      // we fall back to using our local configuration file.
       if (process.env.NODE_ENV === "production") {
         console.warn('Automatic Firebase initialization failed. Falling back to local config.', e);
       }
@@ -28,11 +24,11 @@ export function initializeFirebase() {
     return getSdks(firebaseApp);
   }
 
-  // If Firebase is already initialized, we just get the existing instance.
+  // If already initialized, return existing services.
   return getSdks(getApp());
 }
 
-// This is a helper function to get all the service SDKs from a Firebase App instance.
+// Helper to get all service SDKs from a Firebase App instance.
 function getSdks(firebaseApp: FirebaseApp) {
   return {
     firebaseApp,
@@ -42,10 +38,7 @@ function getSdks(firebaseApp: FirebaseApp) {
   };
 }
 
-// This file acts as a central "barrel," re-exporting modules from other files.
-// This allows us to have cleaner import statements in our components. For example:
-// import { useUser, useDoc } from '@/firebase';
-// instead of two separate lines.
+// Re-exports modules for cleaner import statements elsewhere.
 export * from './provider';
 export * from './client-provider';
 export * from './firestore/use-collection';
