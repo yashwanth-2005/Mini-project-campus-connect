@@ -133,6 +133,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 // React Suspense gracefully handles loading URL parameters and prevents errors.
+// It ensures that the `useSearchParams` hook inside `AppLayoutContent` has the data it needs before rendering.
 export default function AppLayout({
   children,
 }: {
@@ -140,7 +141,7 @@ export default function AppLayout({
 }) {
   return (
     <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"><Logo className="h-16 w-16 text-primary animate-pulse-grow" /></div>}>
-        <AppLayoutContent>{children}</AppLayoutContent>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </React.Suspense>
   )
 }
