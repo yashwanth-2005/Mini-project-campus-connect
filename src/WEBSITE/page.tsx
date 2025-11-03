@@ -92,28 +92,6 @@ const staggerContainer = {
   },
 };
 
-const MotionCard = motion(Card);
-
-// A reusable component for displaying a feature card.
-const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
-    return (
-        <MotionCard
-            variants={fadeIn}
-            whileHover={{ scale: 1.03, y: -5 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="feature-card h-full"
-        >
-            <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
-              {feature.icon}
-              <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-4">
-              <p className="text-muted-foreground text-sm">{feature.description}</p>
-            </CardContent>
-        </MotionCard>
-    );
-};
-
 // This is the main landing page for the application.
 export default function Home() {
   const router = useRouter();
@@ -246,7 +224,22 @@ export default function Home() {
             variants={staggerContainer}
           >
             {features.map((feature) => (
-                <FeatureCard key={feature.title} feature={feature} />
+                <motion.div 
+                  key={feature.title}
+                  variants={fadeIn}
+                  whileHover={{ scale: 1.03, y: -5 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <Card className="feature-card h-full">
+                    <CardHeader className="flex flex-row items-center gap-4 p-4 bg-primary text-primary-foreground">
+                      {feature.icon}
+                      <CardTitle className="text-lg font-headline text-primary-foreground">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4 pt-4">
+                      <p className="text-muted-foreground text-sm">{feature.description}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
             ))}
           </motion.div>
         </motion.section>
@@ -272,7 +265,8 @@ export default function Home() {
                   variants={staggerContainer}
                   >
                     {testimonials.map((testimonial) => (
-                         <MotionCard key={testimonial.name} variants={fadeIn} className="bg-card p-6 flex flex-col justify-center items-center text-center h-full">
+                         <motion.div key={testimonial.name} variants={fadeIn}>
+                            <Card className="bg-card p-6 flex flex-col justify-center items-center text-center h-full">
                               <CardHeader className="p-0 items-center">
                                   <Avatar className="w-20 h-20 mb-4 border-2 border-primary">
                                       <AvatarImage src={testimonial.avatar} />
@@ -287,7 +281,8 @@ export default function Home() {
                                   </div>
                                   <p className="text-muted-foreground text-sm italic">&quot;{testimonial.testimonial}&quot;</p>
                               </CardContent>
-                          </MotionCard>
+                          </Card>
+                         </motion.div>
                     ))}
                 </motion.div>
             </div>
