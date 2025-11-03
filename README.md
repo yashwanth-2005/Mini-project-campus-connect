@@ -1,4 +1,4 @@
-# CampusConnect: The All-in-One Campus Platform
+# CampusConnect: The All-In-One Campus Platform
 
 Welcome to the CampusConnect project repository. This application is a comprehensive, cloud-native platform designed to unify every aspect of a student's campus life.
 
@@ -22,14 +22,30 @@ Welcome to the CampusConnect project repository. This application is a comprehen
 
 To run the project locally, follow these steps:
 
-1.  **Install Dependencies:**
+1.  **Set Up AI Functionality (Required):**
+    *   The AI chatbot in this project is powered by the Google Gemini model. To use it, you need a free API key.
+    *   Visit [Google AI Studio](https://aistudio.google.com/app/apikey) to create and copy your API key.
+    *   In the root of this project, you will find a file named `.env`. Open it and replace the placeholder `"YOUR_API_KEY_HERE"` with the key you just copied. The line should look like this:
+        ```
+        GEMINI_API_KEY="AIzaSy...your...key..."
+        ```
+    *   Save the `.env` file.
+
+2.  **Install Dependencies:**
     ```bash
     npm install
     ```
 
-2.  **Run the Development Server:**
-    ```bash
-    npm run dev
-    ```
+3.  **Run the Development Servers:**
+    You will need to run two servers in two separate terminals for the full application to work.
 
-This will start the Next.js development server, and you can view the application by navigating to `http://localhost:9002` in your web browser. The application is fully configured to connect to a live Firebase backend, so all features will work out-of-the-box on your local machine.
+    *   **Terminal 1 (Next.js Web App):**
+        ```bash
+        npm run dev
+        ```
+    *   **Terminal 2 (Genkit AI Server):**
+        ```bash
+        npm run genkit:dev
+        ```
+
+This will start the Next.js and AI servers. You can view the application by navigating to `http://localhost:9002` in your web browser. The application is fully configured to connect to a live Firebase backend, so all features will work out-of-the-box on your local machine.
