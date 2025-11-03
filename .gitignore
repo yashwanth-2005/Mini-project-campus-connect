@@ -40,3 +40,6 @@ next-env.d.ts
 # genkit
 .genkit/
 .genkit-cache.json
+.npm/
+node_modules/
+
