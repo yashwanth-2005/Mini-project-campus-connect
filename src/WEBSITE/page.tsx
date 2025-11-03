@@ -22,7 +22,7 @@ import React, { useState } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 
-// Data for the feature cards displayed on the landing page.
+// Data for the feature cards.
 const features = [
   {
     icon: <Briefcase className="h-6 w-6 text-primary-foreground" />,
@@ -56,7 +56,7 @@ const features = [
   },
 ];
 
-// Data for testimonials from past students.
+// Data for testimonials.
 const testimonials = [
     {
         name: "Priya Sharma",
@@ -78,7 +78,7 @@ const testimonials = [
     }
 ]
 
-// Animation definitions for the 'framer-motion' library.
+// Animation definitions for Framer Motion.
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -92,15 +92,14 @@ const staggerContainer = {
   },
 };
 
-// This is the main landing page for the application.
+// The main landing page for the application.
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
-  // Navigate to a new page and show a loading screen.
+  // Navigate to a new page and show a loading indicator.
   const handleLinkClick = (path: string, id: string) => {
     setLoading(id);
-    // A small timeout lets the user see the loading animation.
     setTimeout(() => {
       router.push(path);
     }, 100);
@@ -139,7 +138,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 overflow-x-hidden">
-         {/* The main title and call-to-action section. */}
+         {/* Hero section */}
          <motion.section 
             className="py-20 md:py-32"
             initial="initial"
@@ -171,7 +170,7 @@ export default function Home() {
           </div>
         </motion.section>
         
-        {/* A special feature highlight for the placement prep tool. */}
+        {/* Quick Placement Prep feature highlight */}
         <motion.section 
           id="quick-prep" 
           className="bg-secondary/50 py-20 my-12"
@@ -202,7 +201,7 @@ export default function Home() {
             </div>
         </motion.section>
 
-        {/* This section displays the main features as a grid of cards. */}
+        {/* Features grid */}
         <motion.section 
           id="features" 
           className="container my-20"
@@ -219,12 +218,11 @@ export default function Home() {
               </p>
             </div>
           </motion.div>
-          <motion.div 
+          <div 
             className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
-            variants={staggerContainer}
           >
             {features.map((feature) => (
-                <motion.div 
+                <motion.div
                   key={feature.title}
                   variants={fadeIn}
                   whileHover={{ scale: 1.03, y: -5 }}
@@ -241,10 +239,10 @@ export default function Home() {
                   </Card>
                 </motion.div>
             ))}
-          </motion.div>
+          </div>
         </motion.section>
         
-        {/* This section shows quotes from students as social proof. */}
+        {/* Testimonials section */}
         <motion.section 
           id="testimonials" 
           className="my-20 py-24 bg-secondary/50"
@@ -260,9 +258,8 @@ export default function Home() {
                         See how CampusConnect is helping students achieve their goals.
                     </p>
                 </motion.div>
-                <motion.div 
+                <div
                   className="grid gap-8 md:grid-cols-2 lg:grid-cols-3"
-                  variants={staggerContainer}
                   >
                     {testimonials.map((testimonial) => (
                          <motion.div key={testimonial.name} variants={fadeIn}>
@@ -284,13 +281,13 @@ export default function Home() {
                           </Card>
                          </motion.div>
                     ))}
-                </motion.div>
+                </div>
             </div>
         </motion.section>
 
       </main>
 
-      {/* The footer contains navigation and social media links. */}
+      {/* Footer */}
       <motion.footer 
         className="py-12 md:py-16 border-t border-border/40 bg-secondary/30"
         initial="initial"
