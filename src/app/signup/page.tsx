@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -27,7 +28,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { Eye, EyeOff, Loader2 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-// Base schema for fields common to all users.
+// The base schema defines fields common to both students and faculty.
 const baseSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Please enter a valid email address"),
@@ -37,7 +38,7 @@ const baseSchema = z.object({
   confirmPassword: z.string().min(8, "Please confirm your password"),
 });
 
-// Schema for student-specific fields.
+// This schema adds fields specific to students.
 const studentSchema = baseSchema.extend({
   role: z.literal('student'),
   usn: z.string().min(1, "USN is required"),
@@ -48,7 +49,7 @@ const studentSchema = baseSchema.extend({
   course: z.string().min(1, "Please select your course"),
 });
 
-// Schema for faculty-specific fields.
+// This schema adds fields specific to faculty members.
 const facultySchema = baseSchema.extend({
     role: z.literal('faculty'),
     department: z.string().min(1, "Department is required"),
@@ -56,7 +57,8 @@ const facultySchema = baseSchema.extend({
     uniqueCode: z.string().min(1, "Unique code is required"),
 });
 
-// Combined schema that validates based on the selected role.
+// This combined schema uses a `discriminatedUnion` to switch validation rules
+// based on the selected role.
 const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema])
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -64,7 +66,7 @@ const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema]
 });
 
 
-// The main component for the user signup page.
+// This is the main component for the user signup page.
 export default function SignupPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -76,7 +78,7 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState<'student' | 'faculty'>('student');
   
-  // Initializes the form with validation rules.
+  // Initializes the form with validation rules and default values.
   const form = useForm<z.infer<typeof signupSchema>>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
@@ -99,7 +101,7 @@ export default function SignupPage() {
   
   const password = form.watch("password");
 
-  // Calculates password strength for user feedback.
+  // Calculates password strength and provides feedback.
   const getPasswordStrength = (pass: string) => {
     let score = 0;
     if (!pass) return { score: 0, label: '', color: '' };
@@ -129,10 +131,11 @@ export default function SignupPage() {
 
   const strength = getPasswordStrength(password);
 
-  // Handles form submission, user creation, and data saving.
+  // Handles form submission, creates the user, and saves their data.
   async function onSubmit(data: z.infer<typeof signupSchema>) {
     setIsLoading(true);
 
+    // Checks for a strong password before submitting.
     if (strength.score < 3) {
       toast({
         title: "Weak Password",
@@ -146,18 +149,18 @@ export default function SignupPage() {
     try {
         if (!firestore) throw new Error("Firestore not initialized");
 
-        // 1. Create user in Firebase Authentication.
+        // 1. Create the user in Firebase Authentication.
         const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         const user = userCredential.user;
 
-        // 2. Update their display name.
+        // 2. Update their display name in their Firebase profile.
         await updateProfile(user, {
             displayName: data.fullName
         });
 
         const [firstName, ...lastName] = data.fullName.split(' ');
 
-        // 3. Prepare the user's profile data for Firestore.
+        // 3. Prepare the user's profile data to be saved in Firestore.
         let userProfileData: any = {
             id: user.uid,
             email: data.email,
@@ -170,7 +173,7 @@ export default function SignupPage() {
             role: data.role,
         };
 
-        // 4. Add role-specific data.
+        // 4. Add role-specific data to the profile object.
         if (data.role === 'student') {
             userProfileData = {
                 ...userProfileData,
@@ -178,19 +181,19 @@ export default function SignupPage() {
                 year: data.year,
                 semester: data.semester,
                 course: data.course,
-                branch: data.course,
+                branch: data.course, // Use 'course' as 'branch' for students.
             }
         } else {
              userProfileData = {
                 ...userProfileData,
                 department: data.department,
                 facultyId: data.facultyId,
-                branch: data.department,
+                branch: data.department, // Use 'department' as 'branch' for faculty.
                 uniqueCode: data.uniqueCode,
              }
         }
 
-        // 5. Save the profile to the 'users' collection.
+        // 5. Save the complete profile to the 'users' collection.
         await setDoc(doc(firestore, "users", user.uid), userProfileData);
 
         toast({
@@ -215,10 +218,11 @@ export default function SignupPage() {
     }
   }
 
-  // Handles switching between student and faculty forms.
+  // Handles switching between the student and faculty signup forms.
   const handleRoleChange = (role: 'student' | 'faculty') => {
     setSelectedRole(role);
     form.setValue('role', role);
+    // Reset the form to clear data from the previous role's fields.
     form.reset({
         ...form.getValues(),
         role: role,
@@ -234,7 +238,7 @@ export default function SignupPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
-       {/* Loading overlay */}
+       {/* A loading overlay while the account is being created. */}
        {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -301,7 +305,7 @@ export default function SignupPage() {
                         </FormItem>
                     )} />
 
-                    {/* Student-specific fields */}
+                    {/* Fields displayed only if "student" role is selected. */}
                     {selectedRole === 'student' && (
                         <>
                             <FormField control={form.control} name="usn" render={({ field }) => (
@@ -366,7 +370,7 @@ export default function SignupPage() {
                         </>
                     )}
 
-                    {/* Faculty-specific fields */}
+                    {/* Fields displayed only if "faculty" role is selected. */}
                     {selectedRole === 'faculty' && (
                         <>
                             <FormField

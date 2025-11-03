@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -168,3 +169,5 @@
     animation: rainbow-gradient 4s ease infinite;
   }
 }
+
+    

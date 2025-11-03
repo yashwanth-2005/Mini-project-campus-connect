@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
-    // Sends a password reset email using Firebase.
+    // This function uses Firebase to send a password reset email.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
@@ -38,7 +39,7 @@ export default function ForgotPasswordPage() {
             setEmailSent(true);
         } catch (error: any) {
             let description = "An unexpected error occurred. Please try again.";
-            // Provide a more helpful error message.
+            // Give a helpful message if the email doesn't exist.
             if (error.code === 'auth/user-not-found') {
                 description = "No account is associated with this email address.";
             }
@@ -54,7 +55,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-             {/* Loading overlay */}
+             {/* A loading overlay while the email is being sent. */}
              {isLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
                     <div className="flex flex-col items-center gap-4">
@@ -77,7 +78,7 @@ export default function ForgotPasswordPage() {
                     </CardDescription>
                 </CardHeader>
                 {emailSent ? (
-                    // View shown after the email is sent.
+                    // This view shows after the email is successfully sent.
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
@@ -91,7 +92,7 @@ export default function ForgotPasswordPage() {
                         </Button>
                     </CardContent>
                 ) : (
-                    // Initial form to enter email.
+                    // This is the initial form where the user enters their email.
                     <form onSubmit={handleSubmit}>
                         <CardContent className="grid gap-4">
                             <div className="grid gap-2">

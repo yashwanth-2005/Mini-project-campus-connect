@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Handles the user's login attempt.
+  // This function handles the user's login attempt.
   const handleLogin = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     setIsLoading(true);
@@ -47,6 +48,7 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
+    // Simple check for valid email format.
     if (!/^\S+@\S+\.\S+$/.test(email)) {
         toast({
             title: "Invalid Email",
@@ -56,6 +58,7 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
     }
+    // Ensures a password was entered.
     if (!password) {
         toast({
             title: "Password Required",
@@ -67,11 +70,11 @@ export default function LoginPage() {
     }
 
     try {
-        // Sign the user in with Firebase Authentication.
+        // Use Firebase to sign the user in.
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // Get the user's profile from Firestore to determine their role.
+        // After login, get the user's profile from our database.
         const userDocRef = doc(firestore, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -79,6 +82,7 @@ export default function LoginPage() {
              throw new Error("User profile not found. Please contact support.");
         }
         
+        // Get the user's role from their database profile to redirect correctly.
         const userProfile = userDoc.data();
         const userRole = userProfile.role || 'student';
         
@@ -94,7 +98,7 @@ export default function LoginPage() {
         let title = "Login Failed";
         let description = "An unexpected error occurred. Please try again.";
 
-        // Provide more helpful error messages for common cases.
+        // Provide more helpful error messages for common problems.
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/invalid-credential":
@@ -116,9 +120,10 @@ export default function LoginPage() {
     }
   };
 
-  // Renders the email and password form.
+  // This function renders the email and password form.
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
+      {/* Social login buttons only for students. */}
       {currentRole === 'student' && (
         <>
             <div className="grid grid-cols-2 gap-2">
@@ -174,7 +179,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
-        {/* Loading overlay */}
+        {/* A loading overlay while processing the login request. */}
         {isLoading && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
             <div className="flex flex-col items-center gap-4">
