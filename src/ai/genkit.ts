@@ -9,3 +9,4 @@ export const ai = genkit({
   plugins: [googleAI()],
   model: 'googleai/gemini-pro',
 });
+

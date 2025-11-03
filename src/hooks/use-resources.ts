@@ -21,16 +21,17 @@ export type Resource = {
 };
 
 // This custom hook handles all the logic for managing resources with Firebase.
-export function useResources() {
+// It now accepts a collection name to be reusable for different repositories.
+export function useResources(collectionName: string = 'resources') {
     const { user } = useUser();
     const firestore = useFirestore();
     const storage = useStorage();
 
     // We "memoize" this query to prevent re-fetching data unnecessarily.
-    // It gets all documents from the 'resources' collection, ordered by most recent.
+    // It gets all documents from the specified collection, ordered by most recent.
     const resourcesQuery = useMemoFirebase(() => 
-        (firestore) ? query(collection(firestore, 'resources'), orderBy('uploadDate', 'desc')) : null,
-        [firestore]
+        (firestore) ? query(collection(firestore, collectionName), orderBy('uploadDate', 'desc')) : null,
+        [firestore, collectionName]
     );
 
     // The `useCollection` hook gives us a real-time stream of the resources data.
@@ -43,7 +44,7 @@ export function useResources() {
         
         // We create a unique path in Firebase Storage to store the file.
         // The path includes the user's ID to help manage permissions later.
-        const storagePath = `resources/${user.uid}/${Date.now()}_${file.name}`;
+        const storagePath = `${collectionName}/${user.uid}/${Date.now()}_${file.name}`;
         const storageRef = ref(storage, storagePath);
         
         // We upload the file's raw data (bytes).
@@ -51,9 +52,9 @@ export function useResources() {
         // After uploading, we get the public URL to download the file.
         const downloadURL = await getDownloadURL(snapshot.ref);
 
-        // We then create a new document in our Firestore 'resources' collection
+        // We then create a new document in our specified Firestore collection
         // to store the file's metadata, like its name and download URL.
-        await addDoc(collection(firestore, 'resources'), {
+        await addDoc(collection(firestore, collectionName), {
             name: title,
             description,
             fileType: file.type || "File",
@@ -63,16 +64,16 @@ export function useResources() {
             fileUrl: downloadURL,
             storagePath: storagePath,
         });
-    }, [user, firestore, storage]);
+    }, [user, firestore, storage, collectionName]);
 
     // This function updates the metadata (just the name and description) of an existing resource.
     const updateResource = useCallback(async (resourceId: string, title: string, description: string) => {
         if (!user) throw new Error("User not authenticated.");
         if (!firestore) throw new Error("Firestore is not initialized.");
         
-        const resourceDocRef = doc(firestore, 'resources', resourceId);
+        const resourceDocRef = doc(firestore, collectionName, resourceId);
         await updateDoc(resourceDocRef, { name: title, description: description });
-    }, [firestore, user]);
+    }, [firestore, user, collectionName]);
 
     // This function deletes a resource from both Firestore and Firebase Storage.
     const deleteResource = useCallback(async (resourceId: string, storagePath: string) => {
@@ -80,14 +81,14 @@ export function useResources() {
         if (!firestore || !storage) throw new Error("Firebase is not initialized.");
 
         // We create references to both the file in Storage and its metadata document in Firestore.
-        const resourceDocRef = doc(firestore, 'resources', resourceId);
+        const resourceDocRef = doc(firestore, collectionName, resourceId);
         const fileRef = ref(storage, storagePath);
 
         // It's important to delete the file from Storage first.
         await deleteObject(fileRef);
         // Then, we delete the metadata document from Firestore.
         await deleteDoc(resourceDocRef);
-    }, [firestore, storage, user]);
+    }, [firestore, storage, user, collectionName]);
 
     return {
         resources: resources || [],
