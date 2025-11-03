@@ -31,11 +31,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-   turbopack: {
-    // This tells Turbopack where the project root is, silencing the warning
-    // about multiple lockfiles.
-    root: __dirname,
-  },
 };
 
 export default nextConfig;
