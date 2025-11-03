@@ -32,7 +32,6 @@ import { UserNav } from "@/components/user-nav";
 import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
-import React from "react";
 
 // This array defines all possible navigation links for the sidebar.
 // The `role` property determines who can see each link.
@@ -134,6 +133,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 // React Suspense gracefully handles loading URL parameters and prevents errors.
+// It also contains the Firebase provider to give all pages access to cloud services.
 export default function AppLayout({
   children,
 }: {
@@ -141,7 +141,9 @@ export default function AppLayout({
 }) {
   return (
     <React.Suspense fallback={<div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm"><Logo className="h-16 w-16 text-primary animate-pulse-grow" /></div>}>
-        <AppLayoutContent>{children}</AppLayoutContent>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </React.Suspense>
   )
 }
+
+    

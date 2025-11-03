@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/firebase";
 import { useResources, type Resource } from "@/hooks/use-resources";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // A dialog component for the "Upload Resource" form.
 const UploadResourceDialog = ({
@@ -63,26 +64,28 @@ const UploadResourceDialog = ({
                         Contribute to the hub by uploading a new resource.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="title" className="text-right">
-                            Title
-                        </Label>
-                        <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
+                <ScrollArea className="max-h-[70vh] p-4">
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="title" className="text-right">
+                                Title
+                            </Label>
+                            <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="description" className="text-right">
+                                Description
+                            </Label>
+                            <Textarea id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="file" className="text-right">
+                                File
+                            </Label>
+                            <Input id="file" type="file" className="col-span-3" onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)} />
+                        </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="description" className="text-right">
-                            Description
-                        </Label>
-                        <Textarea id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="file" className="text-right">
-                            File
-                        </Label>
-                        <Input id="file" type="file" className="col-span-3" onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)} />
-                    </div>
-                </div>
+                </ScrollArea>
                 <DialogFooter>
                     <Button type="submit" onClick={handleUploadClick} disabled={isUploading}>
                         {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -449,3 +452,5 @@ export default function ResourcesPage() {
         </div>
     )
 }
+
+    
