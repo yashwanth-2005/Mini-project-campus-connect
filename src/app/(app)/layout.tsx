@@ -32,6 +32,7 @@ import { UserNav } from "@/components/user-nav";
 import Chatbot from "@/components/chatbot";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import React from "react";
 
 // This array defines all possible navigation links for the sidebar.
 // The `role` property determines who can see each link.
