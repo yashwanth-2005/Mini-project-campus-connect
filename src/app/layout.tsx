@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Inter } from 'next/font/google';
 import { Analytics } from "@vercel/analytics/react"
 import { FirebaseClientProvider } from '@/firebase';
+import React from 'react';
 
 // This function downloads the 'Inter' font at build time and hosts it locally.
 // This is faster than fetching it from Google Fonts on every page load.

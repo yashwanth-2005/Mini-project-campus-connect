@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack -p 9002",
-    "genkit:dev": "genkit start --tsx --watch.usePolling src/ai/dev.ts",
+    "genkit:dev": "genkit start --tsx --watch --watch.usePolling src/ai/dev.ts",
     "genkit:watch": "genkit start --tsx --watch --watch.usePolling src/ai/dev.ts",
     "build": "next build",
     "start": "next start",
