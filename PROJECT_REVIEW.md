@@ -1,4 +1,5 @@
-# CampusConnect: Project Review & Viva Preparation
+# CampusConnect: Project Review 
+
 
 This document provides a comprehensive overview of the CampusConnect project, structured for a formal academic review.
 

@@ -3,7 +3,7 @@
 import './globals.css';
 import { Toaster } from "@/frontend/components/ui/toaster";
 import { ThemeProvider } from '@/frontend/components/theme-provider';
-import { FirebaseClientProvider } from '@/backend/firebase';
+import { FirebaseClientProvider } from '@/firebase';
 
 export default function RootLayout({
   children,
