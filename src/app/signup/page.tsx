@@ -57,7 +57,7 @@ const facultySchema = baseSchema.extend({
     uniqueCode: z.string().min(1, "Unique code is required"),
 });
 
-// This combined schema uses the `discriminatedUnion` to switch validation rules
+// This combined schema uses a `discriminatedUnion` to switch validation rules
 // based on the selected role (student or faculty).
 const signupSchema = z.discriminatedUnion("role", [studentSchema, facultySchema])
   .refine((data) => data.password === data.confirmPassword, {

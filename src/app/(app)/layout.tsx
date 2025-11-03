@@ -134,6 +134,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 // React Suspense gracefully handles the loading of URL parameters, preventing errors.
+// It also contains the Firebase provider to give all pages access to the cloud services.
 export default function AppLayout({
   children,
 }: {

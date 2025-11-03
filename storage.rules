@@ -1,23 +1,30 @@
+
 rules_version = '2';
 
+// These rules define who can upload and download files from our cloud storage.
 service firebase.storage {
   match /b/{bucket}/o {
     
+    // A simple function to check if a user is logged in.
     function isSignedIn() {
       return request.auth != null;
     }
 
+    // A function to check if the current user is the owner of the file.
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
     
-    // Allow signed-in users to upload to their own folder in `resources`
+    // This rule allows any logged-in user to upload files, but only to a folder
+    // that matches their own user ID. This is a critical security step.
     match /resources/{userId}/{fileName} {
+      // Any signed-in user can view and download any file.
       allow read: if isSignedIn();
+      // A user can only write (upload, update, delete) files in their own folder.
       allow write: if isOwner(userId);
     }
     
-    // Fallback rule for any other paths
+    // As a safety measure, this blocks all reads and writes to any other path.
     match /{allPaths=**} {
       allow read, write: if false;
     }

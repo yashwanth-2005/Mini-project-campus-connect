@@ -8,7 +8,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
 
-// Defines the expected input for the placement prep flow.
+// This defines the input for the placement prep flow.
 const PlacementPrepInputSchema = z.object({
   resume: z
     .string()
@@ -22,19 +22,19 @@ const PlacementPrepInputSchema = z.object({
 });
 export type PlacementPrepInput = z.infer<typeof PlacementPrepInputSchema>;
 
-// Defines the expected output for the placement prep flow.
+// This defines the output we expect from the AI.
 const PlacementPrepOutputSchema = z.object({
   studyPlan: z.string().describe('A tailored study plan for placement preparation.'),
   suggestedResources: z.string().describe('A list of suggested resources.'),
 });
 export type PlacementPrepOutput = z.infer<typeof PlacementPrepOutputSchema>;
 
-// The main function that clients will call to trigger the flow.
+// This is the main function our app will call to start the process.
 export async function generatePlacementPrepPlan(input: PlacementPrepInput): Promise<PlacementPrepOutput> {
   return placementPrepFlow(input);
 }
 
-// Defines the prompt and instructions for the AI model.
+// This defines the instructions for the AI model.
 const placementPrepPrompt = ai.definePrompt({
   name: 'placementPrepPrompt',
   input: {schema: PlacementPrepInputSchema},
@@ -52,7 +52,7 @@ const placementPrepPrompt = ai.definePrompt({
   Suggested Resources:`,
 });
 
-// Defines the Genkit flow that orchestrates the process.
+// This "flow" ties everything together.
 const placementPrepFlow = ai.defineFlow(
   {
     name: 'placementPrepFlow',
