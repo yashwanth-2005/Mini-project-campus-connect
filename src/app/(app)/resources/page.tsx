@@ -1,4 +1,3 @@
-
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -119,7 +118,7 @@ const EditResourceDialog = ({
     React.useEffect(() => {
         if(resource) {
             setEditTitle(resource.name);
-            setEditDescription(resource.description);
+            setEditDescription(resource.description || '');
         }
     }, [resource]);
 
