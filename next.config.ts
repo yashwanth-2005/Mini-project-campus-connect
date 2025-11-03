@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -29,6 +30,11 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+   turbopack: {
+    // This tells Turbopack where the project root is, silencing the warning
+    // about multiple lockfiles.
+    root: __dirname,
   },
 };
 
