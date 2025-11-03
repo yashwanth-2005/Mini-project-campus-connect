@@ -17,7 +17,8 @@ service firebase.storage {
     
     // This rule allows any logged-in user to upload files, but only to a folder
     // that matches their own user ID. This is a critical security step.
-    match /resources/{userId}/{fileName} {
+    // The {allPaths=**} wildcard allows users to write to any subpath within their folder.
+    match /resources/{userId}/{allPaths=**} {
       // Any signed-in user can view and download any file.
       allow read: if isSignedIn();
       // A user can only write (upload, update, delete) files in their own folder.
