@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from '@/components/theme-provider';
 import { Inter } from 'next/font/google';
 import { Analytics } from "@vercel/analytics/react"
+import { FirebaseClientProvider } from '@/firebase';
 
 // This function downloads the 'Inter' font at build time and hosts it locally.
 // This is faster than fetching it from Google Fonts on every page load.
@@ -30,7 +31,10 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          {/* The FirebaseClientProvider ensures Firebase is available to the entire app. */}
+          <FirebaseClientProvider>
+            {children}
+          </FirebaseClientProvider>
           {/* The Toaster component is where all popup notifications appear. */}
           <Toaster />
         </ThemeProvider>
