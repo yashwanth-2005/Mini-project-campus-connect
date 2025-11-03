@@ -103,12 +103,16 @@ export default function LoginPage() {
             case "auth/user-not-found":
             case "auth/invalid-credential":
             case "auth/invalid-email":
-                title = "Account Not Found";
-                description = "No account found with these details. Please sign up first.";
-                toast({ title, description, variant: "destructive" });
+                // If the user does not exist, redirect them to the signup page with the email pre-filled.
+                toast({
+                    title: "Account Not Found",
+                    description: "Redirecting you to the sign-up page...",
+                });
+                router.push(`/signup?email=${encodeURIComponent(email)}`);
                 break;
             case "auth/wrong-password":
-                description = "Invalid password. Please try again.";
+                title = "Login Failed";
+                description = "The password you entered is incorrect. Please try again.";
                 toast({ title, description, variant: "destructive" });
                 break;
             default:

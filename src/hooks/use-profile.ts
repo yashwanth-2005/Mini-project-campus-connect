@@ -43,6 +43,11 @@ export function useProfile() {
     // The `useDoc` hook provides a real-time stream of the user's profile data from the database.
     const { data: userProfile, isLoading: isProfileLoading, error: firestoreError } = useDoc<UserProfile>(userDocRef);
 
+    // Add role from userProfile to the user object
+    if (user && userProfile) {
+        (user as any).role = userProfile.role;
+    }
+
     // This function updates the user's profile in the database.
     const updateUserProfile = useCallback(async (data: Partial<Omit<UserProfile, 'id' | 'email' | 'role'>>) => {
         if (!userDocRef) throw new Error("User reference not available. Cannot update profile.");

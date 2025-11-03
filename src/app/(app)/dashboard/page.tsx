@@ -62,7 +62,7 @@ export default function DashboardPage() {
         <div className="space-y-8">
             <div>
                  <h1 className="text-3xl font-bold font-headline">{welcomeMessage()}</h1>
-                <p className="text-muted-foreground">Here&apos;s a quick overview of what&apos;s happening on campus.</p>
+                <p className="text-muted-foreground">Here's a quick overview of what's happening on campus.</p>
             </div>
 
             {/* This grid displays quick-access navigation cards. */}

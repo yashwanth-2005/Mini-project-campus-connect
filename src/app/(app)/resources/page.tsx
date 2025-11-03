@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from "@/components/ui/button";
@@ -14,87 +15,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/firebase";
 import { useResources, type Resource } from "@/hooks/use-resources";
 import { ScrollArea } from "@/components/ui/scroll-area";
-
-// A dialog component for the "Upload Resource" form.
-const UploadResourceDialog = ({
-    isOpen,
-    onOpenChange,
-    onUpload,
-    isUploading
-}: {
-    isOpen: boolean;
-    onOpenChange: (isOpen: boolean) => void;
-    onUpload: (title: string, description: string, file: File) => void;
-    isUploading: boolean;
-}) => {
-    const [uploadTitle, setUploadTitle] = useState("");
-    const [uploadDescription, setUploadDescription] = useState("");
-    const [uploadFile, setUploadFile] = useState<File | null>(null);
-    const { toast } = useToast();
-
-    // Validate the input and call the main upload function.
-    const handleUploadClick = () => {
-        if (!uploadTitle || !uploadFile) {
-            toast({
-                title: "Upload Failed",
-                description: "Please provide a title and select a file.",
-                variant: "destructive",
-            });
-            return;
-        }
-        onUpload(uploadTitle, uploadDescription, uploadFile);
-    };
-
-    return (
-        <Dialog open={isOpen} onOpenChange={(open) => {
-            // Prevent closing the dialog while uploading.
-            if (!isUploading) onOpenChange(open);
-        }}>
-            <DialogTrigger asChild>
-                <Button>
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload Resource
-                </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                    <DialogTitle>Upload Resource</DialogTitle>
-                    <DialogDescription>
-                        Contribute to the hub by uploading a new resource.
-                    </DialogDescription>
-                </DialogHeader>
-                <ScrollArea className="max-h-[70vh] -mx-6 px-6">
-                  <div className="grid gap-4 py-4 pr-1">
-                      <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="title" className="text-right">
-                              Title
-                          </Label>
-                          <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="description" className="text-right">
-                              Description
-                          </Label>
-                          <Textarea id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
-                      </div>
-                      <div className="grid grid-cols-4 items-center gap-4">
-                          <Label htmlFor="file" className="text-right">
-                              File
-                          </Label>
-                          <Input id="file" type="file" className="col-span-3" onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)} />
-                      </div>
-                  </div>
-                </ScrollArea>
-                <DialogFooter>
-                    <Button type="submit" onClick={handleUploadClick} disabled={isUploading}>
-                        {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {isUploading ? "Uploading..." : "Upload"}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
-};
 
 // A dialog component for editing a resource's details.
 const EditResourceDialog = ({
@@ -186,6 +106,12 @@ export default function ResourcesPage() {
 
     const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    
+    // State for the upload dialog is now managed here, in the parent component.
+    const [uploadTitle, setUploadTitle] = useState("");
+    const [uploadDescription, setUploadDescription] = useState("");
+    const [uploadFile, setUploadFile] = useState<File | null>(null);
+
     const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
     const [isUpdating, setIsUpdating] = useState(false);
     const [editingResource, setEditingResource] = useState<Resource | null>(null);
@@ -226,18 +152,30 @@ export default function ResourcesPage() {
             });
     };
 
-    // Handles the file upload process.
-    const handleUpload = async (title: string, description: string, file: File) => {
+    // This function now correctly uses state managed by the parent component.
+    const handleUpload = async () => {
         if (!user) return;
-        setIsUploading(true);
+        if (!uploadTitle || !uploadFile) {
+            toast({
+                title: "Upload Failed",
+                description: "Please provide a title and select a file.",
+                variant: "destructive",
+            });
+            return;
+        }
 
+        setIsUploading(true);
         try {
-            await uploadResource(title, description, file);
+            await uploadResource(uploadTitle, uploadDescription, uploadFile);
             toast({
                 title: "Resource Uploaded",
-                description: `'${title}' has been added to the hub.`,
+                description: `'${uploadTitle}' has been added to the hub.`,
             });
             setIsUploadDialogOpen(false);
+            // Reset state after successful upload
+            setUploadTitle("");
+            setUploadDescription("");
+            setUploadFile(null);
         } catch (error: any) {
             toast({
                 title: "Upload Failed",
@@ -331,12 +269,52 @@ export default function ResourcesPage() {
                     <h1 className="text-3xl font-bold font-headline">Resource Hub</h1>
                     <p className="text-muted-foreground">Central repository for notes, papers, and other materials.</p>
                 </div>
-                {user && <UploadResourceDialog 
-                    isOpen={isUploadDialogOpen}
-                    onOpenChange={setIsUploadDialogOpen}
-                    onUpload={handleUpload}
-                    isUploading={isUploading}
-                />}
+                {user && (
+                    <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Resource
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                            <DialogHeader>
+                                <DialogTitle>Upload Resource</DialogTitle>
+                                <DialogDescription>
+                                    Contribute to the hub by uploading a new resource.
+                                </DialogDescription>
+                            </DialogHeader>
+                            <ScrollArea className="max-h-[70vh] -mx-6 px-6">
+                              <div className="grid gap-4 py-4 pr-1">
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label htmlFor="title" className="text-right">
+                                          Title
+                                      </Label>
+                                      <Input id="title" placeholder="E.g., DSA Notes" className="col-span-3" value={uploadTitle} onChange={(e) => setUploadTitle(e.target.value)} />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label htmlFor="description" className="text-right">
+                                          Description
+                                      </Label>
+                                      <Textarea id="description" placeholder="Briefly describe the resource" className="col-span-3" value={uploadDescription} onChange={(e) => setUploadDescription(e.target.value)} />
+                                  </div>
+                                  <div className="grid grid-cols-4 items-center gap-4">
+                                      <Label htmlFor="file" className="text-right">
+                                          File
+                                      </Label>
+                                      <Input id="file" type="file" className="col-span-3" onChange={(e) => setUploadFile(e.target.files ? e.target.files[0] : null)} />
+                                  </div>
+                              </div>
+                            </ScrollArea>
+                            <DialogFooter>
+                                <Button type="submit" onClick={handleUpload} disabled={isUploading}>
+                                    {isUploading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    {isUploading ? "Uploading..." : "Upload"}
+                                </Button>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+                )}
             </div>
             
             <div className="relative">

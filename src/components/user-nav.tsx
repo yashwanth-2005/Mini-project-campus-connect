@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import React from "react"
 import { Skeleton } from "./ui/skeleton"
 import { useUser, useAuth } from "@/firebase"
@@ -25,6 +25,8 @@ export function UserNav() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const role = searchParams.get('role');
 
   // This function signs the user out using Firebase's `signOut` function.
   const handleLogout = async () => {
@@ -47,6 +49,8 @@ export function UserNav() {
      return null;
   }
 
+  const profileLink = role ? `/profile?role=${role}` : '/profile';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -68,7 +72,7 @@ export function UserNav() {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <Link href="/profile" passHref>
+          <Link href={profileLink} passHref>
             <DropdownMenuItem>
               Profile
             </DropdownMenuItem>

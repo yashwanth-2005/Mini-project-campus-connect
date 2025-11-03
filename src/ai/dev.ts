@@ -8,3 +8,6 @@ config();
 import '@/ai/flows/summarize-discussion.ts';
 import '@/ai/flows/quick-placement-prep-start.ts';
 import '@/ai/flows/ai-chatbot-assistance.ts';
+import '@/ai/flows/generate-placement-quiz.ts';
+
+    

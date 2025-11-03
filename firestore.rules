@@ -47,10 +47,10 @@ service cloud.firestore {
      * Rule: Anyone can read, but only authors can write or delete.
      */
     match /announcements/{announcementId} {
-      // Anyone can read announcements.
-      allow get, list: if true;
-      // An announcement can only be created by its author.
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      // Anyone logged in can read announcements.
+      allow get, list: if isSignedIn();
+      // An announcement can only be created by its author, who must be a faculty member.
+      allow create: if isSignedIn() && isFaculty() && request.resource.data.authorId == request.auth.uid;
       // Only the original author can update or delete their announcement.
       allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
     }
@@ -60,19 +60,19 @@ service cloud.firestore {
      * Rule: Anyone can read event information.
      */
     match /events/{eventId} {
-      // Anyone can read events.
-      allow get, list: if true;
+      // Anyone logged in can read events.
+      allow get, list: if isSignedIn();
       // For now, creating events is restricted. This could be a future feature for admins.
       allow create, update, delete: if false;
     }
 
     /**
      * Forum Posts: Controls access to the discussion forum.
-     * Rule: Anyone can read, anyone logged in can upvote, but only the author can write/delete.
+     * Rule: Anyone logged in can read/write, but only the author can delete.
      */
     match /forum_posts/{forumPostId} {
-      // Anyone can read forum posts.
-      allow get, list: if true;
+      // Anyone logged in can read the list of posts.
+      allow get, list: if isSignedIn();
       // A post must be created by a logged-in user, who is marked as the author.
       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
       // Any logged-in user can update a post (e.g., to upvote it).
@@ -83,13 +83,26 @@ service cloud.firestore {
 
     /**
      * Resources: Controls access to files in the Resource Hub.
-     * Rule: Anyone can read, but only the uploader can write or delete.
+     * Rule: Any logged-in user can read and upload files.
      */
     match /resources/{resourceId} {
-      // Anyone can read the resource metadata.
-      allow get, list: if true;
-      // A resource must be uploaded by a logged-in user, who is marked as the uploader.
-      allow create: if isSignedIn() && request.resource.data.uploaderId == request.auth.uid;
+      // Any signed-in user can read the resource metadata.
+      allow get, list: if isSignedIn();
+      // Any signed-in user can create a resource.
+      allow create: if isSignedIn();
+      // Only the original uploader can update or delete their resource.
+      allow update, delete: if isSignedIn() && resource.data.uploaderId == request.auth.uid;
+    }
+
+    /**
+     * Placement Documents: Controls access to the placement-specific document repository.
+     * Rule: Any logged-in user can read and upload documents.
+     */
+    match /placement_documents/{docId} {
+      // Any signed-in user can read the list of documents.
+      allow get, list: if isSignedIn();
+       // Any signed-in user can create a resource.
+      allow create: if isSignedIn();
       // Only the original uploader can update or delete their resource.
       allow update, delete: if isSignedIn() && resource.data.uploaderId == request.auth.uid;
     }

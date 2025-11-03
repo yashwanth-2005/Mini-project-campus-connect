@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 const config: Config = {
@@ -16,7 +17,6 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // Use a CSS variable for the main font.
         sans: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
       },

@@ -7,30 +7,18 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
 // Initializes and returns all Firebase services.
-// This function ensures Firebase is only initialized once.
+// This function ensures Firebase is only initialized once, in a way that is robust for both local development and production.
 export function initializeFirebase() {
-  let firebaseApp: FirebaseApp;
-  if (!getApps().length) {
-    // If deployed on Firebase Hosting, it can configure itself.
-    // Otherwise, it uses the local config file.
-    try {
-      // This is for Firebase Hosting auto-configuration
-      firebaseApp = initializeApp();
-    } catch (e) {
-      if (process.env.NODE_ENV === "production") {
-        console.warn('Automatic Firebase initialization failed. Falling back to local config.', e);
-      }
-      firebaseApp = initializeApp(firebaseConfig);
-    }
-  } else {
-    firebaseApp = getApp();
+  // Check if any Firebase app has already been initialized.
+  if (getApps().length === 0) {
+    // If not, initialize a new app with our configuration.
+    // This is the standard and most reliable way to initialize for a web app.
+    initializeApp(firebaseConfig);
   }
+  // Get the initialized app.
+  const firebaseApp = getApp();
   
-  return getSdks(firebaseApp);
-}
-
-// Helper to get all service SDKs from a Firebase App instance.
-function getSdks(firebaseApp: FirebaseApp) {
+  // Return all the necessary Firebase service SDKs.
   return {
     firebaseApp,
     auth: getAuth(firebaseApp),

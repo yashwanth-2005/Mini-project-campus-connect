@@ -14,11 +14,13 @@ import { useToast } from '@/hooks/use-toast';
 import { useUser } from '@/firebase';
 import { useForum, type ForumPost } from '@/hooks/use-forum';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 // This is the main page for the discussion forum.
 export default function ForumPage() {
     const { user } = useUser();
     // Our custom `useForum` hook handles all logic for posts.
+    // It's built with onSnapshot, so it's already real-time.
     const { posts, isLoading, addPost, toggleUpvote } = useForum();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -82,12 +84,23 @@ export default function ForumPage() {
         toggleUpvote(postId);
     }
     
-    // Formats a database timestamp into a readable date.
+    // Formats a database timestamp into a readable date string.
     const formatDate = (timestamp: any) => {
         if (!timestamp) return "Just now";
         // Firestore timestamps have a `toDate()` method.
         if (timestamp.toDate) {
-            return timestamp.toDate().toLocaleDateString();
+            const date = timestamp.toDate();
+            const now = new Date();
+            const diffInSeconds = (now.getTime() - date.getTime()) / 1000;
+            const diffInMinutes = diffInSeconds / 60;
+            const diffInHours = diffInMinutes / 60;
+            const diffInDays = diffInHours / 24;
+
+            if (diffInSeconds < 60) return "Just now";
+            if (diffInMinutes < 60) return `${Math.floor(diffInMinutes)}m ago`;
+            if (diffInHours < 24) return `${Math.floor(diffInHours)}h ago`;
+            if (diffInDays < 7) return `${Math.floor(diffInDays)}d ago`;
+            return date.toLocaleDateString();
         }
         return new Date(timestamp).toLocaleDateString();
     }
@@ -98,7 +111,7 @@ export default function ForumPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold font-headline">Discussion Forum</h1>
-                    <p className="text-muted-foreground">Connect with peers, seniors, and faculty.</p>
+                    <p className="text-muted-foreground">Connect with peers, seniors, and faculty in real-time.</p>
                 </div>
                 {/* This dialog box lets users create a new post. */}
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -112,7 +125,7 @@ export default function ForumPage() {
                         <DialogHeader>
                             <DialogTitle>Start a New Discussion</DialogTitle>
                             <DialogDescription>
-                                Share your thoughts and engage with the community.
+                                Share your thoughts and engage with the community. Your post will appear instantly for all users.
                             </DialogDescription>
                         </DialogHeader>
                         <div className="grid gap-4 py-4">
@@ -152,7 +165,7 @@ export default function ForumPage() {
                     <AvatarImage src={user?.photoURL || `https://api.dicebear.com/8.x/bottts/svg?seed=${user?.uid}`} />
                     <AvatarFallback>{user?.displayName?.charAt(0) || 'U'}</AvatarFallback>
                 </Avatar>
-                <Input placeholder="What's on your mind?" className="h-12" onClick={() => setIsDialogOpen(true)} readOnly/>
+                <Input placeholder="What's on your mind? Start a new discussion..." className="h-12 cursor-pointer" onClick={() => setIsDialogOpen(true)} readOnly/>
             </div>
 
             {/* This section renders the list of discussion posts. */}
@@ -162,46 +175,54 @@ export default function ForumPage() {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {posts?.map(d => {
+                    {posts?.map((d, index) => {
                         // Check if the current user has already upvoted this post.
                         const isUpvoted = user && d.upvoteUserIds?.includes(user.uid);
                         return (
-                            <Card key={d.id} className="hover:border-primary transition-colors">
-                                <CardContent className="p-6 flex items-start gap-6">
-                                    <div className="flex flex-col items-center gap-1 text-muted-foreground">
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className={cn("flex flex-col h-auto p-1", isUpvoted && "text-primary")}
-                                            onClick={() => handleUpvote(d.id)}
-                                        >
-                                            <ThumbsUp className={cn("h-5 w-5", isUpvoted && "fill-current")}/>
-                                            <span className="text-xs font-bold">{d.upvoteUserIds?.length || 0}</span>
-                                        </Button>
-                                    </div>
-                                    <div className="flex-1 cursor-pointer">
-                                        <CardTitle className="text-lg mb-2">{d.title}</CardTitle>
-                                        <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
-                                            <div className="flex items-center gap-2">
-                                                <Avatar className="h-6 w-6">
-                                                    <AvatarImage src={d.authorImage} />
-                                                    <AvatarFallback>{d.authorName?.charAt(0) || 'A'}</AvatarFallback>
-                                                </Avatar>
-                                                <span>{d.authorName}</span>
-                                            </div>
-                                            <span>&bull;</span>
-                                            <span>{formatDate(d.createdAt)}</span>
-                                            <span>&bull;</span>
-                                            <div className="flex items-center gap-1">
-                                                <MessageSquare className="h-4 w-4" />
-                                                {/* Reply count can be a future feature. */}
-                                                <span>0 replies</span>
-                                            </div>
+                            <motion.div
+                                key={d.id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3, delay: index * 0.05 }}
+                                layout
+                            >
+                                <Card className="hover:border-primary/80 transition-colors duration-300">
+                                    <CardContent className="p-6 flex items-start gap-6">
+                                        <div className="flex flex-col items-center gap-1 text-muted-foreground">
+                                            <Button 
+                                                variant="ghost" 
+                                                size="sm" 
+                                                className={cn("flex flex-col h-auto p-1 transition-colors", isUpvoted && "text-primary")}
+                                                onClick={() => handleUpvote(d.id)}
+                                            >
+                                                <ThumbsUp className={cn("h-5 w-5 transition-transform", isUpvoted && "fill-current scale-110")}/>
+                                                <span className="text-xs font-bold">{d.upvoteUserIds?.length || 0}</span>
+                                            </Button>
                                         </div>
-                                        <p className="text-sm text-foreground mt-3 line-clamp-2">{d.content}</p>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                        <div className="flex-1 cursor-pointer">
+                                            <CardTitle className="text-lg mb-2">{d.title}</CardTitle>
+                                            <div className="text-sm text-muted-foreground flex items-center gap-4 flex-wrap">
+                                                <div className="flex items-center gap-2">
+                                                    <Avatar className="h-6 w-6">
+                                                        <AvatarImage src={d.authorImage} />
+                                                        <AvatarFallback>{d.authorName?.charAt(0) || 'A'}</AvatarFallback>
+                                                    </Avatar>
+                                                    <span>{d.authorName}</span>
+                                                </div>
+                                                <span>&bull;</span>
+                                                <span>{formatDate(d.createdAt)}</span>
+                                                <span>&bull;</span>
+                                                <div className="flex items-center gap-1">
+                                                    <MessageSquare className="h-4 w-4" />
+                                                    {/* Reply count can be a future feature. */}
+                                                    <span>0 replies</span>
+                                                </div>
+                                            </div>
+                                            <p className="text-sm text-foreground mt-3 line-clamp-2">{d.content}</p>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
                         )
                     })}
                 </div>

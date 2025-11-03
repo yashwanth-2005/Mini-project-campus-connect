@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -12,7 +13,7 @@ import { useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { useCollection, type WithId } from '@/firebase/firestore/use-collection';
 
-// Data structure for a USN change request.
+// The data structure for a USN change request from our database.
 export type UsnChangeRequest = {
     id: string;
     userId: string;
@@ -24,26 +25,27 @@ export type UsnChangeRequest = {
     requestedAt: any;
 };
 
-// Admin page, accessible only to faculty.
+// The admin page, accessible only to faculty members.
 export default function AdminPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
+  // Get the user's role from the URL to decide if they can see this page.
   const role = searchParams.get('role');
 
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  // A real-time query for all "pending" USN change requests.
+  // A database query to get all USN change requests that are "pending".
   const requestsQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'usn_change_requests'), where('status', '==', 'pending'));
   }, [firestore]);
 
-  // Hook to fetch and listen for changes to the requests.
+  // This hook fetches the data from our query and updates it in real-time.
   const { data: requests, isLoading: isLoadingRequests } = useCollection<UsnChangeRequest>(requestsQuery);
 
-  // Redirect non-faculty users.
+  // Check if the user is a faculty member. If not, redirect them.
   useEffect(() => {
     if (role !== 'faculty') {
       router.push('/dashboard');
@@ -56,14 +58,14 @@ export default function AdminPage() {
     if (!firestore) return;
     setActionLoading(request.id);
     try {
-        // A "batch" write updates multiple documents at once.
+        // A "batch write" lets us update two documents at once atomically.
         const batch = writeBatch(firestore);
 
         // 1. Update the request status to "approved".
         const requestRef = doc(firestore, 'usn_change_requests', request.id);
         batch.update(requestRef, { status: 'approved' });
 
-        // 2. Update the student's USN in their user profile.
+        // 2. Update the student's actual USN in their user profile.
         const userRef = doc(firestore, 'users', request.userId);
         batch.update(userRef, { usn: request.newUsn });
 
@@ -71,7 +73,7 @@ export default function AdminPage() {
 
         toast({
           title: 'Request Approved',
-          description: "The student's USN has been updated.",
+          description: "The student's USN has been successfully updated.",
         });
     } catch (error: any) {
         toast({
@@ -140,12 +142,14 @@ export default function AdminPage() {
                         </TableCell>
                     </TableRow>
                 ) : !requests || requests.length === 0 ? (
+                  // This message shows if there are no pending requests to review.
                   <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
                       No pending requests.
                     </TableCell>
                   </TableRow>
                 ) : (
+                  // We map over the requests and create a table row for each one.
                   requests.map((req) => (
                     <TableRow key={req.id}>
                       <TableCell className="font-medium">{req.studentName}</TableCell>
