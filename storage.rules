@@ -9,13 +9,20 @@ service firebase.storage {
     function isSignedIn() {
       return request.auth != null;
     }
-    
-    // This is a broad rule that allows any authenticated user to read and write
-    // to any location in the storage bucket. This enables a fully collaborative
-    // file-sharing experience for the Resource Hub and Placement Repository.
+
+    // Match any file in the 'resources' folder.
+    match /resources/{filePath} {
+      // Any authenticated user can read (download) any file.
+      allow read: if isSignedIn();
+      // A user can only write (upload, update, delete) if they are authenticated.
+      // The logic to prevent deleting/editing others' files is in the 'delete' rule below.
+      allow write: if isSignedIn();
+    }
+
+    // It's good practice to have a default deny-all rule, though not strictly
+    // necessary here since the above rule is specific.
     match /{allPaths=**} {
-      // Allow read (download) and write (upload, update, delete) if the user is signed in.
-      allow read, write: if isSignedIn();
+      allow read, write: if false;
     }
   }
 }

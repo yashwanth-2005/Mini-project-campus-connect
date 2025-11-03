@@ -83,25 +83,12 @@ service cloud.firestore {
 
     /**
      * Resources: Controls access to files in the Resource Hub.
-     * Rule: Any logged-in user can read and upload files.
+     * Rule: Any logged-in user can read and upload files. Only the uploader can edit/delete.
      */
     match /resources/{resourceId} {
       // Any signed-in user can read the resource metadata.
       allow get, list: if isSignedIn();
       // Any signed-in user can create a resource.
-      allow create: if isSignedIn();
-      // Only the original uploader can update or delete their resource.
-      allow update, delete: if isSignedIn() && resource.data.uploaderId == request.auth.uid;
-    }
-
-    /**
-     * Placement Documents: Controls access to the placement-specific document repository.
-     * Rule: Any logged-in user can read and upload documents.
-     */
-    match /placement_documents/{docId} {
-      // Any signed-in user can read the list of documents.
-      allow get, list: if isSignedIn();
-       // Any signed-in user can create a resource.
       allow create: if isSignedIn();
       // Only the original uploader can update or delete their resource.
       allow update, delete: if isSignedIn() && resource.data.uploaderId == request.auth.uid;

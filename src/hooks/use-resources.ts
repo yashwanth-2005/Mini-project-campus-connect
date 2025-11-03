@@ -21,17 +21,16 @@ export type Resource = {
 };
 
 // This custom hook handles all the logic for managing resources with Firebase.
-// It can now accept a collection name to be reusable.
-export function useResources(collectionName: string = 'resources') {
+export function useResources() {
     const { user } = useUser();
     const firestore = useFirestore();
     const storage = useStorage();
 
     // We "memoize" this query to prevent re-fetching data unnecessarily.
-    // It gets all documents from the specified collection, ordered by most recent.
+    // It gets all documents from the 'resources' collection, ordered by most recent.
     const resourcesQuery = useMemoFirebase(() => 
-        (firestore) ? query(collection(firestore, collectionName), orderBy('uploadDate', 'desc')) : null,
-        [firestore, collectionName]
+        (firestore) ? query(collection(firestore, 'resources'), orderBy('uploadDate', 'desc')) : null,
+        [firestore]
     );
 
     // The `useCollection` hook gives us a real-time stream of the resources data.
@@ -43,8 +42,8 @@ export function useResources(collectionName: string = 'resources') {
         if (!firestore || !storage) throw new Error("Firebase is not initialized.");
         
         // We create a unique path in Firebase Storage to store the file.
-        // The path is now collaborative, not user-specific.
-        const storagePath = `${collectionName}/${Date.now()}_${file.name}`;
+        // The path includes the user's ID to help manage permissions later.
+        const storagePath = `resources/${user.uid}/${Date.now()}_${file.name}`;
         const storageRef = ref(storage, storagePath);
         
         // We upload the file's raw data (bytes).
@@ -54,7 +53,7 @@ export function useResources(collectionName: string = 'resources') {
 
         // We then create a new document in our Firestore 'resources' collection
         // to store the file's metadata, like its name and download URL.
-        await addDoc(collection(firestore, collectionName), {
+        await addDoc(collection(firestore, 'resources'), {
             name: title,
             description,
             fileType: file.type || "File",
@@ -64,16 +63,16 @@ export function useResources(collectionName: string = 'resources') {
             fileUrl: downloadURL,
             storagePath: storagePath,
         });
-    }, [user, firestore, storage, collectionName]);
+    }, [user, firestore, storage]);
 
     // This function updates the metadata (just the name and description) of an existing resource.
     const updateResource = useCallback(async (resourceId: string, title: string, description: string) => {
         if (!user) throw new Error("User not authenticated.");
         if (!firestore) throw new Error("Firestore is not initialized.");
         
-        const resourceDocRef = doc(firestore, collectionName, resourceId);
+        const resourceDocRef = doc(firestore, 'resources', resourceId);
         await updateDoc(resourceDocRef, { name: title, description: description });
-    }, [firestore, user, collectionName]);
+    }, [firestore, user]);
 
     // This function deletes a resource from both Firestore and Firebase Storage.
     const deleteResource = useCallback(async (resourceId: string, storagePath: string) => {
@@ -81,14 +80,14 @@ export function useResources(collectionName: string = 'resources') {
         if (!firestore || !storage) throw new Error("Firebase is not initialized.");
 
         // We create references to both the file in Storage and its metadata document in Firestore.
-        const resourceDocRef = doc(firestore, collectionName, resourceId);
+        const resourceDocRef = doc(firestore, 'resources', resourceId);
         const fileRef = ref(storage, storagePath);
 
         // It's important to delete the file from Storage first.
         await deleteObject(fileRef);
         // Then, we delete the metadata document from Firestore.
         await deleteDoc(resourceDocRef);
-    }, [firestore, storage, user, collectionName]);
+    }, [firestore, storage, user]);
 
     return {
         resources: resources || [],
