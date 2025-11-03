@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Calendar, Clock, MapPin } from "lucide-react";
 import Image from "next/image";
 
-// In a real app, this data would come from a database. For the demo, it's a simple array.
+// In a real app, this data would come from a database. For the demo, it's just an array.
 const events = [
     {
         title: "AI & Machine Learning Workshop",
@@ -48,12 +48,12 @@ export default function EventsPage() {
                 <h1 className="text-3xl font-bold font-headline">Events & Workshops</h1>
                 <p className="text-muted-foreground">Discover, learn, and participate in campus happenings.</p>
             </div>
-            {/* A responsive grid that displays the event cards, adjusting to different screen sizes. */}
+            {/* A responsive grid for displaying event cards. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {events.map((event, index) => (
                     <Card key={index} className="overflow-hidden flex flex-col">
                         <CardHeader className="p-0 relative h-60 w-full">
-                            {/* We use Next.js's optimized Image component for better performance. */}
+                            {/* We use Next.js's Image component for better performance. */}
                             <Image src={event.image} alt={event.title} fill style={{objectFit: 'cover'}} data-ai-hint={event.imageHint} />
                         </CardHeader>
                         <CardContent className="p-6 flex-1">

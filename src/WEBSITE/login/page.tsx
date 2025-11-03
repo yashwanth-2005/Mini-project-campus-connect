@@ -48,7 +48,7 @@ export default function LoginPage() {
     const email = emailInput.value;
     const password = passwordInput.value;
 
-    // A simple check to make sure the user entered a valid email format.
+    // Simple check for valid email format.
     if (!/^\S+@\S+\.\S+$/.test(email)) {
         toast({
             title: "Invalid Email",
@@ -58,7 +58,7 @@ export default function LoginPage() {
         setIsLoading(false);
         return;
     }
-    // Ensures a password was actually entered.
+    // Ensures a password was entered.
     if (!password) {
         toast({
             title: "Password Required",
@@ -70,11 +70,11 @@ export default function LoginPage() {
     }
 
     try {
-        // We use Firebase to sign the user in with their email and password.
+        // Use Firebase to sign the user in.
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
-        // After a successful login, we get the user's profile from our database.
+        // After login, get the user's profile from our database.
         const userDocRef = doc(firestore, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
@@ -82,7 +82,7 @@ export default function LoginPage() {
              throw new Error("User profile not found. Please contact support.");
         }
         
-        // We get the user's role from their database profile to make sure we redirect them correctly.
+        // Get the user's role from their database profile to redirect correctly.
         const userProfile = userDoc.data();
         const userRole = userProfile.role || 'student';
         
@@ -91,14 +91,14 @@ export default function LoginPage() {
             description: `Welcome back, ${user.displayName || user.email}!`,
         });
 
-        // Redirect the user to their dashboard, passing their role in the URL.
+        // Redirect to the dashboard, passing the role in the URL.
         router.push(`/dashboard?role=${userRole}`);
 
     } catch (error: any) {
         let title = "Login Failed";
         let description = "An unexpected error occurred. Please try again.";
 
-        // We provide more helpful error messages for common login problems.
+        // Provide more helpful error messages for common problems.
         switch (error.code) {
             case "auth/user-not-found":
             case "auth/invalid-credential":
@@ -120,10 +120,10 @@ export default function LoginPage() {
     }
   };
 
-  // This function renders the email and password form for either a student or faculty.
+  // This function renders the email and password form.
   const renderLoginForm = (currentRole: "student" | "faculty") => (
     <>
-      {/* We only show social login buttons for students. */}
+      {/* Social login buttons only for students. */}
       {currentRole === 'student' && (
         <>
             <div className="grid grid-cols-2 gap-2">
@@ -179,7 +179,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4 animate-in">
-        {/* A loading overlay is shown while we process the login request. */}
+        {/* A loading overlay while processing the login request. */}
         {isLoading && (
             <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
             <div className="flex flex-col items-center gap-4">

@@ -1,10 +1,9 @@
-
 import type {Config} from 'tailwindcss';
 
 const config: Config = {
   darkMode: ['class'],
   content: [
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/WEBSITE/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
@@ -17,8 +16,7 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        // We use a CSS variable for our main font, which is set in the layout file.
-        // This makes it easy to change the font across the entire app.
+        // Use a CSS variable for our main font, set in the layout file.
         sans: ['var(--font-inter)', 'sans-serif'],
         headline: ['var(--font-inter)', 'sans-serif'],
       },

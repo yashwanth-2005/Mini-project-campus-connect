@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 // This is the main page for the discussion forum.
 export default function ForumPage() {
     const { user } = useUser();
-    // Our custom hook `useForum` handles all the logic for fetching and updating posts.
+    // Our custom `useForum` hook handles all logic for posts.
     const { posts, isLoading, addPost, toggleUpvote } = useForum();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -27,12 +27,12 @@ export default function ForumPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const { toast } = useToast();
 
-    // This function handles creating a new discussion post.
+    // Handles creating a new discussion post.
     const handleStartDiscussion = async () => {
         if (!newDiscussionTitle.trim() || !newDiscussionContent.trim()) {
             toast({
                 title: "Incomplete Discussion",
-                description: "Please provide both a title and content for your post.",
+                description: "Please provide both a title and content.",
                 variant: "destructive",
             });
             return;
@@ -49,7 +49,7 @@ export default function ForumPage() {
 
         setIsSubmitting(true);
         try {
-            // We call the `addPost` function from our custom hook.
+            // Call the `addPost` function from our custom hook.
             await addPost(newDiscussionTitle, newDiscussionContent);
             
             // Clear the form and close the dialog on success.
@@ -72,20 +72,20 @@ export default function ForumPage() {
         }
     };
     
-    // This handles the upvoting logic for a post.
+    // Handles the upvoting logic for a post.
     const handleUpvote = (postId: string) => {
         if (!user) {
             toast({ title: "Please log in to upvote", variant: "destructive" });
             return;
         }
-        // We call the `toggleUpvote` function from our custom hook.
+        // Call the `toggleUpvote` function from our custom hook.
         toggleUpvote(postId);
     }
     
-    // This helper function formats a database timestamp into a readable date.
+    // Formats a database timestamp into a readable date.
     const formatDate = (timestamp: any) => {
         if (!timestamp) return "Just now";
-        // Firestore timestamps have a `toDate()` method that we can use.
+        // Firestore timestamps have a `toDate()` method.
         if (timestamp.toDate) {
             return timestamp.toDate().toLocaleDateString();
         }
@@ -100,7 +100,7 @@ export default function ForumPage() {
                     <h1 className="text-3xl font-bold font-headline">Discussion Forum</h1>
                     <p className="text-muted-foreground">Connect with peers, seniors, and faculty.</p>
                 </div>
-                {/* This dialog box lets users create a new discussion post. */}
+                {/* This dialog box lets users create a new post. */}
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger asChild>
                         <Button>
@@ -146,7 +146,7 @@ export default function ForumPage() {
                 </Dialog>
             </div>
             
-            {/* This is a convenience input field that opens the "New Discussion" dialog when clicked. */}
+            {/* A convenience input field that opens the dialog when clicked. */}
             <div className="flex items-center gap-4">
                 <Avatar className="h-10 w-10 border">
                     <AvatarImage src={user?.photoURL || `https://api.dicebear.com/8.x/bottts/svg?seed=${user?.uid}`} />
@@ -194,7 +194,7 @@ export default function ForumPage() {
                                             <span>&bull;</span>
                                             <div className="flex items-center gap-1">
                                                 <MessageSquare className="h-4 w-4" />
-                                                {/* Reply count can be added as a feature later. */}
+                                                {/* Reply count can be a future feature. */}
                                                 <span>0 replies</span>
                                             </div>
                                         </div>

@@ -5,15 +5,15 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Inter } from 'next/font/google';
 import { Analytics } from "@vercel/analytics/react"
 
-// This function from Next.js downloads the 'Inter' font at build time and hosts it locally.
-// This is faster than fetching it from Google Fonts every time the page loads.
+// This function downloads the 'Inter' font at build time and hosts it locally.
+// This is faster than fetching it from Google Fonts on every page load.
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter', // We create a CSS variable to easily use this font.
 });
 
 // This is the root layout for the entire application.
-// It wraps every single page with essential components like the theme switcher
+// It wraps every page with essential components like the theme switcher
 // and notification system (Toaster).
 export default function RootLayout({
   children,
@@ -31,7 +31,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           {children}
-          {/* The Toaster component is where all popup notifications will be rendered. */}
+          {/* The Toaster component is where all popup notifications appear. */}
           <Toaster />
         </ThemeProvider>
         <Analytics />

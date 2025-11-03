@@ -23,7 +23,7 @@ import { useUser, useFirestore } from "@/firebase";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useProfile } from "@/hooks/use-profile";
 
-// This schema defines the structure and validation rules for our profile form.
+// This schema defines the structure and validation for our profile form.
 const profileSchema = z.object({
     firstName: z.string().min(1, "First name is required"),
     lastName: z.string().min(1, "Last name is required"),
@@ -31,12 +31,12 @@ const profileSchema = z.object({
     githubUrl: z.string().url("Please enter a valid GitHub URL").optional().or(z.literal('')),
     leetcodeUrl: z.string().url("Please enter a valid LeetCode URL").optional().or(z.literal('')),
     profilePictureUrl: z.string().optional(),
-    // These fields are specific to faculty members.
+    // Fields specific to faculty members.
     department: z.string().optional(),
     facultyId: z.string().optional(),
 });
 
-// This schema defines validation for the USN (University Seat Number) change request form.
+// This schema defines validation for the USN change request form.
 const usnChangeSchema = z.object({
     newUsn: z.string().min(1, "New USN is required."),
     reason: z.string().min(10, "Please provide a brief reason (min. 10 characters)."),
@@ -49,7 +49,7 @@ export default function ProfilePage() {
     const { user, isUserLoading } = useUser();
     const firestore = useFirestore();
 
-    // Our custom hook `useProfile` handles fetching and updating profile data from the database.
+    // Our custom `useProfile` hook handles profile data.
     const { userProfile, isLoading: isProfileLoading, updateUserProfile } = useProfile();
 
     const [previewImage, setPreviewImage] = useState<string | null>(null);
@@ -58,7 +58,7 @@ export default function ProfilePage() {
     const [isSaving, setIsSaving] = useState(false);
     const [isRequestingUsn, setIsRequestingUsn] = useState(false);
 
-    // This initializes the main profile form with validation rules and default values.
+    // Initialize the main profile form.
     const form = useForm<z.infer<typeof profileSchema>>({
         resolver: zodResolver(profileSchema),
         defaultValues: {
@@ -81,14 +81,14 @@ export default function ProfilePage() {
         }
     });
     
-    // This effect redirects the user to the login page if they are not authenticated.
+    // Redirect to login if user is not authenticated.
     useEffect(() => {
       if (!isUserLoading && !user) {
         router.push('/login');
       }
     }, [isUserLoading, user, router]);
 
-    // When the user's profile data has loaded from the database, this effect fills the form fields.
+    // When the profile data loads, fill the form fields.
     useEffect(() => {
         if (userProfile) {
             form.reset({
@@ -105,7 +105,7 @@ export default function ProfilePage() {
         }
     }, [userProfile, form]);
 
-    // This function creates a local preview of a newly selected profile picture.
+    // Create a local preview of a new profile picture.
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (file) {
@@ -119,7 +119,7 @@ export default function ProfilePage() {
         }
     };
 
-    // This function saves the updated profile data to the database.
+    // Save the updated profile data to the database.
     async function onSubmit(data: z.infer<typeof profileSchema>) {
         if (!user) return;
         setIsSaving(true);
@@ -134,7 +134,7 @@ export default function ProfilePage() {
         } catch(e: any) {
             toast({
                 title: "Update Failed",
-                description: e.message || "Could not update your profile. Please try again.",
+                description: e.message || "Could not update profile.",
                 variant: 'destructive'
             });
         } finally {
@@ -142,7 +142,7 @@ export default function ProfilePage() {
         }
     }
 
-    // This function handles submitting a USN change request to the database.
+    // Submit a USN change request to the database.
     async function onUsnChangeSubmit(data: z.infer<typeof usnChangeSchema>) {
         if (!user || !userProfile || !firestore) return;
         setIsRequestingUsn(true);
@@ -159,7 +159,7 @@ export default function ProfilePage() {
 
             toast({
                 title: "Request Submitted",
-                description: "Your USN change request has been submitted for faculty approval."
+                description: "Your USN change request has been sent for faculty approval."
             });
             setIsUsnDialogOpen(false);
             usnForm.reset();
@@ -174,7 +174,7 @@ export default function ProfilePage() {
         }
     }
 
-    // This shows a loading skeleton UI while data is being fetched.
+    // Show a loading skeleton while data is being fetched.
     if (isUserLoading || isProfileLoading || !userProfile) {
         return (
             <div className="space-y-8">

@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUser } from "@/firebase";
 import { useResources, type Resource } from "@/hooks/use-resources";
 
-// This dialog component handles the form for uploading a new resource.
+// A dialog component for the "Upload Resource" form.
 const UploadResourceDialog = ({
     isOpen,
     onOpenChange,
@@ -32,7 +32,7 @@ const UploadResourceDialog = ({
     const [uploadFile, setUploadFile] = useState<File | null>(null);
     const { toast } = useToast();
 
-    // This function validates the input and calls the main upload function.
+    // Validate the input and call the main upload function.
     const handleUploadClick = () => {
         if (!uploadTitle || !uploadFile) {
             toast({
@@ -47,7 +47,7 @@ const UploadResourceDialog = ({
 
     return (
         <Dialog open={isOpen} onOpenChange={(open) => {
-            // This prevents the user from closing the dialog while a file is uploading.
+            // Prevent closing the dialog while uploading.
             if (!isUploading) onOpenChange(open);
         }}>
             <DialogTrigger asChild>
@@ -94,7 +94,7 @@ const UploadResourceDialog = ({
     );
 };
 
-// This dialog component handles editing an existing resource's details.
+// A dialog component for editing a resource's details.
 const EditResourceDialog = ({
     resource,
     isOpen,
@@ -112,7 +112,7 @@ const EditResourceDialog = ({
     const [editDescription, setEditDescription] = useState('');
     const { toast } = useToast();
 
-    // This effect pre-fills the form with the resource's current data when the dialog opens.
+    // Pre-fill the form with current data when the dialog opens.
     React.useEffect(() => {
         if(resource) {
             setEditTitle(resource.name);
@@ -120,7 +120,7 @@ const EditResourceDialog = ({
         }
     }, [resource]);
 
-    // This function validates the input and calls the main update function.
+    // Validate and call the main update function.
     const handleUpdateClick = () => {
         if(!resource) return;
         if (!editTitle) {
@@ -168,12 +168,12 @@ const EditResourceDialog = ({
     );
 }
 
-// This is the main page for the Resource Hub, where users can share and download files.
+// The main page for the Resource Hub.
 export default function ResourcesPage() {
     const { toast } = useToast();
     const { user } = useUser();
     
-    // Our custom hook `useResources` handles all the complex logic for interacting with the database.
+    // Our custom `useResources` hook handles all database logic.
     const { 
         resources, 
         isLoading: isLoadingResources, 
@@ -191,12 +191,12 @@ export default function ResourcesPage() {
     const [deletingResourceId, setDeletingResourceId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // This function opens a file's URL in a new browser tab for viewing.
+    // Opens a file's URL in a new tab.
     const handleView = (url: string) => {
         window.open(url, '_blank');
     };
 
-    // This function handles downloading a file from a given cloud URL.
+    // Downloads a file from a cloud URL.
     const handleDownload = (url: string, fileName: string) => {
         fetch(url)
             .then(response => {
@@ -218,13 +218,13 @@ export default function ResourcesPage() {
                 console.error("Download failed:", error);
                 toast({
                     title: "Download Failed",
-                    description: "Could not download the file. It may be due to security policies. Please try viewing it instead.",
+                    description: "Could not download file. Try viewing it instead.",
                     variant: "destructive",
                 });
             });
     };
 
-    // This function handles the file upload process.
+    // Handles the file upload process.
     const handleUpload = async (title: string, description: string, file: File) => {
         if (!user) return;
         setIsUploading(true);
@@ -247,13 +247,13 @@ export default function ResourcesPage() {
         }
     }
 
-    // This function opens the edit dialog with the correct resource data.
+    // Opens the edit dialog with the correct resource data.
     const handleEditClick = (resource: Resource) => {
         setEditingResource(resource);
         setIsEditDialogOpen(true);
     };
 
-    // This function handles updating a resource's title and description.
+    // Handles updating a resource's title and description.
     const handleUpdate = async (resourceId: string, title: string, description: string) => {
         setIsUpdating(true);
         try {
@@ -275,13 +275,13 @@ export default function ResourcesPage() {
         }
     }
 
-    // This function opens the delete confirmation dialog.
+    // Opens the delete confirmation dialog.
     const handleDeleteClick = (resourceId: string) => {
         setDeletingResourceId(resourceId);
         setIsDeleteDialogOpen(true);
     };
 
-    // This function permanently deletes a resource from the database and cloud storage.
+    // Permanently deletes a resource from the database and cloud storage.
     const handleConfirmDelete = async () => {
         if (!deletingResourceId || !resources) return;
 
@@ -307,13 +307,13 @@ export default function ResourcesPage() {
         }
     };
 
-    // This filters the displayed resources based on the user's search query.
+    // Filters displayed resources based on the search query.
     const filteredResources = resources?.filter(resource => 
         resource.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (resource.description && resource.description.toLowerCase().includes(searchQuery.toLowerCase()))
     ) || [];
 
-    // This helper function formats a database timestamp into a readable date.
+    // Formats a database timestamp into a readable date.
     const formatDate = (timestamp: any) => {
         if (!timestamp) return "Just now";
         if (timestamp.toDate) {
@@ -397,7 +397,7 @@ export default function ResourcesPage() {
                                                     <Download className="mr-2 h-4 w-4"/>
                                                     Download
                                                 </DropdownMenuItem>
-                                                {/* The Edit and Delete options are only shown to the original uploader. */}
+                                                {/* Edit and Delete are only shown to the original uploader. */}
                                                 {resource.uploaderId === user?.uid && (
                                                     <>
                                                         <DropdownMenuItem onClick={() => handleEditClick(resource)}>
@@ -429,14 +429,13 @@ export default function ResourcesPage() {
                 onUpdate={handleUpdate}
                 isUpdating={isUpdating}
             />
-            {/* This is a confirmation dialog to prevent accidental deletion of a resource. */}
+            {/* A confirmation dialog to prevent accidental deletion. */}
             <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
                     <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete the
-                        resource from the cloud.
+                        This will permanently delete the resource from the cloud. This action cannot be undone.
                     </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

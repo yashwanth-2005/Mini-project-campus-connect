@@ -22,7 +22,7 @@ import React, { useState } from 'react';
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion } from "framer-motion";
 
-// This array holds the data for the feature cards displayed on the landing page.
+// Data for the feature cards displayed on the landing page.
 const features = [
   {
     icon: <Briefcase className="h-6 w-6 text-primary-foreground" />,
@@ -56,7 +56,7 @@ const features = [
   },
 ];
 
-// This array holds the data for the testimonials from past students.
+// Data for testimonials from past students.
 const testimonials = [
     {
         name: "Priya Sharma",
@@ -78,7 +78,7 @@ const testimonials = [
     }
 ]
 
-// These are animation definitions for the 'framer-motion' library.
+// Animation definitions for the 'framer-motion' library.
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -94,7 +94,7 @@ const staggerContainer = {
 
 const MotionCard = motion(Card);
 
-// This is a reusable component for displaying a feature card with a cool hover effect.
+// A reusable component for displaying a feature card.
 const FeatureCard = ({ feature }: { feature: (typeof features)[0] }) => {
     return (
         <MotionCard
@@ -119,10 +119,10 @@ export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState<string | null>(null);
 
-  // This function navigates to a new page and shows a loading screen in the process.
+  // Navigate to a new page and show a loading screen.
   const handleLinkClick = (path: string, id: string) => {
     setLoading(id);
-    // A small timeout allows the loading animation to be seen by the user.
+    // A small timeout lets the user see the loading animation.
     setTimeout(() => {
       router.push(path);
     }, 100);
@@ -130,7 +130,7 @@ export default function Home() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      {/* This loading overlay is shown during page transitions to give feedback to the user. */}
+      {/* Loading overlay for page transitions. */}
       {loading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0">
           <div className="flex flex-col items-center gap-4">
@@ -161,7 +161,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 overflow-x-hidden">
-         {/* This is the main title and call-to-action section. */}
+         {/* The main title and call-to-action section. */}
          <motion.section 
             className="py-20 md:py-32"
             initial="initial"
@@ -193,7 +193,7 @@ export default function Home() {
           </div>
         </motion.section>
         
-        {/* This is a special feature highlight for the placement preparation tool. */}
+        {/* A special feature highlight for the placement prep tool. */}
         <motion.section 
           id="quick-prep" 
           className="bg-secondary/50 py-20 my-12"
@@ -224,7 +224,7 @@ export default function Home() {
             </div>
         </motion.section>
 
-        {/* This section displays the main features of the application as a grid of cards. */}
+        {/* This section displays the main features as a grid of cards. */}
         <motion.section 
           id="features" 
           className="container my-20"
@@ -251,7 +251,7 @@ export default function Home() {
           </motion.div>
         </motion.section>
         
-        {/* This section shows quotes from satisfied students as social proof. */}
+        {/* This section shows quotes from students as social proof. */}
         <motion.section 
           id="testimonials" 
           className="my-20 py-24 bg-secondary/50"
@@ -295,7 +295,7 @@ export default function Home() {
 
       </main>
 
-      {/* The footer contains navigation links and social media icons. */}
+      {/* The footer contains navigation and social media links. */}
       <motion.footer 
         className="py-12 md:py-16 border-t border-border/40 bg-secondary/30"
         initial="initial"
@@ -311,7 +311,7 @@ export default function Home() {
                     <span className="font-bold text-2xl font-headline">CampusConnect</span>
                 </Link>
                 <p className="text-muted-foreground max-w-sm mb-4">
-                    Bringing campus communities together through innovative digital experiences and seamless collaboration.
+                    Bringing campus communities together through innovative digital experiences.
                 </p>
                 <div className="flex space-x-2">
                     <Button variant="ghost" size="icon" asChild>

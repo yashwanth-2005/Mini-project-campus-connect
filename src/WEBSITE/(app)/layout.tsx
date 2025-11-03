@@ -35,7 +35,7 @@ import { Button } from "@/components/ui/button";
 import { FirebaseClientProvider } from "@/firebase";
 
 // This array defines all possible navigation links for the sidebar.
-// The `role` property determines which users (students or faculty) can see each link.
+// The `role` property determines who can see each link.
 const allNavItems = [
   { href: "/dashboard", icon: <LayoutDashboard />, label: "Dashboard", role: ['student', 'faculty'] },
   { href: "/placements", icon: <Briefcase />, label: "Placement Corner", role: ['student', 'faculty'] },
@@ -47,7 +47,7 @@ const allNavItems = [
 ];
 
 // This is the main layout for the authenticated part of the app.
-// It includes the sidebar, header, and main content area for all the pages.
+// It includes the sidebar, header, and main content area.
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -55,23 +55,23 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  // Filters navigation links based on the user's role, which we get from the URL.
+  // Filters navigation links based on the user's role from the URL.
   const navItems = allNavItems.filter(item => item.role.includes(role));
 
-  // This effect shows a loading screen during page transitions for a smoother experience.
+  // Shows a loading screen during page transitions.
   useEffect(() => {
     setIsLoading(false);
   }, [pathname, searchParams]);
 
   const handleLinkClick = (url: string) => {
-      // Don't show the loader if the user clicks the link for the page they're already on.
+      // Don't show loader if clicking the current page's link.
       if (url.startsWith(pathname) && (!searchParams.get('role') || url.includes(`role=${role}`))) return;
       setIsLoading(true);
   };
 
   return (
     <SidebarProvider>
-      {/* This is the full-screen loading overlay that appears during page navigation. */}
+      {/* Full-screen loading overlay. */}
       {isLoading && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
           <div className="flex flex-col items-center gap-4">
@@ -115,7 +115,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
               <SidebarTrigger />
             </div>
             <div className="flex-1">
-              {/* This space can be used for breadcrumbs or other header content later. */}
+              {/* This space can be used for breadcrumbs later. */}
             </div>
             <div className="flex items-center gap-2">
               <Button onClick={() => setIsChatOpen(true)} className="font-bold rainbow-button text-white">
@@ -133,8 +133,8 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   );
 }
 
-// React Suspense gracefully handles the loading of URL parameters, preventing errors.
-// It also contains the Firebase provider to give all pages access to the cloud services.
+// React Suspense gracefully handles loading URL parameters and prevents errors.
+// It also contains the Firebase provider to give all pages access to cloud services.
 export default function AppLayout({
   children,
 }: {

@@ -29,7 +29,7 @@ export default function ForgotPasswordPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
-    // This function uses Firebase to send a password reset email to the user.
+    // This function uses Firebase to send a password reset email.
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
         setIsLoading(true);
@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
             setEmailSent(true);
         } catch (error: any) {
             let description = "An unexpected error occurred. Please try again.";
-            // We give a more helpful message if the email address doesn't exist.
+            // Give a helpful message if the email doesn't exist.
             if (error.code === 'auth/user-not-found') {
                 description = "No account is associated with this email address.";
             }
@@ -55,7 +55,7 @@ export default function ForgotPasswordPage() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background p-4">
-             {/* This loading overlay is shown while the email is being sent. */}
+             {/* A loading overlay while the email is being sent. */}
              {isLoading && (
                 <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-sm animate-in fade-in-0 duration-150">
                     <div className="flex flex-col items-center gap-4">
@@ -78,13 +78,13 @@ export default function ForgotPasswordPage() {
                     </CardDescription>
                 </CardHeader>
                 {emailSent ? (
-                    // This view is shown after the email is successfully sent.
+                    // This view shows after the email is successfully sent.
                     <CardContent>
                         <Alert variant="default" className="border-green-500/50 text-green-700 dark:text-green-400 [&>svg]:text-green-700 dark:[&>svg]:text-green-400">
                             <MailCheck className="h-4 w-4" />
                             <AlertTitle>Password Reset Link Sent!</AlertTitle>
                             <AlertDescription>
-                                A password reset link has been sent to <strong>{email}</strong>. Please check your spam folder if you don't see it.
+                                A reset link has been sent to <strong>{email}</strong>. Check your spam folder if you don't see it.
                             </AlertDescription>
                         </Alert>
                          <Button asChild className="w-full mt-6">

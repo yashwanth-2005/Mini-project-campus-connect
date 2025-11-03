@@ -10,7 +10,6 @@ import { useUser } from "@/firebase";
 import React from "react";
 
 // This array defines the quick-access links shown on the dashboard.
-// The `role` property controls who can see each link (e.g., students or faculty).
 const allQuickLinks = [
     {
         title: "Placement Corner",
@@ -42,17 +41,17 @@ const allQuickLinks = [
     }
 ];
 
-// This is the main dashboard page, which is the first thing a user sees after logging in.
+// This is the main dashboard, the first page a user sees after logging in.
 export default function DashboardPage() {
     const searchParams = useSearchParams();
     const { user } = useUser();
-    // For this demo, we read the user's role from the URL to customize the dashboard.
+    // We read the user's role from the URL to customize the dashboard.
     const role = searchParams.get('role') || 'student';
     
-    // This filters the quick links to only show the ones relevant to the current user's role.
+    // Filter the quick links to show only relevant ones for the current user.
     const quickLinks = allQuickLinks.filter(link => link.role.includes(role));
     
-    // This function creates a personalized welcome message for the logged-in user.
+    // Create a personalized welcome message for the logged-in user.
     const welcomeMessage = () => {
         if (role === 'faculty') return "Welcome back, Faculty!";
         if (user) return `Welcome back, ${user.displayName?.split(' ')[0] || 'Student'}!`;
@@ -66,7 +65,7 @@ export default function DashboardPage() {
                 <p className="text-muted-foreground">Here&apos;s a quick overview of what&apos;s happening on campus.</p>
             </div>
 
-            {/* This grid displays the navigation cards for quick access to other pages. */}
+            {/* This grid displays quick-access navigation cards. */}
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {quickLinks.map(link => (
                     <Card key={link.title} className="hover:shadow-lg transition-shadow">
@@ -86,7 +85,7 @@ export default function DashboardPage() {
                 ))}
             </div>
 
-            {/* This card shows a summary of the most recent campus announcements. */}
+            {/* A summary of the most recent campus announcements. */}
             <Card>
                 <CardHeader>
                     <CardTitle>Recent Announcements</CardTitle>
